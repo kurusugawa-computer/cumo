@@ -1,0 +1,13 @@
+syntax = "proto3";
+package Server;
+
+message PBServerCommand {
+    oneof Command {
+        string log_message = 1;
+        PBPointCloud point_cloud = 2;
+    }
+}
+
+message PBPointCloud {
+    bytes data = 1;
+}

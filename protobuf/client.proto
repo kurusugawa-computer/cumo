@@ -1,0 +1,8 @@
+syntax = "proto3";
+package Client;
+
+message Client {
+    oneof Command {
+        string log_message = 1;
+    }
+}

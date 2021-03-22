@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "pointcloud-viewer"
+version = "0.1.0"
+description = ""
+authors = ["Kotet <kotet0418@gmail.com>"]
+include = ["pointcloud_viewer/public/*"]
+
+[tool.poetry.dependencies]
+python = "^3.6,<3.9"
+websocket-server = "^0.4"
+protobuf = "^3.15.6"
+open3d = "^0.12.0"
+pypcd = {git = "https://github.com/DanielPollithy/pypcd.git"}
+
+[tool.poetry.dev-dependencies]
+autopep8 = "^1.5.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
