@@ -6,6 +6,7 @@ message PBServerCommand {
         string log_message = 1;
         PBPointCloud point_cloud = 2;
     }
+    bytes UUID = 9999;
 }
 
 message PBPointCloud {

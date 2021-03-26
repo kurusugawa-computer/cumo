@@ -1,8 +1,17 @@
 syntax = "proto3";
 package Client;
 
-message Client {
+message PBClientCommand {
     oneof Command {
         string log_message = 1;
+        Result result = 2;
+    }
+}
+
+message Result {
+    bytes UUID = 1;
+    oneof Result {
+        string success = 2;
+        string failure = 3;
     }
 }

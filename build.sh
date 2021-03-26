@@ -25,6 +25,13 @@ ${PROTOC} \
     -I. \
     --plugin=protoc-gen-ts="${PLUGIN_TS}" \
     protobuf/server.proto
+${PROTOC} \
+  --python_out=./lib/pointcloud_viewer/ \
+  --ts_out=import_style=commonjs,binary:./client/src \
+  --js_out=import_style=commonjs,binary:./client/src \
+  -I. \
+  --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+  protobuf/client.proto
 
 cd ${SCRIPT_DIR}/client
 ${YARN} build
