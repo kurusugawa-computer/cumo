@@ -30,7 +30,9 @@ export class PointCloudViewer {
 
         this.orthographic_camera = new OrthographicCamera(0, 0, 0, 0, 0, 0);
 
-        this.renderer = new THREE.WebGL1Renderer();
+        this.renderer = new THREE.WebGL1Renderer({
+            preserveDrawingBuffer: true,
+        });
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         container.appendChild(this.renderer.domElement);

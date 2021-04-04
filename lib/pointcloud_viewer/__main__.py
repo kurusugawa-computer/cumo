@@ -1,3 +1,5 @@
+import asyncio
+import time
 from urllib import parse
 from . import PointCloudViewer
 import sys
@@ -22,25 +24,22 @@ def main():
     )
     viewer.start()
     print("open: http://{}:{}".format(host, http_port))
-    viewer.wait_connection()
-    viewer.send_pointcloud(points)
+
+    viewer.send_pointcloud(points, on_success=lambda s: print(
+        "pointcloud send"), on_failure=lambda e: print("error: "+e))
 
     while True:
-        str = getline()
-        viewer.console_log(str)
+        import time
+        time.sleep(5)
+        viewer.capture_screen(
+            on_success=save_png,
+            on_failure=lambda e: print("error: "+e)
+        )
 
-
-def getline(prompt=""):
-    fd = sys.stdin.fileno()
-    old = termios.tcgetattr(fd)
-    new = termios.tcgetattr(fd)
-    new[3] = new[3] & ~termios.ICANON
-    try:
-        termios.tcsetattr(fd, termios.TCSADRAIN, new)
-        line = input(prompt)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old)
-    return line
-
+def save_png(data: bytes) -> None:
+    f = open("image.png", "bw")
+    f.write(data)
+    f.close()
+    print("saved")
 
 main()

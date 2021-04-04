@@ -5,6 +5,7 @@ message PBServerCommand {
     oneof Command {
         string log_message = 1;
         PBPointCloud point_cloud = 2;
+        bool capture_screen = 3;
     }
     bytes UUID = 9999;
 }

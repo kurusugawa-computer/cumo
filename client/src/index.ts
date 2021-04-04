@@ -1,6 +1,6 @@
 import './style.css';
 
-import { connectWebSocket } from './websocket';
+import { connectWebSocket } from './websocket/websocket';
 import { PointCloudViewer } from "./viewer";
 
 

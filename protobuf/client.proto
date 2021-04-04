@@ -5,6 +5,7 @@ message PBClientCommand {
     oneof Command {
         string log_message = 1;
         Result result = 2;
+        Image image = 3;
     }
 }
 
@@ -14,4 +15,9 @@ message Result {
         string success = 2;
         string failure = 3;
     }
+}
+
+message Image {
+    bytes UUID = 1;
+    bytes data = 2;
 }
