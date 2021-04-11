@@ -32,6 +32,7 @@ export class PointCloudViewer {
 
         this.renderer = new THREE.WebGL1Renderer({
             preserveDrawingBuffer: true,
+            logarithmicDepthBuffer: true,
         });
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.setSize(window.innerWidth, window.innerHeight);

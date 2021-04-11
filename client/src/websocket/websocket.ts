@@ -5,6 +5,8 @@ import { sendSuccess, sendFailure, sendImage } from "./client_command";
 
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 
+import * as THREE from 'three';
+
 const WEBSOCKET_HOST = 'ws://127.0.0.1';
 const WEBSOCKET_PORT = '8081';
 
@@ -75,12 +77,24 @@ function handlePointCloud(
     }
 
     let pointcloud = new PCDLoader().parse(pb_pointcloud.getData_asU8().buffer, "test");
+    console.log(command_id);
+    console.log(pointcloud);
     if (pointcloud.geometry.boundingSphere) {
         console.log(pointcloud.geometry.boundingSphere);
         const radius = pointcloud.geometry.boundingSphere.radius;
         const dist = radius / 2 / Math.tan(Math.PI * viewer.fov / 360);
-        viewer.perspective_camera.position.set(0, 0, dist);
-        viewer.perspective_camera.lookAt(pointcloud.geometry.boundingSphere.center);
+
+        if (pointcloud.material instanceof THREE.PointsMaterial) {
+            pointcloud.material.size = 1;
+            pointcloud.material.sizeAttenuation = false;
+            pointcloud.material.needsUpdate = true;
+        }
+
+        let center = pointcloud.geometry.boundingSphere.center;
+        viewer.perspective_camera.position.set(center.x, center.y, center.z - dist);
+        viewer.perspective_camera.lookAt(center.x, center.y, center.z);
+        viewer.controls.target = center;
+        viewer.controls.update();
     }
     viewer.scene.add(pointcloud);
     sendSuccess(websocket, command_id, "success");

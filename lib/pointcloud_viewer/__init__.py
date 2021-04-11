@@ -1,6 +1,7 @@
 import asyncio
 from logging import handlers
 import sys
+import numpy
 from pypcd import pypcd
 import open3d
 from google.protobuf.message import DecodeError
@@ -89,7 +90,6 @@ class PointCloudViewer:
         while True:
             if not self.broadcast_queue.empty() and 0 < len(self.websocket_connections):
                 data = self.broadcast_queue.get()
-                print(data)
                 for conn in self.websocket_connections:
                     conn: websockets.WebSocketServerProtocol = conn
                     await conn.send(data)
@@ -153,15 +153,33 @@ class PointCloudViewer:
         self.on_failure[uuid] = on_failure
         self.__send_data(obj, uuid)
 
-    def send_pointcloud(
+    def send_pointcloud_from_open3d(
         self,
-        pc: pypcd.PointCloud,
+        pc: open3d.geometry.PointCloud,
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
-        pcd = pc.save_pcd_to_buffer()
+        pcd: pypcd.PointCloud
+        print(len(pc.points))
+        if len(pc.points) == len(pc.colors):
+            colors_f32 = numpy.asarray(pc.colors)
+            colors_f32 *= 256
+            colors = colors_f32.astype(numpy.uint32)
+
+            rgb = (colors[:, 0] << 16) | (colors[:, 1] << 8) | colors[:, 2]
+            rgb.dtype = numpy.float32
+
+            xyzrgb = numpy.column_stack((
+                numpy.asarray(pc.points).astype(numpy.float32),
+                rgb,
+            ))
+            pcd = pypcd.make_xyz_rgb_point_cloud(xyzrgb)
+        else:
+            xyz = numpy.asarray(pc.points).astype(numpy.float32)
+            pcd = pypcd.make_xyz_point_cloud(xyz)
+        pcd_bytes = pcd.save_pcd_to_buffer()
         obj = PBServerCommand()
-        obj.point_cloud.data = pcd
+        obj.point_cloud.data = pcd_bytes
         uuid = uuid4()
         self.on_success[uuid] = on_success
         self.on_failure[uuid] = on_failure
