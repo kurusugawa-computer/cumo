@@ -82,7 +82,6 @@ function handlePointCloud(
     if (pointcloud.geometry.boundingSphere) {
         console.log(pointcloud.geometry.boundingSphere);
         const radius = pointcloud.geometry.boundingSphere.radius;
-        const dist = radius / 2 / Math.tan(Math.PI * viewer.fov / 360);
 
         if (pointcloud.material instanceof THREE.PointsMaterial) {
             pointcloud.material.size = 1;
@@ -90,9 +89,19 @@ function handlePointCloud(
             pointcloud.material.needsUpdate = true;
         }
 
-        let center = pointcloud.geometry.boundingSphere.center;
-        viewer.perspective_camera.position.set(center.x, center.y, center.z - dist);
+        const dist_perspective = radius / 2 / Math.tan(Math.PI * viewer.config.camera.perspective.fov / 360);
+        const aspect = window.innerWidth / window.innerHeight;
+        const center = pointcloud.geometry.boundingSphere.center;
+        viewer.perspective_camera.position.set(center.x, center.y, center.z - dist_perspective);
         viewer.perspective_camera.lookAt(center.x, center.y, center.z);
+        viewer.orthographic_camera.position.set(center.x, center.y, center.z - 1);
+        viewer.orthographic_camera.lookAt(center.x, center.y, center.z);
+        viewer.orthographic_camera.left = -aspect * radius / 2;
+        viewer.orthographic_camera.right = aspect * radius / 2;
+        viewer.orthographic_camera.top = radius / 2;
+        viewer.orthographic_camera.bottom = -radius / 2;
+        viewer.orthographic_camera.updateProjectionMatrix();
+
         viewer.controls.target = center;
         viewer.controls.update();
     }
