@@ -37,7 +37,8 @@ cd ${SCRIPT_DIR}/client
 ${YARN} build
 
 cd ${SCRIPT_DIR}
-cp -R client/public lib/pointcloud_viewer/public
+rm -rf ./lib/pointcloud_viewer/public
+cp -R client/public lib/pointcloud_viewer/
 
 cd lib
 POETRY="docker run --rm -v ${PWD}:/workdir -w /workdir ${DOCKER_IMAGE} poetry"

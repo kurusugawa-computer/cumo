@@ -70,10 +70,19 @@ class PointCloudViewer:
         start_server = websockets.serve(self.__websocket_handler,
                                         host=host, port=websocket_port)
         loop.run_until_complete(start_server)
+
+        self.http_server = HTTPServer(
+            (host, http_port),
+            _PointCloudViewerHTTPRequestHandler,
+        )
+
         self.threads = [
             threading.Thread(
                 target=lambda: loop.run_forever()
             ),
+            threading.Thread(
+                target=lambda: self.http_server.serve_forever()
+            )
         ]
         self.on_success = dict()
         self.on_failure = dict()
@@ -192,6 +201,30 @@ class PointCloudViewer:
     ) -> None:
         obj = PBServerCommand()
         obj.capture_screen = True
+        uuid = uuid4()
+        self.on_success[uuid] = on_success
+        self.on_failure[uuid] = on_failure
+        self.__send_data(obj, uuid)
+
+    def switch_camera_to_orthographic(
+        self,
+        on_success: Optional[Callable[[str], None]] = None,
+        on_failure: Optional[Callable[[str], None]] = None
+    ) -> None:
+        obj = PBServerCommand()
+        obj.use_perspective_camera = False
+        uuid = uuid4()
+        self.on_success[uuid] = on_success
+        self.on_failure[uuid] = on_failure
+        self.__send_data(obj, uuid)
+
+    def switch_camera_to_perspective(
+        self,
+        on_success: Optional[Callable[[str], None]] = None,
+        on_failure: Optional[Callable[[str], None]] = None
+    ) -> None:
+        obj = PBServerCommand()
+        obj.use_perspective_camera = True
         uuid = uuid4()
         self.on_success[uuid] = on_success
         self.on_failure[uuid] = on_failure

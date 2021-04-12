@@ -38,10 +38,18 @@ function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message:
         case commandCase.CAPTURE_SCREEN:
             handleScreenCapture(websocket, command_id, viewer);
             break;
+        case commandCase.USE_PERSPECTIVE_CAMERA:
+            handleUsePerspectiveCamera(websocket, command_id, viewer, message.getUsePerspectiveCamera());
         default:
             sendFailure(websocket, message.getUuid_asU8(), "message has not any command");
             break;
     }
+}
+
+function handleUsePerspectiveCamera(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, use_perspective: boolean): void {
+    viewer.switchCamera(use_perspective);
+    console.log(use_perspective);
+    sendSuccess(websocket, command_id, "success");
 }
 
 function handleScreenCapture(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer) {

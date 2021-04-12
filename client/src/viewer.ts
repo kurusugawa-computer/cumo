@@ -104,8 +104,10 @@ export class PointCloudViewer {
 
         animate();
     }
-    private switchCamera(perspective: boolean): void {
+    switchCamera(perspective: boolean): void {
         this.controls.dispose()
+        this.config.camera.use_perspective = perspective;
+        this.gui.updateDisplay()
         this.controls = this.createControls(perspective ? this.perspective_camera : this.orthographic_camera);
     }
     private createControls(camera: THREE.Camera): TrackballControls {

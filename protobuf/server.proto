@@ -6,6 +6,7 @@ message PBServerCommand {
         string log_message = 1;
         PBPointCloud point_cloud = 2;
         bool capture_screen = 3;
+        bool use_perspective_camera = 4;
     }
     bytes UUID = 9999;
 }
