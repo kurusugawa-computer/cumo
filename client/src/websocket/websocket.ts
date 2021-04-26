@@ -1,7 +1,7 @@
-import { PBServerCommand, PBPointCloud } from '../protobuf/server_pb.js';
+import * as PB from '../protobuf/server_pb.js';
 
 import { PointCloudViewer } from "../viewer";
-import { sendSuccess, sendFailure, sendImage } from "./client_command";
+import { sendSuccess, sendFailure, sendImage, sendControlChanged } from "./client_command";
 
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 
@@ -13,7 +13,7 @@ const WEBSOCKET_PORT = '8081';
 export function connectWebSocket(viewer: PointCloudViewer) {
     const websocket = new WebSocket(WEBSOCKET_HOST + ':' + WEBSOCKET_PORT);
     websocket.onmessage = function (ev: MessageEvent) {
-        let message = PBServerCommand.deserializeBinary(ev.data);
+        let message = PB.PBServerCommand.deserializeBinary(ev.data);
         handleProtobuf(websocket, viewer, message);
     }
     websocket.onclose = function () {
@@ -24,10 +24,9 @@ export function connectWebSocket(viewer: PointCloudViewer) {
     }
 }
 
-function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message: PBServerCommand) {
-    const commandCase = PBServerCommand.CommandCase;
+function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message: PB.PBServerCommand) {
+    const commandCase = PB.PBServerCommand.CommandCase;
     const command_id = message.getUuid_asU8();
-    console.log(message.getCommandCase());
     switch (message.getCommandCase()) {
         case commandCase.LOG_MESSAGE:
             handleLogMessage(websocket, command_id, message.getLogMessage());
@@ -40,6 +39,10 @@ function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message:
             break;
         case commandCase.USE_PERSPECTIVE_CAMERA:
             handleUsePerspectiveCamera(websocket, command_id, viewer, message.getUsePerspectiveCamera());
+            break;
+        case commandCase.ADD_CUSTOM_CONTROL:
+            handleAddControl(websocket, command_id, viewer, message.getAddCustomControl());
+            break;
         default:
             sendFailure(websocket, message.getUuid_asU8(), "message has not any command");
             break;
@@ -76,7 +79,7 @@ function handleLogMessage(websocket: WebSocket, command_id: Uint8Array, message:
 function handlePointCloud(
     websocket: WebSocket,
     command_id: Uint8Array,
-    pb_pointcloud: PBPointCloud | undefined,
+    pb_pointcloud: PB.PBPointCloud | undefined,
     viewer: PointCloudViewer
 ): void {
     if (!pb_pointcloud) {
@@ -114,5 +117,124 @@ function handlePointCloud(
         viewer.controls.update();
     }
     viewer.scene.add(pointcloud);
+    sendSuccess(websocket, command_id, "success");
+}
+
+function handleAddControl(
+    websocket: WebSocket,
+    command_id: Uint8Array,
+    viewer: PointCloudViewer,
+    control: PB.CustomControl | undefined
+) {
+    if (!control) {
+        sendFailure(websocket, command_id, "failure to get control");
+        return;
+    }
+    let property_name = "custom_" + btoa(String.fromCharCode(...command_id));
+    switch (control.getControlCase()) {
+        case PB.CustomControl.ControlCase.BUTTON:
+            const button = control.getButton();
+            if (button) {
+                Object.defineProperty(
+                    viewer.config.custom,
+                    property_name,
+                    {
+                        value: () => { sendControlChanged(websocket, command_id, true); },
+                    },
+                );
+                viewer.gui_custom.add(viewer.config.custom, property_name).name(button.getName());
+            }
+            break;
+        case PB.CustomControl.ControlCase.CHECKBOX:
+            const checkbox = control.getCheckbox();
+            if (checkbox) {
+                Object.defineProperty(
+                    viewer.config.custom,
+                    property_name,
+                    {
+                        value: checkbox.getInitValue(),
+                        writable: true,
+                    },
+                );
+                viewer.gui_custom.add(viewer.config.custom, property_name)
+                    .name(checkbox.getName())
+                    .onChange((v: string | number | boolean) => { sendControlChanged(websocket, command_id, v); });
+            }
+            break;
+        case PB.CustomControl.ControlCase.COLOR_PICKER:
+            const picker = control.getColorPicker();
+            if (picker) {
+                Object.defineProperty(
+                    viewer.config.custom,
+                    property_name,
+                    {
+                        value: picker.getInitValue(),
+                        writable: true,
+                    }
+                );
+                viewer.gui_custom.addColor(viewer.config.custom, property_name)
+                    .name(picker.getName())
+                    .onChange((v: string | number | boolean) => { sendControlChanged(websocket, command_id, v); });
+            }
+            break;
+        case PB.CustomControl.ControlCase.SELECTBOX:
+            const selectbox = control.getSelectbox();
+            if (selectbox) {
+                Object.defineProperty(
+                    viewer.config.custom,
+                    property_name,
+                    {
+                        value: selectbox.getInitValue(),
+                        writable: true,
+                    }
+                );
+                viewer.gui_custom.add(viewer.config.custom, property_name, selectbox.getItemsList())
+                    .name(selectbox.getName())
+                    .onChange((v: string | number | boolean) => { sendControlChanged(websocket, command_id, v); });
+            }
+            break;
+        case PB.CustomControl.ControlCase.SLIDER:
+            const slider = control.getSlider();
+            if (slider) {
+                Object.defineProperty(
+                    viewer.config.custom,
+                    property_name,
+                    {
+                        value: slider.getInitValue(),
+                        writable: true,
+                    }
+                );
+                viewer.gui_custom.add(
+                    viewer.config.custom,
+                    property_name,
+                    slider.getMin(),
+                    slider.getMax(),
+                    slider.getStep()
+                )
+                    .name(slider.getName())
+                    .onChange((v: string | number | boolean) => { sendControlChanged(websocket, command_id, v); });
+            }
+            break;
+        case PB.CustomControl.ControlCase.TEXTBOX:
+            const textbox = control.getTextbox();
+            if (textbox) {
+                Object.defineProperty(
+                    viewer.config.custom,
+                    property_name,
+                    {
+                        value: textbox.getInitValue(),
+                        writable: true,
+                    }
+                );
+                viewer.gui_custom.add(viewer.config.custom, property_name)
+                    .name(textbox.getName())
+                    .onChange((v: string | number | boolean) => { sendControlChanged(websocket, command_id, v); });
+            }
+            break;
+
+        default:
+            sendFailure(websocket, command_id, "invalid command");
+            return;
+    }
     sendSuccess(websocket, command_id, "success");
 }

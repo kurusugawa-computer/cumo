@@ -3,10 +3,10 @@ import * as PB from "../protobuf/client_pb.js";
 export function sendSuccess(websocket: WebSocket, command_id: Uint8Array, message: string): void {
     let result_success = new PB.Result();
     result_success.setSuccess(message);
-    result_success.setUuid(command_id);
 
     let command = new PB.PBClientCommand();
     command.setResult(result_success);
+    command.setUuid(command_id);
 
     websocket.send(command.serializeBinary());
 }
@@ -14,10 +14,10 @@ export function sendSuccess(websocket: WebSocket, command_id: Uint8Array, messag
 export function sendFailure(websocket: WebSocket, command_id: Uint8Array, message: string): void {
     let result_failure = new PB.Result();
     result_failure.setFailure(message);
-    result_failure.setUuid(command_id);
 
     let command = new PB.PBClientCommand();
     command.setResult(result_failure);
+    command.setUuid(command_id);
 
     websocket.send(command.serializeBinary());
 }
@@ -28,10 +28,10 @@ export function sendImage(websocket: WebSocket, command_id: Uint8Array, blob: Bl
             function (buffer: ArrayBuffer): void {
                 let image = new PB.Image();
                 image.setData(new Uint8Array(buffer));
-                image.setUuid(command_id);
 
                 let command = new PB.PBClientCommand();
                 command.setImage(image);
+                command.setUuid(command_id);
 
                 websocket.send(command.serializeBinary());
                 resolve();
@@ -41,4 +41,26 @@ export function sendImage(websocket: WebSocket, command_id: Uint8Array, blob: Bl
             }
         )
     })
+}
+
+export function sendControlChanged(websocket: WebSocket, command_id: Uint8Array, value: number | boolean | string) {
+    let changed = new PB.ControlChanged();
+    switch (typeof (value)) {
+        case "boolean":
+            changed.setBoolean(value);
+            break;
+        case "number":
+            changed.setNumber(value);
+            break;
+        case "string":
+            changed.setText(value);
+            break;
+        default:
+            console.error("unexpected type:" + typeof (value));
+            break;
+    }
+    let command = new PB.PBClientCommand();
+    command.setControlChanged(changed);
+    command.setUuid(command_id);
+    websocket.send(command.serializeBinary());
 }

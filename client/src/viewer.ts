@@ -7,11 +7,15 @@ import { Camera, OrthographicCamera, PerspectiveCamera } from 'three';
 export class PointCloudViewer {
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
+
     perspective_camera: THREE.PerspectiveCamera;
     orthographic_camera: THREE.OrthographicCamera;
+
     controls: TrackballControls;
+
     gui: DAT.GUI;
-    fov: number = 30;
+    gui_custom: DAT.GUI;
+
     config = {
         controls: {
             rotateSpeed: 2.0,
@@ -26,7 +30,8 @@ export class PointCloudViewer {
             orthographic: {
                 frustum: 400,
             }
-        }
+        },
+        custom: {},
     };
     constructor(container: HTMLDivElement) {
         const camera_near = Number.EPSILON;
@@ -37,7 +42,7 @@ export class PointCloudViewer {
 
         let aspect = window.innerWidth / window.innerHeight;
         this.perspective_camera = new PerspectiveCamera(
-            this.fov, aspect, camera_near, camera_far);
+            this.config.camera.perspective.fov, aspect, camera_near, camera_far);
         this.perspective_camera.position.set(1, 1, 1);
 
         let frustum = this.config.camera.orthographic.frustum;
@@ -81,6 +86,7 @@ export class PointCloudViewer {
 
         let gui_control = this.gui.addFolder("control");
         let gui_camera = this.gui.addFolder("camera");
+        this.gui_custom = this.gui.addFolder("custom");
 
         gui_camera.add(this.config.camera, "use_perspective")
             .name("use perspective camera")

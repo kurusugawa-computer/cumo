@@ -7,10 +7,55 @@ message PBServerCommand {
         PBPointCloud point_cloud = 2;
         bool capture_screen = 3;
         bool use_perspective_camera = 4;
+        CustomControl add_custom_control = 5;
     }
     bytes UUID = 9999;
 }
 
 message PBPointCloud {
     bytes data = 1;
+}
+
+message CustomControl {
+    oneof Control {
+        CustomSlider slider = 1;
+        CustomCheckBox checkbox = 2;
+        CustomTextBox textbox = 3;
+        CustomSelectBox selectbox = 4;
+        CustomButton button = 5;
+        CustomColorPicker color_picker = 6;
+    }
+}
+
+message CustomSlider {
+    string name = 1;
+    double min = 2;
+    double max = 3;
+    double step = 4;
+    double init_value = 5;
+}
+
+message CustomCheckBox {
+    string name = 1;
+    bool init_value = 2;
+}
+
+message CustomTextBox {
+    string name = 1;
+    string init_value = 2;
+}
+
+message CustomSelectBox {
+    string name = 1;
+    repeated string items = 2;
+    string init_value = 3;
+}
+
+message CustomButton {
+    string name = 1;
+}
+
+message CustomColorPicker {
+    string name = 1;
+    string init_value = 2;
 }
