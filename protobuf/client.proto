@@ -1,14 +1,14 @@
 syntax = "proto3";
 package Client;
 
-message PBClientCommand {
+message ClientCommand {
+    bytes UUID = 1;
     oneof Command {
-        string log_message = 1;
-        Result result = 2;
-        Image image = 3;
-        ControlChanged control_changed = 4;
+        string log_message = 2;
+        Result result = 3;
+        Image image = 4;
+        ControlChanged control_changed = 5;
     }
-    bytes UUID = 999;
 }
 
 message Result {

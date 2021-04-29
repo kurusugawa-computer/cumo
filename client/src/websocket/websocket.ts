@@ -13,7 +13,7 @@ const WEBSOCKET_PORT = '8081';
 export function connectWebSocket(viewer: PointCloudViewer) {
     const websocket = new WebSocket(WEBSOCKET_HOST + ':' + WEBSOCKET_PORT);
     websocket.onmessage = function (ev: MessageEvent) {
-        let message = PB.PBServerCommand.deserializeBinary(ev.data);
+        let message = PB.ServerCommand.deserializeBinary(ev.data);
         handleProtobuf(websocket, viewer, message);
     }
     websocket.onclose = function () {
@@ -24,8 +24,8 @@ export function connectWebSocket(viewer: PointCloudViewer) {
     }
 }
 
-function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message: PB.PBServerCommand) {
-    const commandCase = PB.PBServerCommand.CommandCase;
+function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message: PB.ServerCommand) {
+    const commandCase = PB.ServerCommand.CommandCase;
     const command_id = message.getUuid_asU8();
     switch (message.getCommandCase()) {
         case commandCase.LOG_MESSAGE:
@@ -36,9 +36,6 @@ function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message:
             break;
         case commandCase.CAPTURE_SCREEN:
             handleScreenCapture(websocket, command_id, viewer);
-            break;
-        case commandCase.USE_PERSPECTIVE_CAMERA:
-            handleUsePerspectiveCamera(websocket, command_id, viewer, message.getUsePerspectiveCamera());
             break;
         case commandCase.ADD_CUSTOM_CONTROL:
             handleAddControl(websocket, command_id, viewer, message.getAddCustomControl());
@@ -79,7 +76,7 @@ function handleLogMessage(websocket: WebSocket, command_id: Uint8Array, message:
 function handlePointCloud(
     websocket: WebSocket,
     command_id: Uint8Array,
-    pb_pointcloud: PB.PBPointCloud | undefined,
+    pb_pointcloud: PB.PointCloud | undefined,
     viewer: PointCloudViewer
 ): void {
     if (!pb_pointcloud) {

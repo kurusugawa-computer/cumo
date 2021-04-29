@@ -4,7 +4,7 @@ export function sendSuccess(websocket: WebSocket, command_id: Uint8Array, messag
     let result_success = new PB.Result();
     result_success.setSuccess(message);
 
-    let command = new PB.PBClientCommand();
+    let command = new PB.ClientCommand();
     command.setResult(result_success);
     command.setUuid(command_id);
 
@@ -15,7 +15,7 @@ export function sendFailure(websocket: WebSocket, command_id: Uint8Array, messag
     let result_failure = new PB.Result();
     result_failure.setFailure(message);
 
-    let command = new PB.PBClientCommand();
+    let command = new PB.ClientCommand();
     command.setResult(result_failure);
     command.setUuid(command_id);
 
@@ -29,7 +29,7 @@ export function sendImage(websocket: WebSocket, command_id: Uint8Array, blob: Bl
                 let image = new PB.Image();
                 image.setData(new Uint8Array(buffer));
 
-                let command = new PB.PBClientCommand();
+                let command = new PB.ClientCommand();
                 command.setImage(image);
                 command.setUuid(command_id);
 
@@ -59,7 +59,7 @@ export function sendControlChanged(websocket: WebSocket, command_id: Uint8Array,
             console.error("unexpected type:" + typeof (value));
             break;
     }
-    let command = new PB.PBClientCommand();
+    let command = new PB.ClientCommand();
     command.setControlChanged(changed);
     command.setUuid(command_id);
     websocket.send(command.serializeBinary());

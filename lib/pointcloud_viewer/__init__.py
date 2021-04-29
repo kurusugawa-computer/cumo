@@ -98,7 +98,7 @@ class PointCloudViewer:
             await asyncio.sleep(0.1)
 
     def __handle_message(self, message: bytes):
-        command: client_pb2.PBClientCommand = client_pb2.PBClientCommand()
+        command: client_pb2.ClientCommand = client_pb2.ClientCommand()
         try:
             command.ParseFromString(message)
         except DecodeError:
@@ -127,25 +127,25 @@ class PointCloudViewer:
             self.custom_handlers[uuid] = dict()
         self.custom_handlers[uuid][name] = func
 
-    def __handle_image(self, command: client_pb2.PBClientCommand):
+    def __handle_image(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
         on_success = self.__get_custom_handler(uuid, "success")
         if on_success != None:
             on_success(command.image.data)
 
-    def __handle_success(self, command: client_pb2.PBClientCommand):
+    def __handle_success(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
         on_success = self.__get_custom_handler(uuid, "success")
         if on_success != None:
             on_success(command.result.success)
 
-    def __handle_failure(self, command: client_pb2.PBClientCommand):
+    def __handle_failure(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
         on_failure = self.__get_custom_handler(uuid, "failure")
         if on_failure != None:
             on_failure(command.result.failure)
 
-    def __handle_control_changed(self, command: client_pb2.PBClientCommand):
+    def __handle_control_changed(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
         on_changed = self.__get_custom_handler(uuid, "changed")
         if on_changed != None:
@@ -156,7 +156,7 @@ class PointCloudViewer:
             elif command.control_changed.HasField("boolean"):
                 on_changed(command.control_changed.boolean)
 
-    def __send_data(self, pbobj: server_pb2.PBServerCommand, uuid: UUID) -> None:
+    def __send_data(self, pbobj: server_pb2.ServerCommand, uuid: UUID) -> None:
         pbobj.UUID = uuid.bytes_le
         data = base64.b64encode(pbobj.SerializeToString())
         self.broadcast_queue.put(data.decode())
@@ -173,7 +173,7 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.log_message = message
         uuid = uuid4()
         self.__set_custom_handler(uuid, "success", on_success)
@@ -204,7 +204,7 @@ class PointCloudViewer:
             xyz = numpy.asarray(pc.points).astype(numpy.float32)
             pcd = pypcd.make_xyz_point_cloud(xyz)
         pcd_bytes = pcd.save_pcd_to_buffer()
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.point_cloud.data = pcd_bytes
         uuid = uuid4()
         self.__set_custom_handler(uuid, "success", on_success)
@@ -216,7 +216,7 @@ class PointCloudViewer:
         on_success: Callable[[bytes], None],
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.capture_screen = True
         uuid = uuid4()
         self.__set_custom_handler(uuid, "success", on_success)
@@ -228,7 +228,7 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.use_perspective_camera = False
         uuid = uuid4()
         self.__set_custom_handler(uuid, "success", on_success)
@@ -240,7 +240,7 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.use_perspective_camera = True
         uuid = uuid4()
         self.__set_custom_handler(uuid, "success", on_success)
@@ -258,8 +258,8 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
-        obj = server_pb2.PBServerCommand()
-        slider = server_pb2.CustomSlider()
+        obj = server_pb2.ServerCommand()
+        slider = server_pb2.CustomControl.Slider()
         slider.name = name
         slider.min = min
         slider.max = max
@@ -282,12 +282,12 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
-        checkbox = server_pb2.CustomCheckBox()
+        checkbox = server_pb2.CustomControl.CheckBox()
         checkbox.name = name
         checkbox.init_value = init_value
         add_custom_control = server_pb2.CustomControl()
         add_custom_control.checkbox.CopyFrom(checkbox)
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self.__set_custom_handler(uuid, "changed", on_changed)
@@ -303,12 +303,12 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
-        textbox = server_pb2.CustomTextBox()
+        textbox = server_pb2.CustomControl.TextBox()
         textbox.name = name
         textbox.init_value = init_value
         add_custom_control = server_pb2.CustomControl()
         add_custom_control.textbox.CopyFrom(textbox)
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self.__set_custom_handler(uuid, "changed", on_changed)
@@ -325,13 +325,13 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
-        selectbox = server_pb2.CustomSelectBox()
+        selectbox = server_pb2.CustomControl.SelectBox()
         selectbox.name = name
         selectbox.items.extend(items)
         selectbox.init_value = init_value
         add_custom_control = server_pb2.CustomControl()
         add_custom_control.selectbox.CopyFrom(selectbox)
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self.__set_custom_handler(uuid, "changed", on_changed)
@@ -346,11 +346,11 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
-        button = server_pb2.CustomButton()
+        button = server_pb2.CustomControl.Button()
         button.name = name
         add_custom_control = server_pb2.CustomControl()
         add_custom_control.button.CopyFrom(button)
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self.__set_custom_handler(uuid, "changed", on_changed)
@@ -366,12 +366,12 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
-        picker = server_pb2.CustomColorPicker()
+        picker = server_pb2.CustomControl.ColorPicker()
         picker.name = name
         picker.init_value = init_value
         add_custom_control = server_pb2.CustomControl()
         add_custom_control.color_picker.CopyFrom(picker)
-        obj = server_pb2.PBServerCommand()
+        obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self.__set_custom_handler(uuid, "changed", on_changed)
