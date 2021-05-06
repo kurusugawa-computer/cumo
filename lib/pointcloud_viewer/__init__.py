@@ -1,101 +1,64 @@
-import asyncio
 import sys
+import threading
+import base64
+import multiprocessing
+
+from uuid import UUID, uuid4
+from typing import Callable, Optional
+
 import numpy
 from pypcd import pypcd
 import open3d
 from google.protobuf.message import DecodeError
-import websockets
 
 from .protobuf import server_pb2
 from .protobuf import client_pb2
-
-import threading
-import base64
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import pkgutil
-from os.path import join
-from uuid import UUID, uuid4
-from typing import Callable, Optional, Union
-from queue import Queue
-
-
-class _PointCloudViewerHTTPRequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == "/":
-            self.redirect("index.html")
-        else:
-            path = join("/public/", "./"+self.path)
-            data: Union[bytes, None] = None
-            try:
-                data = pkgutil.get_data("pointcloud_viewer", path)
-            except FileNotFoundError:
-                self.send_error(404)
-            if data != None:
-                self.send_response(200)
-                self.end_headers()
-                self.wfile.write(data)
-            else:
-                self.send_error(404)
-
-    def log_message(self, format: str, *args) -> None:
-        pass
-
-    def redirect(self, path: str):
-        self.send_response(301)
-        location = path
-        self.send_header(
-            "Location", location
-        )
-        self.end_headers()
-
+from . import server
 
 class PointCloudViewer:
-    websocket_connections: set
-    broadcast_queue: Queue
-    http_server: HTTPServer
-    threads: list
+    server_process: multiprocessing.Process
     custom_handlers: dict
+    websocket_broadcasting_queue: multiprocessing.Queue
+    websocket_message_queue: multiprocessing.Queue
+    polling_thread: threading.Timer
+    polling_interval: int
 
-    def __init__(self, host: str = "127.0.0.1", websocket_port: int = 8081, http_port: int = 8082) -> None:
-        self.websocket_connections = set()
-        self.broadcast_queue = Queue()
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.__broadcast())
-        start_server = websockets.serve(self.__websocket_handler,
-                                        host=host, port=websocket_port)
-        loop.run_until_complete(start_server)
-
-        self.http_server = HTTPServer(
-            (host, http_port),
-            _PointCloudViewerHTTPRequestHandler,
-        )
-
-        self.threads = [
-            threading.Thread(
-                target=lambda: loop.run_forever()
-            ),
-            threading.Thread(
-                target=lambda: self.http_server.serve_forever()
-            )
-        ]
+    def __init__(
+        self,
+        host: str = "127.0.0.1",
+        websocket_port: int = 8081,
+        http_port: int = 8082,
+        polling_interval: int = 0.1,
+        autostart: bool = False
+    ) -> None:
         self.custom_handlers = dict()
+        self.websocket_broadcasting_queue = multiprocessing.Queue()
+        self.websocket_message_queue = multiprocessing.Queue()
+        self.server_process = multiprocessing.Process(
+            target=server.multiprocessing_worker,
+            args=(
+                host,
+                websocket_port,
+                http_port,
+                self.websocket_broadcasting_queue,
+                self.websocket_message_queue
+            ),
+            daemon=True
+        )
+        self.polling_interval = polling_interval
+        self.polling_thread = threading.Thread(
+            target=lambda: self.__polling()
+        )
+        if autostart:
+            self.start()
 
-    async def __websocket_handler(self, websocket: websockets.WebSocketServerProtocol, path: str):
-        self.websocket_connections.add(websocket)
-        try:
-            async for msg in websocket:
-                self.__handle_message(msg)
-        finally:
-            self.websocket_connections.remove(websocket)
-
-    async def __broadcast(self):
+    def __polling(self):
+        wait_event = threading.Event()
         while True:
-            if not self.broadcast_queue.empty() and 0 < len(self.websocket_connections):
-                data = self.broadcast_queue.get()
-                for conn in self.websocket_connections:
-                    conn: websockets.WebSocketServerProtocol = conn
-                    await conn.send(data)
-            await asyncio.sleep(0.1)
+            if not self.websocket_message_queue.empty():
+                data: bytes = self.websocket_message_queue.get()
+                self.__handle_message(data)
+            wait_event.wait(self.polling_interval)
 
     def __handle_message(self, message: bytes):
         command: client_pb2.ClientCommand = client_pb2.ClientCommand()
@@ -159,13 +122,16 @@ class PointCloudViewer:
     def __send_data(self, pbobj: server_pb2.ServerCommand, uuid: UUID) -> None:
         pbobj.UUID = uuid.bytes_le
         data = base64.b64encode(pbobj.SerializeToString())
-        self.broadcast_queue.put(data.decode())
+        self.websocket_broadcasting_queue.put(data.decode())
 
     def start(self) -> None:
-        for thread in self.threads:
-            thread: threading.Thread = thread
-            thread.setDaemon(True)
-            thread.start()
+        self.polling_thread.setDaemon(True)
+        self.polling_thread.start()
+
+        self.server_process.start()
+
+    def wait_forever(self) -> None:
+        self.polling_thread.join()
 
     def console_log(
         self,
@@ -205,7 +171,9 @@ class PointCloudViewer:
             pcd = pypcd.make_xyz_point_cloud(xyz)
         pcd_bytes = pcd.save_pcd_to_buffer()
         obj = server_pb2.ServerCommand()
-        obj.point_cloud.data = pcd_bytes
+        cloud = server_pb2.PointCloud()
+        cloud.data = pcd_bytes
+        obj.point_cloud.CopyFrom(cloud)
         uuid = uuid4()
         self.__set_custom_handler(uuid, "success", on_success)
         self.__set_custom_handler(uuid, "failure", on_failure)
@@ -242,6 +210,82 @@ class PointCloudViewer:
     ) -> None:
         obj = server_pb2.ServerCommand()
         obj.use_perspective_camera = True
+        uuid = uuid4()
+        self.__set_custom_handler(uuid, "success", on_success)
+        self.__set_custom_handler(uuid, "failure", on_failure)
+        self.__send_data(obj, uuid)
+
+    def set_orthographic_camera(
+        self,
+        frustum_height: float = 30,
+        on_success: Optional[Callable[[str], None]] = None,
+        on_failure: Optional[Callable[[str], None]] = None
+    ) -> None:
+        camera = server_pb2.SetCamera()
+        camera.orthographic_frustum_height = frustum_height
+        obj = server_pb2.ServerCommand()
+        obj.set_camera.CopyFrom(camera)
+        uuid = uuid4()
+        self.__set_custom_handler(uuid, "success", on_success)
+        self.__set_custom_handler(uuid, "failure", on_failure)
+        self.__send_data(obj, uuid)
+
+    def set_perspective_camera(
+        self,
+        fov: float = 30,
+        on_success: Optional[Callable[[str], None]] = None,
+        on_failure: Optional[Callable[[str], None]] = None
+    ) -> None:
+        camera = server_pb2.SetCamera()
+        camera.perspective_fov = fov
+        obj = server_pb2.ServerCommand()
+        obj.set_camera.CopyFrom(camera)
+        uuid = uuid4()
+        self.__set_custom_handler(uuid, "success", on_success)
+        self.__set_custom_handler(uuid, "failure", on_failure)
+        self.__send_data(obj, uuid)
+
+    def set_camera_position(
+        self,
+        x: float,
+        y: float,
+        z: float,
+        on_success: Optional[Callable[[str], None]] = None,
+        on_failure: Optional[Callable[[str], None]] = None
+    ) -> None:
+        position = server_pb2.SetCamera.Vec3f()
+        position.x = x
+        position.y = y
+        position.z = z
+
+        camera = server_pb2.SetCamera()
+        camera.position.CopyFrom(position)
+
+        obj = server_pb2.ServerCommand()
+        obj.set_camera.CopyFrom(camera)
+        uuid = uuid4()
+        self.__set_custom_handler(uuid, "success", on_success)
+        self.__set_custom_handler(uuid, "failure", on_failure)
+        self.__send_data(obj, uuid)
+
+    def set_camera_target(
+        self,
+        x: float,
+        y: float,
+        z: float,
+        on_success: Optional[Callable[[str], None]] = None,
+        on_failure: Optional[Callable[[str], None]] = None
+    ) -> None:
+        target = server_pb2.SetCamera.Vec3f()
+        target.x = x
+        target.y = y
+        target.z = z
+
+        camera = server_pb2.SetCamera()
+        camera.target.CopyFrom(target)
+
+        obj = server_pb2.ServerCommand()
+        obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
         self.__set_custom_handler(uuid, "success", on_success)
         self.__set_custom_handler(uuid, "failure", on_failure)

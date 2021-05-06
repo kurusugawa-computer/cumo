@@ -28,7 +28,7 @@ export class PointCloudViewer {
                 fov: 30,
             },
             orthographic: {
-                frustum: 400,
+                frustum: 30,
             }
         },
         custom: {},
@@ -52,12 +52,6 @@ export class PointCloudViewer {
         );
         this.orthographic_camera.position.set(1, 1, 1);
 
-        let sphere = new THREE.Mesh(
-            new THREE.SphereGeometry(0.01),
-            new THREE.MeshNormalMaterial(),
-        );
-        this.scene.add(sphere);
-
         this.renderer = new THREE.WebGL1Renderer({
             preserveDrawingBuffer: true,
             logarithmicDepthBuffer: true,
@@ -77,6 +71,7 @@ export class PointCloudViewer {
             this.orthographic_camera.right = frustum * aspect / 2;
             this.orthographic_camera.top = frustum / 2;
             this.orthographic_camera.bottom = -frustum / 2;
+            this.orthographic_camera.updateProjectionMatrix();
 
             this.renderer.setSize(window.innerWidth, window.innerHeight);
             this.controls.handleResize();

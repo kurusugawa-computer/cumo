@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pointcloud-viewer"
+name = "pointcloud_viewer"
 version = "0.1.0"
 description = ""
 authors = ["Kotet <kotet0418@gmail.com>"]

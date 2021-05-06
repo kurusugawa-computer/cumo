@@ -20,6 +20,7 @@ export function sendFailure(websocket: WebSocket, command_id: Uint8Array, messag
     command.setUuid(command_id);
 
     websocket.send(command.serializeBinary());
+    console.error("error: " + message);
 }
 
 export function sendImage(websocket: WebSocket, command_id: Uint8Array, blob: Blob): Promise<void> {

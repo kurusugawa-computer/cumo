@@ -40,15 +40,87 @@ function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message:
         case commandCase.ADD_CUSTOM_CONTROL:
             handleAddControl(websocket, command_id, viewer, message.getAddCustomControl());
             break;
+        case commandCase.SET_CAMERA:
+            handleSetCamera(websocket, command_id, viewer, message.getSetCamera());
+            break;
         default:
             sendFailure(websocket, message.getUuid_asU8(), "message has not any command");
             break;
     }
 }
 
-function handleUsePerspectiveCamera(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, use_perspective: boolean): void {
-    viewer.switchCamera(use_perspective);
-    console.log(use_perspective);
+function handleSetCamera(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, camera: PB.SetCamera | undefined): void {
+    if (camera === undefined) {
+        sendFailure(websocket, command_id, "failed to get camera parameter");
+        return;
+    }
+    const cameraCase = PB.SetCamera.CameraCase;
+    switch (camera.getCameraCase()) {
+        case cameraCase.ORTHOGRAPHIC_FRUSTUM_HEIGHT:
+            setOrthographicCamera(websocket, command_id, viewer, camera.getOrthographicFrustumHeight());
+            break;
+        case cameraCase.PERSPECTIVE_FOV:
+            setPerspectiveCamera(websocket, command_id, viewer, camera.getPerspectiveFov());
+            break;
+        case cameraCase.POSITION:
+            setCameraPosition(websocket, command_id, viewer, camera.getPosition());
+            break;
+        case cameraCase.TARGET:
+            setCameraTarget(websocket, command_id, viewer, camera.getTarget());
+        default:
+            sendFailure(websocket, command_id, "message has not any camera parameters");
+            break;
+    }
+}
+
+function setOrthographicCamera(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, frustum_height: number) {
+    viewer.config.camera.orthographic.frustum = frustum_height;
+
+    const aspect = window.innerWidth / window.innerHeight;
+    viewer.orthographic_camera.left = -frustum_height * aspect / 2;
+    viewer.orthographic_camera.right = frustum_height * aspect / 2;
+    viewer.orthographic_camera.top = frustum_height / 2;
+    viewer.orthographic_camera.bottom = -frustum_height / 2;
+
+    viewer.orthographic_camera.updateProjectionMatrix();
+    if (viewer.config.camera.use_perspective) {
+        viewer.switchCamera(false);
+    }
+    sendSuccess(websocket, command_id, "success");
+}
+
+function setPerspectiveCamera(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, fov: number) {
+    viewer.config.camera.perspective.fov = fov;
+    viewer.perspective_camera.fov = fov;
+    viewer.perspective_camera.updateProjectionMatrix();
+    if (!viewer.config.camera.use_perspective) {
+        viewer.switchCamera(true);
+    }
+    sendSuccess(websocket, command_id, "success");
+}
+
+function setCameraPosition(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, position: PB.SetCamera.Vec3f | undefined) {
+    if (position === undefined) {
+        sendFailure(websocket, command_id, "failed to get camera position");
+        return;
+    }
+
+    viewer.orthographic_camera.position.set(position.getX(), position.getY(), position.getZ());
+    viewer.perspective_camera.position.set(position.getX(), position.getY(), position.getZ());
+    viewer.controls.update();
+    sendSuccess(websocket, command_id, "success");
+}
+
+function setCameraTarget(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, target: PB.SetCamera.Vec3f | undefined) {
+    if (target === undefined) {
+        sendFailure(websocket, command_id, "failed to get camera position");
+        return;
+    }
+
+    viewer.controls.target.set(target.getX(), target.getY(), target.getZ());
+    viewer.orthographic_camera.lookAt(target.getX(), target.getY(), target.getZ());
+    viewer.perspective_camera.lookAt(target.getX(), target.getY(), target.getZ());
+    viewer.controls.update();
     sendSuccess(websocket, command_id, "success");
 }
 
@@ -79,39 +151,19 @@ function handlePointCloud(
     pb_pointcloud: PB.PointCloud | undefined,
     viewer: PointCloudViewer
 ): void {
-    if (!pb_pointcloud) {
+    if (pb_pointcloud === undefined) {
         sendFailure(websocket, command_id, "failure to get pointcloud");
         return;
     }
 
-    let pointcloud = new PCDLoader().parse(pb_pointcloud.getData_asU8().buffer, "test");
-    console.log(command_id);
-    console.log(pointcloud);
-    if (pointcloud.geometry.boundingSphere) {
-        console.log(pointcloud.geometry.boundingSphere);
-        const radius = pointcloud.geometry.boundingSphere.radius;
+    let data = Uint8Array.from(atob(pb_pointcloud.getData_asB64()), c => c.charCodeAt(0)).buffer;
 
-        if (pointcloud.material instanceof THREE.PointsMaterial) {
-            pointcloud.material.size = 1;
-            pointcloud.material.sizeAttenuation = false;
-            pointcloud.material.needsUpdate = true;
-        }
+    let pointcloud = new PCDLoader().parse(data, "test");
 
-        const dist_perspective = radius / 2 / Math.tan(Math.PI * viewer.config.camera.perspective.fov / 360);
-        const aspect = window.innerWidth / window.innerHeight;
-        const center = pointcloud.geometry.boundingSphere.center;
-        viewer.perspective_camera.position.set(center.x, center.y, center.z - dist_perspective);
-        viewer.perspective_camera.lookAt(center.x, center.y, center.z);
-        viewer.orthographic_camera.position.set(center.x, center.y, center.z - 1);
-        viewer.orthographic_camera.lookAt(center.x, center.y, center.z);
-        viewer.orthographic_camera.left = -aspect * radius / 2;
-        viewer.orthographic_camera.right = aspect * radius / 2;
-        viewer.orthographic_camera.top = radius / 2;
-        viewer.orthographic_camera.bottom = -radius / 2;
-        viewer.orthographic_camera.updateProjectionMatrix();
-
-        viewer.controls.target = center;
-        viewer.controls.update();
+    if (pointcloud.material instanceof THREE.PointsMaterial) {
+        pointcloud.material.size = 1;
+        pointcloud.material.sizeAttenuation = false;
+        pointcloud.material.needsUpdate = true;
     }
     viewer.scene.add(pointcloud);
     sendSuccess(websocket, command_id, "success");

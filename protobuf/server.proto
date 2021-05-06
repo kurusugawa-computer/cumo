@@ -8,6 +8,7 @@ message ServerCommand {
         PointCloud point_cloud = 3;
         bool capture_screen = 4;
         CustomControl add_custom_control = 5;
+        SetCamera set_camera = 6;
     }
 }
 
@@ -58,3 +59,16 @@ message CustomControl {
     }
 }
 
+message SetCamera {
+    oneof Camera {
+        float perspective_fov = 1;
+        float orthographic_frustum_height = 2;
+        Vec3f position = 3;
+        Vec3f target = 4;
+    }
+    message Vec3f {
+        float x = 1;
+        float y = 2;
+        float z = 3;
+    }
+}
