@@ -16,12 +16,12 @@ from .protobuf import client_pb2
 from . import server
 
 class PointCloudViewer:
-    server_process: multiprocessing.Process
-    custom_handlers: dict
-    websocket_broadcasting_queue: multiprocessing.Queue
-    websocket_message_queue: multiprocessing.Queue
-    polling_thread: threading.Timer
-    polling_interval: int
+    _server_process: multiprocessing.Process
+    _custom_handlers: dict
+    _websocket_broadcasting_queue: multiprocessing.Queue
+    _websocket_message_queue: multiprocessing.Queue
+    _polling_thread: threading.Timer
+    _polling_interval: int
 
     def __init__(
         self,
@@ -31,36 +31,36 @@ class PointCloudViewer:
         polling_interval: int = 0.1,
         autostart: bool = False
     ) -> None:
-        self.custom_handlers = dict()
-        self.websocket_broadcasting_queue = multiprocessing.Queue()
-        self.websocket_message_queue = multiprocessing.Queue()
-        self.server_process = multiprocessing.Process(
+        self._custom_handlers = dict()
+        self._websocket_broadcasting_queue = multiprocessing.Queue()
+        self._websocket_message_queue = multiprocessing.Queue()
+        self._server_process = multiprocessing.Process(
             target=server.multiprocessing_worker,
             args=(
                 host,
                 websocket_port,
                 http_port,
-                self.websocket_broadcasting_queue,
-                self.websocket_message_queue
+                self._websocket_broadcasting_queue,
+                self._websocket_message_queue
             ),
             daemon=True
         )
-        self.polling_interval = polling_interval
-        self.polling_thread = threading.Thread(
-            target=lambda: self.__polling()
+        self._polling_interval = polling_interval
+        self._polling_thread = threading.Thread(
+            target=lambda: self._polling()
         )
         if autostart:
             self.start()
 
-    def __polling(self):
+    def _polling(self):
         wait_event = threading.Event()
         while True:
-            if not self.websocket_message_queue.empty():
-                data: bytes = self.websocket_message_queue.get()
-                self.__handle_message(data)
-            wait_event.wait(self.polling_interval)
+            if not self._websocket_message_queue.empty():
+                data: bytes = self._websocket_message_queue.get()
+                self._handle_message(data)
+            wait_event.wait(self._polling_interval)
 
-    def __handle_message(self, message: bytes):
+    def _handle_message(self, message: bytes):
         command: client_pb2.ClientCommand = client_pb2.ClientCommand()
         try:
             command.ParseFromString(message)
@@ -72,45 +72,45 @@ class PointCloudViewer:
             return
         if command.HasField("result"):
             if command.result.HasField("success"):
-                self.__handle_success(command)
+                self._handle_success(command)
             elif command.result.HasField("failure"):
-                self.__handle_failure(command)
+                self._handle_failure(command)
         elif command.HasField("image"):
-            self.__handle_image(command)
+            self._handle_image(command)
         elif command.HasField("control_changed"):
-            self.__handle_control_changed(command)
+            self._handle_control_changed(command)
 
-    def __get_custom_handler(self, uuid: UUID, name: str) -> Optional[Callable]:
-        if self.custom_handlers[uuid] != None and self.custom_handlers[uuid][name] != None:
-            return self.custom_handlers[uuid][name]
+    def _get_custom_handler(self, uuid: UUID, name: str) -> Optional[Callable]:
+        if self._custom_handlers[uuid] != None and self._custom_handlers[uuid][name] != None:
+            return self._custom_handlers[uuid][name]
         return None
 
-    def __set_custom_handler(self, uuid: UUID, name: str, func: Callable) -> None:
-        if not uuid in self.custom_handlers:
-            self.custom_handlers[uuid] = dict()
-        self.custom_handlers[uuid][name] = func
+    def _set_custom_handler(self, uuid: UUID, name: str, func: Callable) -> None:
+        if not uuid in self._custom_handlers:
+            self._custom_handlers[uuid] = dict()
+        self._custom_handlers[uuid][name] = func
 
-    def __handle_image(self, command: client_pb2.ClientCommand):
+    def _handle_image(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
-        on_success = self.__get_custom_handler(uuid, "success")
+        on_success = self._get_custom_handler(uuid, "success")
         if on_success != None:
             on_success(command.image.data)
 
-    def __handle_success(self, command: client_pb2.ClientCommand):
+    def _handle_success(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
-        on_success = self.__get_custom_handler(uuid, "success")
+        on_success = self._get_custom_handler(uuid, "success")
         if on_success != None:
             on_success(command.result.success)
 
-    def __handle_failure(self, command: client_pb2.ClientCommand):
+    def _handle_failure(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
-        on_failure = self.__get_custom_handler(uuid, "failure")
+        on_failure = self._get_custom_handler(uuid, "failure")
         if on_failure != None:
             on_failure(command.result.failure)
 
-    def __handle_control_changed(self, command: client_pb2.ClientCommand):
+    def _handle_control_changed(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
-        on_changed = self.__get_custom_handler(uuid, "changed")
+        on_changed = self._get_custom_handler(uuid, "changed")
         if on_changed != None:
             if command.control_changed.HasField("number"):
                 on_changed(command.control_changed.number)
@@ -119,19 +119,19 @@ class PointCloudViewer:
             elif command.control_changed.HasField("boolean"):
                 on_changed(command.control_changed.boolean)
 
-    def __send_data(self, pbobj: server_pb2.ServerCommand, uuid: UUID) -> None:
+    def _send_data(self, pbobj: server_pb2.ServerCommand, uuid: UUID) -> None:
         pbobj.UUID = uuid.bytes_le
         data = base64.b64encode(pbobj.SerializeToString())
-        self.websocket_broadcasting_queue.put(data.decode())
+        self._websocket_broadcasting_queue.put(data.decode())
 
     def start(self) -> None:
-        self.polling_thread.setDaemon(True)
-        self.polling_thread.start()
+        self._polling_thread.setDaemon(True)
+        self._polling_thread.start()
 
-        self.server_process.start()
+        self._server_process.start()
 
     def wait_forever(self) -> None:
-        self.polling_thread.join()
+        self._polling_thread.join()
 
     def console_log(
         self,
@@ -142,9 +142,9 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.log_message = message
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def send_pointcloud_from_open3d(
         self,
@@ -175,9 +175,9 @@ class PointCloudViewer:
         cloud.data = pcd_bytes
         obj.point_cloud.CopyFrom(cloud)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def capture_screen(
         self,
@@ -187,9 +187,9 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.capture_screen = True
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def switch_camera_to_orthographic(
         self,
@@ -199,9 +199,9 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.use_perspective_camera = False
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def switch_camera_to_perspective(
         self,
@@ -211,9 +211,9 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.use_perspective_camera = True
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def set_orthographic_camera(
         self,
@@ -226,9 +226,9 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def set_perspective_camera(
         self,
@@ -241,9 +241,9 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def set_camera_position(
         self,
@@ -264,9 +264,9 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def set_camera_target(
         self,
@@ -287,9 +287,9 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def add_custom_slider(
         self,
@@ -313,10 +313,10 @@ class PointCloudViewer:
         add_custom_control.slider.CopyFrom(slider)
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "changed", on_changed)
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "changed", on_changed)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def add_custom_checkbox(
         self,
@@ -334,10 +334,10 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "changed", on_changed)
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "changed", on_changed)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def add_custom_textbox(
         self,
@@ -355,10 +355,10 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "changed", on_changed)
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "changed", on_changed)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def add_custom_selectbox(
         self,
@@ -378,10 +378,10 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "changed", on_changed)
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "changed", on_changed)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def add_custom_button(
         self,
@@ -397,10 +397,10 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "changed", on_changed)
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "changed", on_changed)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
 
     def add_custom_colorpicker(
         self,
@@ -418,7 +418,7 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
-        self.__set_custom_handler(uuid, "changed", on_changed)
-        self.__set_custom_handler(uuid, "success", on_success)
-        self.__set_custom_handler(uuid, "failure", on_failure)
-        self.__send_data(obj, uuid)
+        self._set_custom_handler(uuid, "changed", on_changed)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
