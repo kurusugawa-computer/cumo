@@ -17,7 +17,21 @@ from ._protobuf import server_pb2
 from ._protobuf import client_pb2
 from ._internal import server
 
+
 class PointCloudViewer:
+    """点群をブラウザで表示するためのサーバーを立ち上げるビューア。
+
+    :param host: ホスト名
+    :type host: str, optional
+    :param websocket_port: WebSocketサーバーが待ち受けるポート
+    :type websocket_port: int, optional
+    :param http_port: Webサーバーが待ち受けるポート
+    :type http_port: int, optional
+    :param polling_interval: サーバープロセスとのやり取りをする間隔の秒数
+    :type polling_interval: int, optional
+    :param autostart: Trueの場合、 ``start`` がコンストラクタ実行時に呼び出される
+    :type autostart: bool, optional
+    """
     _server_process: multiprocessing.Process
     _custom_handlers: dict
     _websocket_broadcasting_queue: multiprocessing.Queue
@@ -127,12 +141,19 @@ class PointCloudViewer:
         self._websocket_broadcasting_queue.put(data.decode())
 
     def start(self) -> None:
+        """
+        サーバープロセスを起動する。
+        """
         self._polling_thread.setDaemon(True)
         self._polling_thread.start()
 
         self._server_process.start()
 
     def wait_forever(self) -> None:
+        """
+        サーバーが動作している間待ち続ける。
+        この関数を実行した後にコールバック内で ``sys.exit()`` を呼び出すなどすることでプログラムを終了できる。
+        """
         self._polling_thread.join()
 
     def console_log(
@@ -141,6 +162,15 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
+        """ブラウザ上で ``console.log()`` を実行する。
+
+        :param message: ``console.log()`` に引数として渡される文字列
+        :type message: str
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         obj = server_pb2.ServerCommand()
         obj.log_message = message
         uuid = uuid4()
@@ -154,6 +184,15 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
+        """点群をブラウザに送信し、表示させる。
+
+        :param pc: 点群。色付きの場合は反映される
+        :type pc: open3d.geometry.PointCloud
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         pcd: pypcd.PointCloud
         if len(pc.points) == len(pc.colors):
             colors_f32 = numpy.asarray(pc.colors)
@@ -186,32 +225,15 @@ class PointCloudViewer:
         on_success: Callable[[bytes], None],
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
+        """ブラウザのcanvasに表示されている画像をpng形式で保存させる。
+
+        :param on_success: 成功時に呼ばれるコールバック関数。png形式の画像データが引数として渡される
+        :type on_success: Callable[[bytes], None]
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         obj = server_pb2.ServerCommand()
         obj.capture_screen = True
-        uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
-        self._send_data(obj, uuid)
-
-    def switch_camera_to_orthographic(
-        self,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None
-    ) -> None:
-        obj = server_pb2.ServerCommand()
-        obj.use_perspective_camera = False
-        uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
-        self._send_data(obj, uuid)
-
-    def switch_camera_to_perspective(
-        self,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None
-    ) -> None:
-        obj = server_pb2.ServerCommand()
-        obj.use_perspective_camera = True
         uuid = uuid4()
         self._set_custom_handler(uuid, "success", on_success)
         self._set_custom_handler(uuid, "failure", on_failure)
@@ -223,6 +245,15 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
+        """カメラを正投影カメラに切り替えさせる。
+
+        :param frustum_height: カメラの視錐台の高さ。幅はウィンドウのアスペクト比から計算される
+        :type frustum_height: float, optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         camera = server_pb2.SetCamera()
         camera.orthographic_frustum_height = frustum_height
         obj = server_pb2.ServerCommand()
@@ -238,6 +269,15 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
+        """カメラを遠近投影カメラに切り替えさせる。
+
+        :param fov: 視野角
+        :type fov: float, optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         camera = server_pb2.SetCamera()
         camera.perspective_fov = fov
         obj = server_pb2.ServerCommand()
@@ -255,6 +295,19 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
+        """カメラの位置を変更する。
+
+        :param x: カメラのx座標
+        :type x: float
+        :param y: カメラのy座標
+        :type y: float
+        :param z: カメラのz座標
+        :type z: float
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         position = server_pb2.SetCamera.Vec3f()
         position.x = x
         position.y = y
@@ -278,6 +331,19 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
+        """カメラが向く目標の座標を変更する。
+
+        :param x: 目標のx座標
+        :type x: float
+        :param y: 目標のy座標
+        :type y: float
+        :param z: 目標のz座標
+        :type z: float
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         target = server_pb2.SetCamera.Vec3f()
         target.x = x
         target.y = y
@@ -304,6 +370,25 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
+        """カスタムフォルダにスライダーを追加する。
+
+        :param name: 表示名
+        :type name: str, optional
+        :param min: 最小値
+        :type min: float, optional
+        :param max: 最大値
+        :type max: float, optional
+        :param step: 最小の変化量
+        :type step: float, optional
+        :param init_value: 初期値
+        :type init_value: float, optional
+        :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にスライダーの設定値が渡される
+        :type on_changed: Optional[Callable[[float], None]], optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         obj = server_pb2.ServerCommand()
         slider = server_pb2.CustomControl.Slider()
         slider.name = name
@@ -328,6 +413,19 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
+        """カスタムフォルダーにチェックボックスを追加する。
+
+        :param name: 表示名
+        :type name: str, optional
+        :param init_value: 初期値
+        :type init_value: bool, optional
+        :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にチェックボックスの設定値が渡される
+        :type on_changed: Optional[Callable[[bool], None]], optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         checkbox = server_pb2.CustomControl.CheckBox()
         checkbox.name = name
         checkbox.init_value = init_value
@@ -349,6 +447,19 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
+        """カスタムフォルダーにテキストボックスを追加する。
+
+        :param name: 表示名
+        :type name: str, optional
+        :param init_value: 初期値
+        :type init_value: str, optional
+        :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にテキストボックスの値が渡される
+        :type on_changed: Optional[Callable[[bool], None]], optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         textbox = server_pb2.CustomControl.TextBox()
         textbox.name = name
         textbox.init_value = init_value
@@ -371,6 +482,21 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
+        """カスタムフォルダーにセレクトボックスを追加する。
+
+        :param items: 要素の文字列のリスト
+        :type items: list
+        :param name: 表示名
+        :type name: str, optional
+        :param init_value: 初期値
+        :type init_value: str, optional
+        :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に選択された要素の文字列が渡される
+        :type on_changed: Optional[Callable[[bool], None]], optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         selectbox = server_pb2.CustomControl.SelectBox()
         selectbox.name = name
         selectbox.items.extend(items)
@@ -392,6 +518,17 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
+        """カスタムフォルダーにボタンを追加する。
+
+        :param name: 表示名
+        :type name: str, optional
+        :param on_changed: ボタンが押されたときに呼ばれるコールバック関数。引数に ``True`` が渡される
+        :type on_changed: Optional[Callable[[], None]], optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         button = server_pb2.CustomControl.Button()
         button.name = name
         add_custom_control = server_pb2.CustomControl()
@@ -412,6 +549,19 @@ class PointCloudViewer:
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
+        """カスタムフォルダーにカラーピッカーを追加する。
+
+        :param name: 表示名
+        :type name: str, optional
+        :param init_value: 初期値。 ``#ff0000`` 、 ``rgb(255,0,0)`` 等の表現が利用可能
+        :type init_value: str, optional
+        :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に色を表す文字列が渡される
+        :type on_changed: Optional[Callable[[], None]], optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
         picker = server_pb2.CustomControl.ColorPicker()
         picker.name = name
         picker.init_value = init_value
