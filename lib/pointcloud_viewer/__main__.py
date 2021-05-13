@@ -6,6 +6,7 @@ import sys
 
 from .pointcloud_viewer import PointCloudViewer
 
+
 def main():
     host = "127.0.0.1"
     websocket_port = 8081
@@ -34,39 +35,50 @@ def main():
     print("open: http://{}:{}".format(host, http_port))
     print("setup...")
 
-    def save_png(name: str, data: bytes, want_to_exit: bool = False) -> None:
+    def save_png(name: str, data: bytes, index: int) -> None:
         f = open(name, "bw")
         f.write(data)
         f.close()
         print("saved: "+name)
-        if want_to_exit:
-            sys.exit()
+        loop(index)
 
-    def button_pushed():
-        viewer.set_camera_position(1, 0, 0)
-        viewer.capture_screen(
-            on_success=lambda data: save_png("screenshot_x.png", data)
-        )
+    commands = [
+        lambda index:viewer.set_camera_position(
+            1, 0, 0, on_success=loop(index+1)
+        ),
+        lambda index:viewer.capture_screen(
+            on_success=lambda data: save_png("screenshot_x.png", data, index+1)
+        ),
+        lambda index: viewer.set_camera_position(
+            0, 1, 0, on_success=loop(index+1)
+        ),
+        lambda index:viewer.capture_screen(
+            on_success=lambda data: save_png("screenshot_y.png", data, index+1)
+        ),
+        lambda index: viewer.set_camera_position(
+            0, 0, 1, on_success=loop(index+1)
+        ),
+        lambda index:viewer.capture_screen(
+            on_success=lambda data: save_png("screenshot_z.png", data, index+1)
+        ),
+        lambda index: sys.exit()
+    ]
 
-        viewer.set_camera_position(0, 1, 0)
-        viewer.capture_screen(
-            on_success=lambda data: save_png("screenshot_y.png", data)
-        )
-
-        viewer.set_camera_position(0, 0, 1)
-        viewer.capture_screen(
-            on_success=lambda data: save_png("screenshot_z.png", data, want_to_exit=True))
+    def loop(index: int) -> None:
+        commands[index](index)
 
     viewer.send_pointcloud_from_open3d(o3d_pc)
     viewer.set_orthographic_camera(frustum_height=radius*2)
 
     viewer.add_custom_button(
-        name="start", on_changed=lambda v: button_pushed(),
+        name="start", on_changed=lambda v: loop(0),
         on_success=lambda s: print(
-            "resize window and press custom control button \"start\"")
+            "resize window and press custom control button \"start\""
+        )
     )
 
     viewer.wait_forever()
+
 
 if __name__ == "__main__":
     main()
