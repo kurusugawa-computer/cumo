@@ -1,0 +1,14 @@
+{
+	"name": "kciguild-pointcloud-viewer",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": ".",
+	},
+	"extensions": [
+		"ms-python.vscode-pylance",
+		"ms-python.python",
+		"zxh404.vscode-proto3",
+		"visualstudioexptteam.vscodeintellicode",
+	],
+	"updateRemoteUserUID": true,
+}

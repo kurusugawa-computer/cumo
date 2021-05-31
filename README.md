@@ -2,8 +2,9 @@
 
 ## ビルド
 
+yarn、protoc、poetryが必要です（`.devcontainer/Dockerfile`参照）。
 以下のようにすると`lib/dist`にtar.gzとwhlファイルが生成されます。
-クライアントのHTML等は埋め込まれています。
+クライアントのHTML等はライブラリに埋め込まれています。
 
 ```console
 $ ./build.sh
