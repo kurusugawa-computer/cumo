@@ -4,6 +4,14 @@
 		"dockerfile": "Dockerfile",
 		"context": ".",
 	},
+	"settings": {
+		"terminal.integrated.profiles.linux": {
+			"bash": {
+				"path": "bash"
+			},
+		},
+		"terminal.integrated.defaultProfile.linux": "bash",
+	},
 	"extensions": [
 		"ms-python.vscode-pylance",
 		"ms-python.python",
@@ -11,4 +19,5 @@
 		"visualstudioexptteam.vscodeintellicode",
 	],
 	"updateRemoteUserUID": true,
+	"remoteUser": "vscode",
 }

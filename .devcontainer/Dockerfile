@@ -18,7 +18,7 @@ RUN apt-get update \
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        curl gnupg unzip git \
+        curl gnupg unzip git sudo\
         make build-essential libssl-dev zlib1g-dev libbz2-dev \
         libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
         xz-utils tk-dev libffi-dev liblzma-dev \
@@ -31,9 +31,21 @@ RUN curl https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
 RUN curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip \
     && unzip protoc-3.15.6-linux-x86_64.zip && cp ./bin/protoc /usr/local/bin/. && chmod +x /usr/local/bin/protoc
 
+RUN groupadd --gid 1000 vscode \
+    && useradd --uid 1000 --gid 1000 -m vscode \
+    && echo vscode ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/vscode \
+    && chmod 0440 /etc/sudoers.d/vscode
+
+USER vscode
+ENV HOME /home/vscode
+
 RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv \
     && cd ~/.pyenv/plugins/python-build \
-    && ./install.sh \
-    && /usr/local/bin/python-build -v ${PYTHON_VERSION} ~/local/python-${PYTHON_VERSION}
+    && PREFIX=~/local ./install.sh \
+    && ~/local/bin/python-build -v ${PYTHON_VERSION} ~/local/python-${PYTHON_VERSION}
+
+ENV PATH "$PATH:/home/vscode/local/python-3.8.7/bin"
 
 RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3
+
+ENV PATH "$PATH:/home/vscode/.poetry/bin"
