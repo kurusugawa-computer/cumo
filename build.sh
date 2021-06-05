@@ -34,4 +34,5 @@ rm -rf ./lib/pointcloud_viewer/public
 cp -R client/public lib/pointcloud_viewer/
 
 cd ${WORKDIR}/lib
+poetry install
 poetry build
