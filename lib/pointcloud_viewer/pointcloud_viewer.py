@@ -308,7 +308,7 @@ class PointCloudViewer:
         :param on_failure: 失敗時に呼ばれるコールバック関数
         :type on_failure: Optional[Callable[[str], None]], optional
         """
-        position = server_pb2.SetCamera.Vec3f()
+        position = server_pb2.VecXYZf()
         position.x = x
         position.y = y
         position.z = z
@@ -344,7 +344,7 @@ class PointCloudViewer:
         :param on_failure: 失敗時に呼ばれるコールバック関数
         :type on_failure: Optional[Callable[[str], None]], optional
         """
-        target = server_pb2.SetCamera.Vec3f()
+        target = server_pb2.VecXYZf()
         target.x = x
         target.y = y
         target.z = z
@@ -571,6 +571,59 @@ class PointCloudViewer:
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self._set_custom_handler(uuid, "changed", on_changed)
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
+
+    def add_box(
+        self,
+        width: float,
+        height: float,
+        depth: float,
+        x: float = 0,
+        y: float = 0,
+        z: float = 0,
+        wireframe: bool = True,
+        on_success: Optional[Callable[[str], None]] = None,
+        on_failure: Optional[Callable[[str], None]] = None,
+    ):
+        """直方体を空間に追加する
+
+        :param width: 直方体の幅
+        :type width: float
+        :param height: 直方体の高さ
+        :type height: float
+        :param depth: 直方体の奥行き
+        :type depth: float
+        :param x: 直方体中心のx座標
+        :type x: float, optional
+        :param y: 直方体中心のy座標
+        :type y: float, optional
+        :param z: 直方体中心のz座標
+        :type z: float, optional
+        :param wireframe: ワイヤーフレームとして表示するかどうか
+        :type wireframe: bool, optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
+        box = server_pb2.AddObject.Box()
+        box.width = width
+        box.height = height
+        box.depth = depth
+        box.wireframe = wireframe
+        position = server_pb2.VecXYZf()
+        position.x = x
+        position.y = y
+        position.z = z
+        add_object = server_pb2.AddObject()
+        add_object.box.CopyFrom(box)
+        add_object.position.CopyFrom(position)
+
+        obj = server_pb2.ServerCommand()
+        obj.add_object.CopyFrom(add_object)
+        uuid = uuid4()
         self._set_custom_handler(uuid, "success", on_success)
         self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)

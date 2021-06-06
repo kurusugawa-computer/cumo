@@ -6,6 +6,7 @@ import { sendSuccess, sendFailure, sendImage, sendControlChanged } from "./clien
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 
 import * as THREE from 'three';
+import { LineBasicMaterial } from 'three';
 
 const WEBSOCKET_HOST = 'ws://127.0.0.1';
 const WEBSOCKET_PORT = '8081';
@@ -43,10 +44,47 @@ function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message:
         case commandCase.SET_CAMERA:
             handleSetCamera(websocket, command_id, viewer, message.getSetCamera());
             break;
+        case commandCase.ADD_OBJECT:
+            handleAddObject(websocket, command_id, viewer, message.getAddObject());
+            break;
         default:
             sendFailure(websocket, message.getUuid_asU8(), "message has not any command");
             break;
     }
+}
+
+function handleAddObject(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, add_object: PB.AddObject | undefined): void {
+    if (add_object == undefined) {
+        sendFailure(websocket, command_id, "failed to get add_object command");
+        return;
+    }
+    const objectCase = PB.AddObject.ObjectCase;
+    switch (add_object.getObjectCase()) {
+        case objectCase.BOX:
+            handleAddBox(websocket, command_id, viewer, add_object.getBox());
+            break;
+        default:
+            sendFailure(websocket, command_id, "message has not any object");
+            break;
+    }
+}
+
+function handleAddBox(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, box: PB.AddObject.Box | undefined): void {
+    if (box === undefined) {
+        sendFailure(websocket, command_id, "failed to get box");
+        return;
+    }
+    let geometry = new THREE.BoxGeometry(box.getWidth(), box.getHeight(), box.getDepth());
+    if (box.getWireframe()) {
+        const wireframe = new THREE.EdgesGeometry(geometry);
+        const line = new THREE.LineSegments(wireframe);
+        viewer.scene.add(line);
+    } else {
+        const material = new THREE.MeshBasicMaterial();
+        const mesh = new THREE.Mesh(geometry, material);
+        viewer.scene.add(mesh);
+    }
+    sendSuccess(websocket, command_id, "success");
 }
 
 function handleSetCamera(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, camera: PB.SetCamera | undefined): void {
@@ -99,7 +137,7 @@ function setPerspectiveCamera(websocket: WebSocket, command_id: Uint8Array, view
     sendSuccess(websocket, command_id, "success");
 }
 
-function setCameraPosition(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, position: PB.SetCamera.Vec3f | undefined) {
+function setCameraPosition(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, position: PB.VecXYZf | undefined) {
     if (position === undefined) {
         sendFailure(websocket, command_id, "failed to get camera position");
         return;
@@ -111,7 +149,7 @@ function setCameraPosition(websocket: WebSocket, command_id: Uint8Array, viewer:
     sendSuccess(websocket, command_id, "success");
 }
 
-function setCameraTarget(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, target: PB.SetCamera.Vec3f | undefined) {
+function setCameraTarget(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, target: PB.VecXYZf | undefined) {
     if (target === undefined) {
         sendFailure(websocket, command_id, "failed to get camera position");
         return;

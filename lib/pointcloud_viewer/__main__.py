@@ -68,6 +68,7 @@ def main():
         commands[index](index)
 
     viewer.send_pointcloud_from_open3d(o3d_pc)
+    viewer.add_box(radius*2, radius*2,radius*2)
     viewer.set_orthographic_camera(frustum_height=radius*2)
 
     viewer.add_custom_button(
