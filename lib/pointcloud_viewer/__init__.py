@@ -1,1 +1,1 @@
-from .pointcloud_viewer import *
+from pointcloud_viewer import *

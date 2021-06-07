@@ -13,9 +13,9 @@ from pypcd import pypcd
 import open3d
 from google.protobuf.message import DecodeError
 
-from ._protobuf import server_pb2
-from ._protobuf import client_pb2
-from ._internal import server
+from _internal.protobuf import server_pb2
+from _internal.protobuf import client_pb2
+from _internal import server
 
 
 class PointCloudViewer:

@@ -23,8 +23,8 @@ protoc \
   -I. \
   --plugin=protoc-gen-ts="${PLUGIN_TS}" \
   protobuf/client.proto
-rm -rf ./lib/pointcloud_viewer/_protobuf
-mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_protobuf
+rm -rf ./lib/pointcloud_viewer/_internal/protobuf
+mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
 
 cd ${WORKDIR}/client
 yarn build

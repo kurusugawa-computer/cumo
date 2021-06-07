@@ -4,7 +4,7 @@ import open3d as open3d
 from argparse import ArgumentParser
 import sys
 
-from .pointcloud_viewer import PointCloudViewer
+from pointcloud_viewer import PointCloudViewer
 
 
 def main():

@@ -11,7 +11,8 @@
 			},
 		},
 		"terminal.integrated.defaultProfile.linux": "bash",
-		"python.formatting.autopep8Path": "lib/.venv/bin/autopep8"
+		"python.formatting.autopep8Path": "lib/.venv/bin/autopep8",
+		"python.pythonPath": "/home/vscode/local/python-3.8.7/bin/python",
 	},
 	"extensions": [
 		"ms-python.vscode-pylance",
