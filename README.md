@@ -22,6 +22,7 @@ sphinxでドキュメントの生成が可能です。
 
 ```console
 $ cd lib
+$ poetry install
 $ poetry run sphinx-apidoc --append-syspath -F -o ./docs .
 ```
 
