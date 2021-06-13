@@ -32,9 +32,6 @@ function handleProtobuf(websocket: WebSocket, viewer: PointCloudViewer, message:
         case commandCase.LOG_MESSAGE:
             handleLogMessage(websocket, command_id, message.getLogMessage());
             break;
-        case commandCase.POINT_CLOUD:
-            handlePointCloud(websocket, command_id, message.getPointCloud(), viewer);
-            break;
         case commandCase.CAPTURE_SCREEN:
             handleScreenCapture(websocket, command_id, viewer);
             break;
@@ -60,8 +57,11 @@ function handleAddObject(websocket: WebSocket, command_id: Uint8Array, viewer: P
     }
     const objectCase = PB.AddObject.ObjectCase;
     switch (add_object.getObjectCase()) {
-        case objectCase.BOX:
-            handleAddBox(websocket, command_id, viewer, add_object.getBox());
+        case objectCase.LINE_SET:
+            handleLineSet(websocket, command_id, viewer, add_object.getLineSet());
+            break;
+        case objectCase.POINT_CLOUD:
+            handlePointCloud(websocket, command_id, add_object.getPointCloud(), viewer);
             break;
         default:
             sendFailure(websocket, command_id, "message has not any object");
@@ -69,21 +69,32 @@ function handleAddObject(websocket: WebSocket, command_id: Uint8Array, viewer: P
     }
 }
 
-function handleAddBox(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, box: PB.AddObject.Box | undefined): void {
-    if (box === undefined) {
-        sendFailure(websocket, command_id, "failed to get box");
+function handleLineSet(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, lineset: PB.AddObject.LineSet | undefined): void {
+    if (lineset === undefined) {
+        sendFailure(websocket, command_id, "failed to get lineset");
         return;
     }
-    let geometry = new THREE.BoxGeometry(box.getWidth(), box.getHeight(), box.getDepth());
-    if (box.getWireframe()) {
-        const wireframe = new THREE.EdgesGeometry(geometry);
-        const line = new THREE.LineSegments(wireframe);
-        viewer.scene.add(line);
-    } else {
-        const material = new THREE.MeshBasicMaterial();
-        const mesh = new THREE.Mesh(geometry, material);
-        viewer.scene.add(mesh);
+    const from_index = lineset.getFromIndexList();
+    const to_index = lineset.getToIndexList();
+    const points = lineset.getPointsList();
+    let positions: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+        const v = points[i];
+        positions.push(v.getX(), v.getY(), v.getZ());
     }
+    let indices: number[] = [];
+    for (let i = 0; i < from_index.length; i++) {
+        indices.push(from_index[i]);
+        indices.push(to_index[i]);
+
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setIndex(indices);
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    const material = new THREE.LineBasicMaterial();
+    const linesegments = new THREE.LineSegments(geometry, material);
+    viewer.scene.add(linesegments);
+
     sendSuccess(websocket, command_id, "success");
 }
 
@@ -186,7 +197,7 @@ function handleLogMessage(websocket: WebSocket, command_id: Uint8Array, message:
 function handlePointCloud(
     websocket: WebSocket,
     command_id: Uint8Array,
-    pb_pointcloud: PB.PointCloud | undefined,
+    pb_pointcloud: PB.AddObject.PointCloud | undefined,
     viewer: PointCloudViewer
 ): void {
     if (pb_pointcloud === undefined) {
@@ -194,7 +205,7 @@ function handlePointCloud(
         return;
     }
 
-    let data = Uint8Array.from(atob(pb_pointcloud.getData_asB64()), c => c.charCodeAt(0)).buffer;
+    let data = Uint8Array.from(atob(pb_pointcloud.getPcdData_asB64()), c => c.charCodeAt(0)).buffer;
 
     let pointcloud = new PCDLoader().parse(data, "test");
 

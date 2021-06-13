@@ -4,7 +4,7 @@ import open3d as open3d
 from argparse import ArgumentParser
 import sys
 
-from pointcloud_viewer import PointCloudViewer
+from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
 
 def main():
@@ -68,7 +68,19 @@ def main():
         commands[index](index)
 
     viewer.send_pointcloud_from_open3d(o3d_pc)
-    viewer.add_box(radius*2, radius*2,radius*2)
+
+    points = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1],
+              [0, 1, 1], [1, 1, 1]]
+    lines = [[0, 1], [0, 2], [1, 3], [2, 3], [4, 5], [4, 6], [5, 7], [6, 7],
+             [0, 4], [1, 5], [2, 6], [3, 7]]
+    line_set = open3d.geometry.LineSet()
+    line_set.points = open3d.utility.Vector3dVector(points)
+    line_set.lines = open3d.utility.Vector2iVector(lines)
+
+    line_set.scale(radius*2, (0, 0, 0))
+    line_set.translate((-radius, -radius, -radius))
+
+    viewer.send_lineset_from_open3d(line_set)
     viewer.set_orthographic_camera(frustum_height=radius*2)
 
     viewer.add_custom_button(

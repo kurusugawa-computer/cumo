@@ -13,9 +13,9 @@ from pypcd import pypcd
 import open3d
 from google.protobuf.message import DecodeError
 
-from _internal.protobuf import server_pb2
-from _internal.protobuf import client_pb2
-from _internal import server
+from pointcloud_viewer._internal.protobuf import server_pb2
+from pointcloud_viewer._internal.protobuf import client_pb2
+from pointcloud_viewer._internal import server
 
 
 class PointCloudViewer:
@@ -211,10 +211,16 @@ class PointCloudViewer:
             xyz = numpy.asarray(pc.points).astype(numpy.float32)
             pcd = pypcd.make_xyz_point_cloud(xyz)
         pcd_bytes = pcd.save_pcd_to_buffer()
+
+        cloud = server_pb2.AddObject.PointCloud()
+        cloud.pcd_data = pcd_bytes
+
+        add_obj = server_pb2.AddObject()
+        add_obj.point_cloud.CopyFrom(cloud)
+
         obj = server_pb2.ServerCommand()
-        cloud = server_pb2.PointCloud()
-        cloud.data = pcd_bytes
-        obj.point_cloud.CopyFrom(cloud)
+        obj.add_object.CopyFrom(add_obj)
+
         uuid = uuid4()
         self._set_custom_handler(uuid, "success", on_success)
         self._set_custom_handler(uuid, "failure", on_failure)
@@ -575,54 +581,37 @@ class PointCloudViewer:
         self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
 
-    def add_box(
+    def send_lineset_from_open3d(
         self,
-        width: float,
-        height: float,
-        depth: float,
-        x: float = 0,
-        y: float = 0,
-        z: float = 0,
-        wireframe: bool = True,
+        lineset: open3d.geometry.LineSet,
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
     ):
-        """直方体を空間に追加する
+        """LineSetをブラウザに送信し、表示させる。
 
-        :param width: 直方体の幅
-        :type width: float
-        :param height: 直方体の高さ
-        :type height: float
-        :param depth: 直方体の奥行き
-        :type depth: float
-        :param x: 直方体中心のx座標
-        :type x: float, optional
-        :param y: 直方体中心のy座標
-        :type y: float, optional
-        :param z: 直方体中心のz座標
-        :type z: float, optional
-        :param wireframe: ワイヤーフレームとして表示するかどうか
-        :type wireframe: bool, optional
+        :param lineset: LineSet。
+        :type lineset: open3d.geometry.LineSet
         :param on_success: 成功時に呼ばれるコールバック関数
         :type on_success: Optional[Callable[[str], None]], optional
         :param on_failure: 失敗時に呼ばれるコールバック関数
         :type on_failure: Optional[Callable[[str], None]], optional
         """
-        box = server_pb2.AddObject.Box()
-        box.width = width
-        box.height = height
-        box.depth = depth
-        box.wireframe = wireframe
-        position = server_pb2.VecXYZf()
-        position.x = x
-        position.y = y
-        position.z = z
-        add_object = server_pb2.AddObject()
-        add_object.box.CopyFrom(box)
-        add_object.position.CopyFrom(position)
+        pb_lineset = server_pb2.AddObject.LineSet()
+        for v in numpy.asarray(lineset.points):
+            p = server_pb2.VecXYZf()
+            p.x = v[0]
+            p.y = v[1]
+            p.z = v[2]
+            pb_lineset.points.append(p)
+        for l in numpy.asarray(lineset.lines):
+            pb_lineset.from_index.append(l[0])
+            pb_lineset.to_index.append(l[1])
 
+        add_obj = server_pb2.AddObject()
+        add_obj.line_set.CopyFrom(pb_lineset)
         obj = server_pb2.ServerCommand()
-        obj.add_object.CopyFrom(add_object)
+        obj.add_object.CopyFrom(add_obj)
+
         uuid = uuid4()
         self._set_custom_handler(uuid, "success", on_success)
         self._set_custom_handler(uuid, "failure", on_failure)

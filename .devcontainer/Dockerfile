@@ -21,7 +21,7 @@ RUN apt-get update \
         curl gnupg unzip git sudo\
         make build-essential libssl-dev zlib1g-dev libbz2-dev \
         libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
-        xz-utils tk-dev libffi-dev liblzma-dev \
+        xz-utils tk-dev libffi-dev liblzma-dev libusb-1.0-0 libgl1-mesa-dev \
     && apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
 RUN curl https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \

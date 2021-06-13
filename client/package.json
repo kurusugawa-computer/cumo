@@ -27,6 +27,7 @@
     "@types/three": "^0.126.0",
     "base64-js": "^1.5.1",
     "dat.gui": "^0.7.7",
+    "google-protobuf": "^3.17.3",
     "three": "^0.126.1"
   }
 }

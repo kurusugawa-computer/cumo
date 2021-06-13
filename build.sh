@@ -25,6 +25,7 @@ protoc \
   protobuf/client.proto
 rm -rf ./lib/pointcloud_viewer/_internal/protobuf
 mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
+touch ./lib/pointcloud_viewer/_internal/protobuf/__init__.py
 
 cd ${WORKDIR}/client
 yarn build
