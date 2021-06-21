@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import * as DAT from 'dat.gui';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
-import { Camera, OrthographicCamera, PerspectiveCamera } from 'three';
+import { OrthographicCamera, PerspectiveCamera } from 'three';
 import { Overlay } from './overlay';
 
 export class PointCloudViewer {
@@ -10,138 +10,141 @@ export class PointCloudViewer {
     scene: THREE.Scene;
 
     overlays: Overlay[] = [];
-    overlay_container: HTMLElement
+    overlayContainer: HTMLElement
 
-    perspective_camera: THREE.PerspectiveCamera;
-    orthographic_camera: THREE.OrthographicCamera;
+    perspectiveCamera: THREE.PerspectiveCamera;
+    orthographicCamera: THREE.OrthographicCamera;
 
     controls: TrackballControls;
 
     gui: DAT.GUI;
-    gui_custom: DAT.GUI;
+    guiCustom: DAT.GUI;
 
     config = {
-        controls: {
-            rotateSpeed: 2.0,
-            zoomSpeed: 2.0,
-            panSpeed: 2.0,
+      controls: {
+        rotateSpeed: 2.0,
+        zoomSpeed: 2.0,
+        panSpeed: 2.0
+      },
+      camera: {
+        use_perspective: true,
+        perspective: {
+          fov: 30
         },
-        camera: {
-            use_perspective: true,
-            perspective: {
-                fov: 30,
-            },
-            orthographic: {
-                frustum: 30,
-            }
-        },
-        custom: {},
+        orthographic: {
+          frustum: 30
+        }
+      },
+      custom: {}
     };
-    constructor(container: HTMLDivElement) {
-        const camera_near = Number.EPSILON;
-        const camera_far = Number.MAX_SAFE_INTEGER;
 
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x000);
+    constructor (container: HTMLDivElement) {
+      const cameraNear = Number.EPSILON;
+      const cameraFar = Number.MAX_SAFE_INTEGER;
 
-        let aspect = window.innerWidth / window.innerHeight;
-        this.perspective_camera = new PerspectiveCamera(
-            this.config.camera.perspective.fov, aspect, camera_near, camera_far);
-        this.perspective_camera.position.set(1, 1, 1);
+      this.scene = new THREE.Scene();
+      this.scene.background = new THREE.Color(0x000);
 
-        let frustum = this.config.camera.orthographic.frustum;
-        this.orthographic_camera = new OrthographicCamera(
-            frustum * aspect / - 2, frustum * aspect / 2, frustum / 2, frustum / - 2,
-            camera_near, camera_far
-        );
-        this.orthographic_camera.position.set(1, 1, 1);
+      const aspect = window.innerWidth / window.innerHeight;
+      this.perspectiveCamera = new PerspectiveCamera(
+        this.config.camera.perspective.fov, aspect, cameraNear, cameraFar);
+      this.perspectiveCamera.position.set(1, 1, 1);
 
-        this.renderer = new THREE.WebGL1Renderer({
-            preserveDrawingBuffer: true,
-            logarithmicDepthBuffer: true,
-        });
-        this.renderer.setPixelRatio(window.devicePixelRatio);
+      const frustum = this.config.camera.orthographic.frustum;
+      this.orthographicCamera = new OrthographicCamera(
+        frustum * aspect / -2, frustum * aspect / 2, frustum / 2, frustum / -2,
+        cameraNear, cameraFar
+      );
+      this.orthographicCamera.position.set(1, 1, 1);
+
+      this.renderer = new THREE.WebGL1Renderer({
+        preserveDrawingBuffer: true,
+        logarithmicDepthBuffer: true
+      });
+      this.renderer.setPixelRatio(window.devicePixelRatio);
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(this.renderer.domElement);
+
+      window.addEventListener('resize', () => {
+        const aspect = window.innerWidth / window.innerHeight;
+        const frustum = this.config.camera.orthographic.frustum;
+
+        this.perspectiveCamera.aspect = aspect;
+        this.perspectiveCamera.updateProjectionMatrix();
+
+        this.orthographicCamera.left = -frustum * aspect / 2;
+        this.orthographicCamera.right = frustum * aspect / 2;
+        this.orthographicCamera.top = frustum / 2;
+        this.orthographicCamera.bottom = -frustum / 2;
+        this.orthographicCamera.updateProjectionMatrix();
+
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        container.appendChild(this.renderer.domElement);
+        this.controls.handleResize();
+      });
 
-        window.addEventListener('resize', () => {
-            let aspect = window.innerWidth / window.innerHeight;
-            let frustum = this.config.camera.orthographic.frustum;
+      this.gui = new DAT.GUI();
 
-            this.perspective_camera.aspect = aspect;
-            this.perspective_camera.updateProjectionMatrix();
+      const guiControl = this.gui.addFolder('control');
+      const guiCamera = this.gui.addFolder('camera');
+      this.guiCustom = this.gui.addFolder('custom');
 
-            this.orthographic_camera.left = -frustum * aspect / 2;
-            this.orthographic_camera.right = frustum * aspect / 2;
-            this.orthographic_camera.top = frustum / 2;
-            this.orthographic_camera.bottom = -frustum / 2;
-            this.orthographic_camera.updateProjectionMatrix();
+      guiCamera.add(this.config.camera, 'use_perspective')
+        .name('use perspective camera')
+        .onChange((perspective: boolean) => this.switchCamera(perspective));
 
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            this.controls.handleResize();
-        });
+      guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1);
+      guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1);
+      guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1);
 
-        this.gui = new DAT.GUI();
+      const render = () => {
+        const camera = this.config.camera.use_perspective ? this.perspectiveCamera : this.orthographicCamera;
+        this.renderer.render(
+          this.scene,
+          camera
+        );
+        for (let i = 0; i < this.overlays.length; i++) {
+          this.overlays[i].render(this.renderer.domElement, camera);
+        }
+      };
 
-        let gui_control = this.gui.addFolder("control");
-        let gui_camera = this.gui.addFolder("camera");
-        this.gui_custom = this.gui.addFolder("custom");
+      const animate = () => {
+        requestAnimationFrame(animate);
+        this.controls.update();
+        render();
+      };
 
-        gui_camera.add(this.config.camera, "use_perspective")
-            .name("use perspective camera")
-            .onChange((perspective: boolean) => this.switchCamera(perspective));
+      this.controls = this.createControls(this.perspectiveCamera);
 
-        gui_control.add(this.config.controls, "rotateSpeed", 0, 10, 0.1);
-        gui_control.add(this.config.controls, "zoomSpeed", 0, 10, 0.1);
-        gui_control.add(this.config.controls, "panSpeed", 0, 10, 0.1);
+      container.style.position = 'relative';
+      container.style.height = '100vh';
 
-        let render = () => {
-            const camera = this.config.camera.use_perspective ? this.perspective_camera : this.orthographic_camera;
-            this.renderer.render(
-                this.scene,
-                camera
-            );
-            for (let i = 0; i < this.overlays.length; i++) {
-                this.overlays[i].render(this.renderer.domElement, camera);
-            }
-        };
+      this.renderer.domElement.style.position = 'absolute';
 
-        let animate = () => {
-            requestAnimationFrame(animate);
-            this.controls.update();
-            render();
-        };
+      this.overlayContainer = document.createElement('div');
+      this.overlayContainer.style.position = 'absolute';
+      this.overlayContainer.style.height = '100%';
+      this.overlayContainer.style.width = '100%';
+      this.overlayContainer.style.pointerEvents = 'none';
+      this.overlayContainer.style.overflow = 'hidden';
+      container.appendChild(this.overlayContainer);
 
-        this.controls = this.createControls(this.perspective_camera);
-
-        container.style.position = "relative";
-        container.style.height = "100vh";
-
-        this.renderer.domElement.style.position = "absolute";
-
-        this.overlay_container = document.createElement("div");
-        this.overlay_container.style.position = "absolute";
-        this.overlay_container.style.height = "100%";
-        this.overlay_container.style.width = "100%";
-        this.overlay_container.style.pointerEvents = "none";
-        this.overlay_container.style.overflow = "hidden";
-        container.appendChild(this.overlay_container);
-
-        animate();
+      animate();
     }
-    switchCamera(perspective: boolean): void {
-        this.controls.dispose()
-        this.config.camera.use_perspective = perspective;
-        this.gui.updateDisplay()
-        this.controls = this.createControls(perspective ? this.perspective_camera : this.orthographic_camera);
+
+    switchCamera (perspective: boolean): void {
+      this.controls.dispose();
+      this.config.camera.use_perspective = perspective;
+      this.gui.updateDisplay();
+      this.controls = this.createControls(perspective ? this.perspectiveCamera : this.orthographicCamera);
     }
-    private createControls(camera: THREE.Camera): TrackballControls {
-        let controls = new TrackballControls(camera, this.renderer.domElement);
-        controls.staticMoving = true;
-        controls.rotateSpeed = this.config.controls.rotateSpeed;
-        controls.zoomSpeed = this.config.controls.zoomSpeed;
-        controls.panSpeed = this.config.controls.panSpeed;
-        controls.keys[2] = 16; // shift to pan
-        return controls;
+
+    private createControls (camera: THREE.Camera): TrackballControls {
+      const controls = new TrackballControls(camera, this.renderer.domElement);
+      controls.staticMoving = true;
+      controls.rotateSpeed = this.config.controls.rotateSpeed;
+      controls.zoomSpeed = this.config.controls.zoomSpeed;
+      controls.panSpeed = this.config.controls.panSpeed;
+      controls.keys[2] = 16; // shift to pan
+      return controls;
     }
 }
