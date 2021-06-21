@@ -80,6 +80,10 @@ def main():
     line_set.scale(radius*2, (0, 0, 0))
     line_set.translate((-radius, -radius, -radius))
 
+    for point in line_set.points:
+        text = "%.2f,%.2f,%.2f" % tuple(point)
+        viewer.send_overlay_text(text,point[0],point[1],point[2])
+
     viewer.send_lineset_from_open3d(line_set)
     viewer.set_orthographic_camera(frustum_height=radius*2)
 

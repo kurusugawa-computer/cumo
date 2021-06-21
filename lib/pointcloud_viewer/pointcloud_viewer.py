@@ -586,7 +586,7 @@ class PointCloudViewer:
         lineset: open3d.geometry.LineSet,
         on_success: Optional[Callable[[str], None]] = None,
         on_failure: Optional[Callable[[str], None]] = None,
-    ):
+    ) -> None:
         """LineSetをブラウザに送信し、表示させる。
 
         :param lineset: LineSet。
@@ -609,6 +609,47 @@ class PointCloudViewer:
 
         add_obj = server_pb2.AddObject()
         add_obj.line_set.CopyFrom(pb_lineset)
+        obj = server_pb2.ServerCommand()
+        obj.add_object.CopyFrom(add_obj)
+
+        uuid = uuid4()
+        self._set_custom_handler(uuid, "success", on_success)
+        self._set_custom_handler(uuid, "failure", on_failure)
+        self._send_data(obj, uuid)
+
+    def send_overlay_text(
+        self,
+        text: str,
+        x: float = 0,
+        y: float = 0,
+        z: float = 0,
+        on_success: Optional[Callable[[str], None]] = None,
+        on_failure: Optional[Callable[[str], None]] = None,
+    ) -> None:
+        """特定の座標を左上として文字列をオーバーレイさせる。
+
+        :param text: 表示させる文字列
+        :type text: str
+        :param x: オーバーレイが追従する点のx座標
+        :type x: float, optional
+        :param y: オーバーレイが追従する点のy座標
+        :type y: float, optional
+        :param z: オーバーレイが追従する点のz座標
+        :type z: float, optional
+        :param on_success: 成功時に呼ばれるコールバック関数
+        :type on_success: Optional[Callable[[str], None]], optional
+        :param on_failure: 失敗時に呼ばれるコールバック関数
+        :type on_failure: Optional[Callable[[str], None]], optional
+        """
+        overlay = server_pb2.AddObject.Overlay()
+        position = server_pb2.VecXYZf()
+        position.x = x
+        position.y = y
+        position.z = z
+        overlay.position.CopyFrom(position)
+        overlay.text = text
+        add_obj = server_pb2.AddObject()
+        add_obj.overlay.CopyFrom(overlay)
         obj = server_pb2.ServerCommand()
         obj.add_object.CopyFrom(add_obj)
 

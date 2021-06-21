@@ -3,10 +3,14 @@ import * as THREE from 'three';
 import * as DAT from 'dat.gui';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 import { Camera, OrthographicCamera, PerspectiveCamera } from 'three';
+import { Overlay } from './overlay';
 
 export class PointCloudViewer {
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
+
+    overlays: Overlay[] = [];
+    overlay_container: HTMLElement
 
     perspective_camera: THREE.PerspectiveCamera;
     orthographic_camera: THREE.OrthographicCamera;
@@ -92,7 +96,14 @@ export class PointCloudViewer {
         gui_control.add(this.config.controls, "panSpeed", 0, 10, 0.1);
 
         let render = () => {
-            this.renderer.render(this.scene, this.config.camera.use_perspective ? this.perspective_camera : this.orthographic_camera);
+            const camera = this.config.camera.use_perspective ? this.perspective_camera : this.orthographic_camera;
+            this.renderer.render(
+                this.scene,
+                camera
+            );
+            for (let i = 0; i < this.overlays.length; i++) {
+                this.overlays[i].render(this.renderer.domElement, camera);
+            }
         };
 
         let animate = () => {
@@ -102,6 +113,19 @@ export class PointCloudViewer {
         };
 
         this.controls = this.createControls(this.perspective_camera);
+
+        container.style.position = "relative";
+        container.style.height = "100vh";
+
+        this.renderer.domElement.style.position = "absolute";
+
+        this.overlay_container = document.createElement("div");
+        this.overlay_container.style.position = "absolute";
+        this.overlay_container.style.height = "100%";
+        this.overlay_container.style.width = "100%";
+        this.overlay_container.style.pointerEvents = "none";
+        this.overlay_container.style.overflow = "hidden";
+        container.appendChild(this.overlay_container);
 
         animate();
     }

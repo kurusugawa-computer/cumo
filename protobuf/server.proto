@@ -68,6 +68,7 @@ message AddObject {
     oneof Object {
         LineSet line_set = 1;
         PointCloud point_cloud = 2;
+        Overlay overlay = 3;
     }
     message LineSet {
         repeated VecXYZf points = 1;
@@ -76,6 +77,12 @@ message AddObject {
     }
     message PointCloud {
         bytes pcd_data = 1;
+    }
+    message Overlay {
+        VecXYZf position = 1;
+        oneof Contents {
+            string text = 2;
+        }
     }
 }
 

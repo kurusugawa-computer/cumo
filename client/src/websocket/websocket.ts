@@ -6,7 +6,7 @@ import { sendSuccess, sendFailure, sendImage, sendControlChanged } from "./clien
 import { PCDLoader } from "three/examples/jsm/loaders/PCDLoader";
 
 import * as THREE from 'three';
-import { LineBasicMaterial } from 'three';
+import { Overlay } from '../overlay';
 
 const WEBSOCKET_HOST = 'ws://127.0.0.1';
 const WEBSOCKET_PORT = '8081';
@@ -63,10 +63,47 @@ function handleAddObject(websocket: WebSocket, command_id: Uint8Array, viewer: P
         case objectCase.POINT_CLOUD:
             handlePointCloud(websocket, command_id, add_object.getPointCloud(), viewer);
             break;
+        case objectCase.OVERLAY:
+            handleOverlay(websocket, command_id, viewer, add_object.getOverlay());
+            break;
         default:
             sendFailure(websocket, command_id, "message has not any object");
             break;
     }
+}
+
+function handleOverlay(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, overlay: PB.AddObject.Overlay | undefined) {
+    if (overlay == undefined || !overlay.hasPosition()) {
+        sendFailure(websocket, command_id, "failed to get overlay command");
+        return;
+    }
+    const position = overlay.getPosition();
+    if (position === undefined)
+    {
+        sendFailure(websocket, command_id, "message has not position");
+        return;
+    }
+    const contentsCase = PB.AddObject.Overlay.ContentsCase;
+    switch (overlay.getContentsCase()) {
+        case contentsCase.TEXT:
+            let div = document.createElement("div");
+            div.innerText = overlay.getText();
+            div.style.color = "white";
+            (div.style as any).mixColorBlend = "difference";
+            addOverlayHTML(viewer, div, position);
+            sendSuccess(websocket, command_id, "success");
+            break;
+        default:
+            sendFailure(websocket, command_id, "message has not any contents");
+            break;
+    }
+}
+
+function addOverlayHTML(viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf) {
+    viewer.overlay_container.appendChild(element);
+    const p = new THREE.Vector3(position.getX(), position.getY(), position.getZ());
+    const overlay = new Overlay(element, p);
+    viewer.overlays.push(overlay);
 }
 
 function handleLineSet(websocket: WebSocket, command_id: Uint8Array, viewer: PointCloudViewer, lineset: PB.AddObject.LineSet | undefined): void {
