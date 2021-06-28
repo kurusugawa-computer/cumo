@@ -36,15 +36,12 @@ class PointCloudViewer:
     _custom_handlers: dict
     _websocket_broadcasting_queue: multiprocessing.Queue
     _websocket_message_queue: multiprocessing.Queue
-    _polling_thread: threading.Timer
-    _polling_interval: int
 
     def __init__(
         self,
         host: str = "127.0.0.1",
         websocket_port: int = 8081,
         http_port: int = 8082,
-        polling_interval: int = 0.1,
         autostart: bool = False
     ) -> None:
         self._custom_handlers = dict()
@@ -61,68 +58,38 @@ class PointCloudViewer:
             ),
             daemon=True
         )
-        self._polling_interval = polling_interval
-        self._polling_thread = threading.Thread(
-            target=lambda: self._polling()
-        )
         if autostart:
             self.start()
 
-    def _polling(self):
-        wait_event = threading.Event()
+    def _wait_until(self, uuid: UUID) -> client_pb2.ClientCommand:
         while True:
-            if not self._websocket_message_queue.empty():
-                data: bytes = self._websocket_message_queue.get()
-                self._handle_message(data)
-            wait_event.wait(self._polling_interval)
+            data: bytes = self._websocket_message_queue.get()
+            command: client_pb2.ClientCommand = client_pb2.ClientCommand()
+            try:
+                command.ParseFromString(data)
+            except DecodeError:
+                raise RuntimeError("failed to parsing message")
+            if UUID(bytes_le=command.UUID) == uuid:
+                return command
+            else:
+                self._handle_message(command)
 
-    def _handle_message(self, message: bytes):
-        command: client_pb2.ClientCommand = client_pb2.ClientCommand()
-        try:
-            command.ParseFromString(message)
-        except DecodeError:
-            print("error: failed to parsing message", file=sys.stderr)
-            return
-        except Exception as e:
-            print("error: "+str(e), file=sys.stderr)
-            return
-        if command.HasField("result"):
-            if command.result.HasField("success"):
-                self._handle_success(command)
-            elif command.result.HasField("failure"):
-                self._handle_failure(command)
-        elif command.HasField("image"):
-            self._handle_image(command)
-        elif command.HasField("control_changed"):
+    def _handle_message(self, command: client_pb2.ClientCommand):
+        print(command)
+        if command.HasField("control_changed"):
             self._handle_control_changed(command)
 
     def _get_custom_handler(self, uuid: UUID, name: str) -> Optional[Callable]:
+        print("get", uuid)
         if self._custom_handlers[uuid] != None and self._custom_handlers[uuid][name] != None:
             return self._custom_handlers[uuid][name]
         return None
 
     def _set_custom_handler(self, uuid: UUID, name: str, func: Callable) -> None:
+        print("set", uuid)
         if not uuid in self._custom_handlers:
             self._custom_handlers[uuid] = dict()
         self._custom_handlers[uuid][name] = func
-
-    def _handle_image(self, command: client_pb2.ClientCommand):
-        uuid = UUID(bytes_le=command.UUID)
-        on_success = self._get_custom_handler(uuid, "success")
-        if on_success != None:
-            on_success(command.image.data)
-
-    def _handle_success(self, command: client_pb2.ClientCommand):
-        uuid = UUID(bytes_le=command.UUID)
-        on_success = self._get_custom_handler(uuid, "success")
-        if on_success != None:
-            on_success(command.result.success)
-
-    def _handle_failure(self, command: client_pb2.ClientCommand):
-        uuid = UUID(bytes_le=command.UUID)
-        on_failure = self._get_custom_handler(uuid, "failure")
-        if on_failure != None:
-            on_failure(command.result.failure)
 
     def _handle_control_changed(self, command: client_pb2.ClientCommand):
         uuid = UUID(bytes_le=command.UUID)
@@ -144,8 +111,6 @@ class PointCloudViewer:
         """
         サーバープロセスを起動する。
         """
-        self._polling_thread.setDaemon(True)
-        self._polling_thread.start()
 
         self._server_process.start()
 
@@ -154,44 +119,33 @@ class PointCloudViewer:
         サーバーが動作している間待ち続ける。
         この関数を実行した後にコールバック内で ``sys.exit()`` を呼び出すなどすることでプログラムを終了できる。
         """
-        self._polling_thread.join()
+        self._wait_until(None)
 
     def console_log(
         self,
         message: str,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
         """ブラウザ上で ``console.log()`` を実行する。
 
         :param message: ``console.log()`` に引数として渡される文字列
         :type message: str
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         obj = server_pb2.ServerCommand()
         obj.log_message = message
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def send_pointcloud_from_open3d(
         self,
         pc: open3d.geometry.PointCloud,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
         """点群をブラウザに送信し、表示させる。
 
         :param pc: 点群。色付きの場合は反映される
         :type pc: open3d.geometry.PointCloud
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         pcd: pypcd.PointCloud
         if len(pc.points) == len(pc.colors):
@@ -222,76 +176,63 @@ class PointCloudViewer:
         obj.add_object.CopyFrom(add_obj)
 
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def capture_screen(
         self,
-        on_success: Callable[[bytes], None],
-        on_failure: Optional[Callable[[str], None]] = None
-    ) -> None:
+    ) -> bytes:
         """ブラウザのcanvasに表示されている画像をpng形式で保存させる。
-
-        :param on_success: 成功時に呼ばれるコールバック関数。png形式の画像データが引数として渡される
-        :type on_success: Callable[[bytes], None]
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         obj = server_pb2.ServerCommand()
         obj.capture_screen = True
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
+        if ret.HasField("image"):
+            return ret.image.data
 
     def set_orthographic_camera(
         self,
         frustum_height: float = 30,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
         """カメラを正投影カメラに切り替えさせる。
 
         :param frustum_height: カメラの視錐台の高さ。幅はウィンドウのアスペクト比から計算される
         :type frustum_height: float, optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         camera = server_pb2.SetCamera()
         camera.orthographic_frustum_height = frustum_height
         obj = server_pb2.ServerCommand()
         obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def set_perspective_camera(
         self,
         fov: float = 30,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
         """カメラを遠近投影カメラに切り替えさせる。
 
         :param fov: 視野角
         :type fov: float, optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         camera = server_pb2.SetCamera()
         camera.perspective_fov = fov
         obj = server_pb2.ServerCommand()
         obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def set_camera_position(
         self,
@@ -309,10 +250,6 @@ class PointCloudViewer:
         :type y: float
         :param z: カメラのz座標
         :type z: float
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         position = server_pb2.VecXYZf()
         position.x = x
@@ -325,17 +262,16 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def set_camera_target(
         self,
         x: float,
         y: float,
         z: float,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None
     ) -> None:
         """カメラが向く目標の座標を変更する。
 
@@ -345,10 +281,6 @@ class PointCloudViewer:
         :type y: float
         :param z: 目標のz座標
         :type z: float
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         target = server_pb2.VecXYZf()
         target.x = x
@@ -361,9 +293,10 @@ class PointCloudViewer:
         obj = server_pb2.ServerCommand()
         obj.set_camera.CopyFrom(camera)
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def add_custom_slider(
         self,
@@ -373,8 +306,6 @@ class PointCloudViewer:
         step: float = 1,
         init_value: float = 50,
         on_changed: Optional[Callable[[float], None]] = None,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
         """カスタムフォルダにスライダーを追加する。
 
@@ -390,10 +321,6 @@ class PointCloudViewer:
         :type init_value: float, optional
         :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にスライダーの設定値が渡される
         :type on_changed: Optional[Callable[[float], None]], optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         obj = server_pb2.ServerCommand()
         slider = server_pb2.CustomControl.Slider()
@@ -407,17 +334,16 @@ class PointCloudViewer:
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self._set_custom_handler(uuid, "changed", on_changed)
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def add_custom_checkbox(
         self,
         name: str = "checkbox",
         init_value: bool = False,
         on_changed: Optional[Callable[[bool], None]] = None,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
         """カスタムフォルダーにチェックボックスを追加する。
 
@@ -427,10 +353,6 @@ class PointCloudViewer:
         :type init_value: bool, optional
         :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にチェックボックスの設定値が渡される
         :type on_changed: Optional[Callable[[bool], None]], optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         checkbox = server_pb2.CustomControl.CheckBox()
         checkbox.name = name
@@ -441,17 +363,16 @@ class PointCloudViewer:
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self._set_custom_handler(uuid, "changed", on_changed)
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def add_custom_textbox(
         self,
         name: str = "textbox",
         init_value: str = "",
         on_changed: Optional[Callable[[bool], None]] = None,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
         """カスタムフォルダーにテキストボックスを追加する。
 
@@ -461,10 +382,6 @@ class PointCloudViewer:
         :type init_value: str, optional
         :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にテキストボックスの値が渡される
         :type on_changed: Optional[Callable[[bool], None]], optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         textbox = server_pb2.CustomControl.TextBox()
         textbox.name = name
@@ -475,9 +392,10 @@ class PointCloudViewer:
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self._set_custom_handler(uuid, "changed", on_changed)
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def add_custom_selectbox(
         self,
@@ -485,8 +403,6 @@ class PointCloudViewer:
         name: str = "selectbox",
         init_value: str = "",
         on_changed: Optional[Callable[[bool], None]] = None,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
         """カスタムフォルダーにセレクトボックスを追加する。
 
@@ -498,10 +414,6 @@ class PointCloudViewer:
         :type init_value: str, optional
         :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に選択された要素の文字列が渡される
         :type on_changed: Optional[Callable[[bool], None]], optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         selectbox = server_pb2.CustomControl.SelectBox()
         selectbox.name = name
@@ -513,16 +425,15 @@ class PointCloudViewer:
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self._set_custom_handler(uuid, "changed", on_changed)
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def add_custom_button(
         self,
         name: str = "button",
         on_changed: Optional[Callable[[], None]] = None,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
         """カスタムフォルダーにボタンを追加する。
 
@@ -530,10 +441,6 @@ class PointCloudViewer:
         :type name: str, optional
         :param on_changed: ボタンが押されたときに呼ばれるコールバック関数。引数に ``True`` が渡される
         :type on_changed: Optional[Callable[[], None]], optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         button = server_pb2.CustomControl.Button()
         button.name = name
@@ -543,17 +450,16 @@ class PointCloudViewer:
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self._set_custom_handler(uuid, "changed", on_changed)
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def add_custom_colorpicker(
         self,
         name: str = "color",
         init_value: str = "#000",
         on_changed: Optional[Callable[[], None]] = None,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
         """カスタムフォルダーにカラーピッカーを追加する。
 
@@ -563,10 +469,6 @@ class PointCloudViewer:
         :type init_value: str, optional
         :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に色を表す文字列が渡される
         :type on_changed: Optional[Callable[[], None]], optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         picker = server_pb2.CustomControl.ColorPicker()
         picker.name = name
@@ -577,24 +479,19 @@ class PointCloudViewer:
         obj.add_custom_control.CopyFrom(add_custom_control)
         uuid = uuid4()
         self._set_custom_handler(uuid, "changed", on_changed)
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def send_lineset_from_open3d(
         self,
         lineset: open3d.geometry.LineSet,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
         """LineSetをブラウザに送信し、表示させる。
 
         :param lineset: LineSet。
         :type lineset: open3d.geometry.LineSet
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         pb_lineset = server_pb2.AddObject.LineSet()
         for v in numpy.asarray(lineset.points):
@@ -613,9 +510,10 @@ class PointCloudViewer:
         obj.add_object.CopyFrom(add_obj)
 
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
 
     def send_overlay_text(
         self,
@@ -623,8 +521,6 @@ class PointCloudViewer:
         x: float = 0,
         y: float = 0,
         z: float = 0,
-        on_success: Optional[Callable[[str], None]] = None,
-        on_failure: Optional[Callable[[str], None]] = None,
     ) -> None:
         """特定の座標を左上として文字列をオーバーレイさせる。
 
@@ -636,10 +532,6 @@ class PointCloudViewer:
         :type y: float, optional
         :param z: オーバーレイが追従する点のz座標
         :type z: float, optional
-        :param on_success: 成功時に呼ばれるコールバック関数
-        :type on_success: Optional[Callable[[str], None]], optional
-        :param on_failure: 失敗時に呼ばれるコールバック関数
-        :type on_failure: Optional[Callable[[str], None]], optional
         """
         overlay = server_pb2.AddObject.Overlay()
         position = server_pb2.VecXYZf()
@@ -654,6 +546,7 @@ class PointCloudViewer:
         obj.add_object.CopyFrom(add_obj)
 
         uuid = uuid4()
-        self._set_custom_handler(uuid, "success", on_success)
-        self._set_custom_handler(uuid, "failure", on_failure)
         self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)

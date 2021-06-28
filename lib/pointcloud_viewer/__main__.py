@@ -35,38 +35,6 @@ def main():
     print("open: http://{}:{}".format(host, http_port))
     print("setup...")
 
-    def save_png(name: str, data: bytes, index: int) -> None:
-        f = open(name, "bw")
-        f.write(data)
-        f.close()
-        print("saved: "+name)
-        loop(index)
-
-    commands = [
-        lambda index:viewer.set_camera_position(
-            1, 0, 0, on_success=loop(index+1)
-        ),
-        lambda index:viewer.capture_screen(
-            on_success=lambda data: save_png("screenshot_x.png", data, index+1)
-        ),
-        lambda index: viewer.set_camera_position(
-            0, 1, 0, on_success=loop(index+1)
-        ),
-        lambda index:viewer.capture_screen(
-            on_success=lambda data: save_png("screenshot_y.png", data, index+1)
-        ),
-        lambda index: viewer.set_camera_position(
-            0, 0, 1, on_success=loop(index+1)
-        ),
-        lambda index:viewer.capture_screen(
-            on_success=lambda data: save_png("screenshot_z.png", data, index+1)
-        ),
-        lambda index: sys.exit()
-    ]
-
-    def loop(index: int) -> None:
-        commands[index](index)
-
     viewer.send_pointcloud_from_open3d(o3d_pc)
 
     points = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1],
@@ -82,17 +50,28 @@ def main():
 
     for point in line_set.points:
         text = "%.2f,%.2f,%.2f" % tuple(point)
-        viewer.send_overlay_text(text,point[0],point[1],point[2])
+        viewer.send_overlay_text(text, point[0], point[1], point[2])
 
     viewer.send_lineset_from_open3d(line_set)
     viewer.set_orthographic_camera(frustum_height=radius*2)
 
+    def save_png(name: str, data: bytes) -> None:
+        f = open(name, "bw")
+        f.write(data)
+        f.close()
+        print("saved: "+name)
+
+    def on_start_button_pushed():
+        for p in [(1, 0, 0, "screenshot_x.png"), (0, 1, 0, "screenshot_y.png"), (0, 0, 1, "screenshot_z.png")]:
+            viewer.set_camera_position(p[0], p[1], p[2])
+            data = viewer.capture_screen()
+            save_png(p[3], data)
+        exit(0)
+
     viewer.add_custom_button(
-        name="start", on_changed=lambda v: loop(0),
-        on_success=lambda s: print(
-            "resize window and press custom control button \"start\""
-        )
+        name="start", on_changed=lambda dummy: on_start_button_pushed()
     )
+    print("resize window and press custom control button \"start\"")
 
     viewer.wait_forever()
 
