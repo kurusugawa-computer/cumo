@@ -16,7 +16,6 @@ export class Overlay {
       p.project(camera);
       const x = (canvas.width / 2) * (p.x + 1.0);
       const y = (canvas.height / 2) * (-p.y + 1.0);
-      console.log(x, y, p, this.__position);
       this.__elem.style.top = '' + y + 'px';
       this.__elem.style.left = '' + x + 'px';
     }

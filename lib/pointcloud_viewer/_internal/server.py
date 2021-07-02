@@ -5,7 +5,7 @@ import threading
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from os.path import join
-from typing import Union
+from typing import Union,Optional
 
 import websockets
 
@@ -46,25 +46,28 @@ def multiprocessing_worker(
     websocket_broadcasting_queue: multiprocessing.Queue,
     websocket_message_queue: multiprocessing.Queue,
 ):
-    websocket_connections = set()
+    websocket_connection: Optional[websockets.WebSocketServerProtocol] = None
 
     async def __broadcast():
+        nonlocal websocket_connection
         while True:
-            if not websocket_broadcasting_queue.empty() and 0 < len(websocket_connections):
+            if not websocket_broadcasting_queue.empty() and websocket_connection != None:
                 data = websocket_broadcasting_queue.get()
-                for conn in websocket_connections:
-                    conn: websockets.WebSocketServerProtocol = conn
-                    await conn.send(data)
+                await websocket_connection.send(data)
             await asyncio.sleep(0.1)
 
     async def __websocket_handler(websocket: websockets.WebSocketServerProtocol, path: str):
-        websocket_connections.add(websocket)
+        nonlocal websocket_connection
+        if websocket_connection != None:
+            await websocket.close()
+            return
+        websocket_connection = websocket
         try:
             async for msg in websocket:
                 msg: bytes = msg
                 websocket_message_queue.put(msg)
         finally:
-            websocket_connections.remove(websocket)
+            websocket_connection = None
 
     loop = asyncio.get_event_loop()
     http_server = HTTPServer(
