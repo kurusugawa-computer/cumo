@@ -150,7 +150,7 @@ class PointCloudViewer:
         pcd: pypcd.PointCloud
         if len(pc.points) == len(pc.colors):
             colors_f32 = numpy.asarray(pc.colors)
-            colors_f32 *= 256
+            colors_f32 *= 255
             colors = colors_f32.astype(numpy.uint32)
 
             rgb = (colors[:, 0] << 16) | (colors[:, 1] << 8) | colors[:, 2]
