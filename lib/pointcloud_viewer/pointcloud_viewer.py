@@ -75,18 +75,15 @@ class PointCloudViewer:
                 self._handle_message(command)
 
     def _handle_message(self, command: client_pb2.ClientCommand):
-        print(command)
         if command.HasField("control_changed"):
             self._handle_control_changed(command)
 
     def _get_custom_handler(self, uuid: UUID, name: str) -> Optional[Callable]:
-        print("get", uuid)
         if self._custom_handlers[uuid] != None and self._custom_handlers[uuid][name] != None:
             return self._custom_handlers[uuid][name]
         return None
 
     def _set_custom_handler(self, uuid: UUID, name: str, func: Callable) -> None:
-        print("set", uuid)
         if not uuid in self._custom_handlers:
             self._custom_handlers[uuid] = dict()
         self._custom_handlers[uuid][name] = func
