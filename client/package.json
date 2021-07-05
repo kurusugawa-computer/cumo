@@ -37,6 +37,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "google-protobuf": "^3.17.3",
+    "html2canvas": "^1.0.0-rc.7",
     "three": "^0.126.1"
   }
 }

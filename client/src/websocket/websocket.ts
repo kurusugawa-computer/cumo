@@ -8,6 +8,8 @@ import { PCDLoader } from 'three/examples/jsm/loaders/PCDLoader';
 import * as THREE from 'three';
 import { Overlay } from '../overlay';
 
+import html2canvas from 'html2canvas';
+
 const WEBSOCKET_HOST = 'ws://127.0.0.1';
 const WEBSOCKET_PORT = '8081';
 
@@ -212,19 +214,23 @@ function setCameraTarget (websocket: WebSocket, commandID: Uint8Array, viewer: P
 }
 
 function handleScreenCapture (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer) {
-  viewer.renderer.domElement.toBlob(
-    function (blob: Blob | null): void {
-      if (blob === null) {
-        sendFailure(websocket, commandID, 'failed to generate blob');
-      } else {
-        sendImage(websocket, commandID, blob).catch(
-          function (reason: any): void {
-            sendFailure(websocket, commandID, 'failed to send image: ' + reason);
-          }
-        );
+  const divcanvas = viewer.getdiv;
+
+  html2canvas(divcanvas).then((canvas) => {
+    canvas.toBlob(
+      function (blob: Blob | null): void {
+        if (blob === null) {
+          sendFailure(websocket, commandID, 'failed to generate blob');
+        } else {
+          sendImage(websocket, commandID, blob).catch(
+            function (reason: any): void {
+              sendFailure(websocket, commandID, 'failed to send image: ' + reason);
+            }
+          );
+        }
       }
-    }
-    , 'image/png');
+      , 'image/png');
+  });
 }
 
 function handleLogMessage (websocket: WebSocket, commandID: Uint8Array, message: string): void {

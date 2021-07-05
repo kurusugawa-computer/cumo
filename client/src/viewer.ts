@@ -38,7 +38,7 @@ export class PointCloudViewer {
       custom: {}
     };
 
-    constructor (container: HTMLDivElement) {
+    constructor (private container: HTMLDivElement) {
       const cameraNear = Number.EPSILON;
       const cameraFar = Number.MAX_SAFE_INTEGER;
 
@@ -129,6 +129,10 @@ export class PointCloudViewer {
       container.appendChild(this.overlayContainer);
 
       animate();
+    }
+
+    get getdiv () {
+      return this.container;
     }
 
     switchCamera (perspective: boolean): void {
