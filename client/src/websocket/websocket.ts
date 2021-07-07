@@ -10,11 +10,8 @@ import { Overlay } from '../overlay';
 
 import html2canvas from 'html2canvas';
 
-const WEBSOCKET_HOST = 'ws://127.0.0.1';
-const WEBSOCKET_PORT = '8081';
-
-export function connectWebSocket (viewer: PointCloudViewer) {
-  const websocket = new WebSocket(WEBSOCKET_HOST + ':' + WEBSOCKET_PORT);
+export function connectWebSocket (viewer: PointCloudViewer, url: string) {
+  const websocket = new WebSocket(url);
   websocket.onmessage = function (ev: MessageEvent) {
     const message = PB.ServerCommand.deserializeBinary(ev.data);
     handleProtobuf(websocket, viewer, message);
@@ -22,7 +19,7 @@ export function connectWebSocket (viewer: PointCloudViewer) {
   websocket.onclose = function () {
     console.log('try to reconnecting');
     setTimeout(() => {
-      connectWebSocket(viewer);
+      connectWebSocket(viewer, url);
     }, 3000);
   };
 }

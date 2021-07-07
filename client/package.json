@@ -19,7 +19,7 @@
     "webpack-dev-server": "^3.11.2"
   },
   "scripts": {
-    "serve": "webpack-dev-server",
+    "serve": "webpack-dev-server --define DEBUG_MODE=true",
     "build": "webpack --mode production",
     "lint:eslint": "eslint . --ext ts,tsx",
     "fix:eslint": "eslint . --ext ts,tsx --fix"
