@@ -14,7 +14,6 @@
 		"python.formatting.autopep8Path": "/workspaces/kciguild-pointcloud-viewer/lib/.venv/bin/autopep8",
 		"python.pythonPath": "/home/vscode/local/python-3.8.7/bin/python",
 		"editor.tabSize": 2,
-		"editor.defaultFormatter": "dbaeumer.vscode-eslint",
 		"eslint.format.enable": true,
 		"eslint.lintTask.enable": true,
 		"eslint.packageManager": "yarn",
