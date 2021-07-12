@@ -20,23 +20,26 @@ export class PointCloudViewer {
     gui: DAT.GUI;
     guiCustom: DAT.GUI;
 
-    config = {
-      controls: {
-        rotateSpeed: 2.0,
-        zoomSpeed: 2.0,
-        panSpeed: 2.0
-      },
-      camera: {
-        use_perspective: true,
-        perspective: {
-          fov: 30
-        },
-        orthographic: {
-          frustum: 30
-        }
-      },
-      custom: {}
-    };
+    config = new class {
+      controls = new class {
+        rotateSpeed: number = 2.0
+        zoomSpeed: number = 2.0
+        panSpeed: number = 2.0
+      }();
+
+      camera = new class {
+        usePerspective: boolean = true;
+        perspective = new class {
+          fov: number = 30;
+        }();
+
+        orthographic = new class {
+          frustum: number = 30;
+        }();
+      }();
+
+      custom: Object = {};
+    }();
 
     constructor (private container: HTMLDivElement) {
       const cameraNear = Number.EPSILON;
@@ -88,8 +91,8 @@ export class PointCloudViewer {
       const guiCamera = this.gui.addFolder('camera');
       this.guiCustom = this.gui.addFolder('custom');
 
-      guiCamera.add(this.config.camera, 'use_perspective')
-        .name('use perspective camera')
+      guiCamera.add(this.config.camera, 'usePerspective')
+        .name('perspective camera')
         .onChange((perspective: boolean) => this.switchCamera(perspective));
 
       guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1);
@@ -97,7 +100,7 @@ export class PointCloudViewer {
       guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1);
 
       const render = () => {
-        const camera = this.config.camera.use_perspective ? this.perspectiveCamera : this.orthographicCamera;
+        const camera = this.config.camera.usePerspective ? this.perspectiveCamera : this.orthographicCamera;
         this.renderer.render(
           this.scene,
           camera
@@ -137,7 +140,7 @@ export class PointCloudViewer {
 
     switchCamera (perspective: boolean): void {
       this.controls.dispose();
-      this.config.camera.use_perspective = perspective;
+      this.config.camera.usePerspective = perspective;
       this.gui.updateDisplay();
       this.controls = this.createControls(perspective ? this.perspectiveCamera : this.orthographicCamera);
     }

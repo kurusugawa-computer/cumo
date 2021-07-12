@@ -37,7 +37,7 @@ function setOrthographicCamera (websocket: WebSocket, commandID: Uint8Array, vie
   viewer.orthographicCamera.bottom = -frustumHeight / 2;
 
   viewer.orthographicCamera.updateProjectionMatrix();
-  if (viewer.config.camera.use_perspective) {
+  if (viewer.config.camera.usePerspective) {
     viewer.switchCamera(false);
   }
   sendSuccess(websocket, commandID, 'success');
@@ -47,7 +47,7 @@ function setPerspectiveCamera (websocket: WebSocket, commandID: Uint8Array, view
   viewer.config.camera.perspective.fov = fov;
   viewer.perspectiveCamera.fov = fov;
   viewer.perspectiveCamera.updateProjectionMatrix();
-  if (!viewer.config.camera.use_perspective) {
+  if (!viewer.config.camera.usePerspective) {
     viewer.switchCamera(true);
   }
   sendSuccess(websocket, commandID, 'success');

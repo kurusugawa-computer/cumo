@@ -3,11 +3,11 @@ import * as PB from '../protobuf/server_pb.js';
 import { PointCloudViewer } from '../viewer';
 import { sendFailure } from './client_command';
 
-import { handleAddControl } from './handler/add_control.js';
+import { handleAddControl } from './handler/add_control';
 import { handleAddObject } from './handler/add_object';
-import { handleScreenCapture } from './handler/capture_screen.js';
+import { handleScreenCapture } from './handler/capture_screen';
 import { handleLogMessage } from './handler/log_message';
-import { handleSetCamera } from './handler/set_camera.js';
+import { handleSetCamera } from './handler/set_camera';
 
 export function connectWebSocket (viewer: PointCloudViewer, url: string) {
   const websocket = new WebSocket(url);
