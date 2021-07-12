@@ -1,5 +1,5 @@
 {
-  "name": "threejs_yarn_ts_test",
+  "name": "pointcloud_viewer",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
