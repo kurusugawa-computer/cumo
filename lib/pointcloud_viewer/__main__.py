@@ -1,3 +1,4 @@
+from uuid import UUID
 import numpy
 import open3d as open3d
 
@@ -5,6 +6,7 @@ from argparse import ArgumentParser
 import sys
 
 from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
+from pointcloud_viewer.keyboard_event import KeyboardEvent
 
 
 def main():
@@ -61,17 +63,30 @@ def main():
         f.close()
         print("saved: "+name)
 
-    def on_start_button_pushed():
+    def take_screenshots():
         for p in [(1, 0, 0, "screenshot_x.png"), (0, 1, 0, "screenshot_y.png"), (0, 0, 1, "screenshot_z.png")]:
             viewer.set_camera_position(p[0], p[1], p[2])
             data = viewer.capture_screen()
             save_png(p[3], data)
+
+    def on_keyup(ev: KeyboardEvent, handler_id: UUID):
+        if (ev.code == "KeyA"):
+            take_screenshots()
+            viewer.remove_keyup_handler(handler_id)
+            exit(0)
+
+    keyup_handler_id = viewer.add_keyup_handler(on_keyup)
+
+    def on_start_button_pushed():
+        take_screenshots()
+        viewer.remove_keyup_handler(keyup_handler_id)
         exit(0)
 
     viewer.add_custom_button(
         name="start", on_changed=lambda dummy: on_start_button_pushed()
     )
-    print("resize window and press custom control button \"start\"")
+
+    print("resize window and press custom control button \"start\" (or press A key)")
 
     viewer.wait_forever()
 

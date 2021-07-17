@@ -9,6 +9,7 @@ message ServerCommand {
         CustomControl add_custom_control = 4;
         SetCamera set_camera = 5;
         AddObject add_object = 6;
+        SetKeyEventHandler set_key_event_handler = 7;
     }
 }
 
@@ -83,6 +84,14 @@ message AddObject {
         oneof Contents {
             string text = 2;
         }
+    }
+}
+
+message SetKeyEventHandler {
+    oneof Event {
+        bool keydown = 1;
+        bool keyup = 2;
+        bool keypress = 3;
     }
 }
 

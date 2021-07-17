@@ -8,6 +8,7 @@ import { handleAddObject } from './handler/add_object';
 import { handleScreenCapture } from './handler/capture_screen';
 import { handleLogMessage } from './handler/log_message';
 import { handleSetCamera } from './handler/set_camera';
+import { handleSetKeyEvent } from './handler/set_key_event';
 
 export function connectWebSocket (viewer: PointCloudViewer, url: string) {
   const websocket = new WebSocket(url);
@@ -41,6 +42,9 @@ function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message
       break;
     case commandCase.ADD_OBJECT:
       handleAddObject(websocket, commandID, viewer, message.getAddObject());
+      break;
+    case commandCase.SET_KEY_EVENT_HANDLER:
+      handleSetKeyEvent(websocket, commandID, viewer, message.getSetKeyEventHandler());
       break;
     default:
       sendFailure(websocket, message.getUuid_asU8(), 'message has not any command');

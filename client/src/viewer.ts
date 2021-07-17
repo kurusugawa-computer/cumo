@@ -20,6 +20,12 @@ export class PointCloudViewer {
     gui: DAT.GUI;
     guiCustom: DAT.GUI;
 
+    keyEventHandler = new class {
+      onKeyUp: ((ev: KeyboardEvent) => any) | null = null
+      onKeyDown: ((ev: KeyboardEvent) => any) | null = null
+      onKeyPress: ((ev: KeyboardEvent) => any) | null = null
+    }();
+
     config = new class {
       controls = new class {
         rotateSpeed: number = 2.0

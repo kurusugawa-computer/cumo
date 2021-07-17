@@ -65,3 +65,42 @@ export function sendControlChanged (websocket: WebSocket, commandID: Uint8Array,
   command.setUuid(commandID);
   websocket.send(command.serializeBinary());
 }
+
+function KeyboardEvent2Protobuf (event: KeyboardEvent): PB.KeyEventOccurred.KeyEvent {
+  const ret = new PB.KeyEventOccurred.KeyEvent();
+  ret.setKey(event.key);
+  ret.setCode(event.code);
+  ret.setAltkey(event.altKey);
+  ret.setCtrlkey(event.ctrlKey);
+  ret.setMetakey(event.metaKey);
+  ret.setShiftkey(event.shiftKey);
+  ret.setRepeat(event.repeat);
+  return ret;
+}
+
+export function sendKeyUp (websocket: WebSocket, commandID: Uint8Array, event: KeyboardEvent) {
+  const keyEventOccurred = new PB.KeyEventOccurred();
+  keyEventOccurred.setKeyup(KeyboardEvent2Protobuf(event));
+  const command = new PB.ClientCommand();
+  command.setKeyEventOccurred(keyEventOccurred);
+  command.setUuid(commandID);
+  websocket.send(command.serializeBinary());
+}
+
+export function sendKeyDown (websocket: WebSocket, commandID: Uint8Array, event: KeyboardEvent) {
+  const keyEventOccurred = new PB.KeyEventOccurred();
+  keyEventOccurred.setKeydown(KeyboardEvent2Protobuf(event));
+  const command = new PB.ClientCommand();
+  command.setKeyEventOccurred(keyEventOccurred);
+  command.setUuid(commandID);
+  websocket.send(command.serializeBinary());
+}
+
+export function sendKeyPress (websocket: WebSocket, commandID: Uint8Array, event: KeyboardEvent) {
+  const keyEventOccurred = new PB.KeyEventOccurred();
+  keyEventOccurred.setKeypress(KeyboardEvent2Protobuf(event));
+  const command = new PB.ClientCommand();
+  command.setKeyEventOccurred(keyEventOccurred);
+  command.setUuid(commandID);
+  websocket.send(command.serializeBinary());
+}
