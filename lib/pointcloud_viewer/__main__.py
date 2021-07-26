@@ -37,6 +37,8 @@ def main():
     print("open: http://{}:{}".format(host, http_port))
     print("setup...")
 
+    viewer.remove_all()
+
     viewer.send_pointcloud_from_open3d(o3d_pc)
 
     points = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1],

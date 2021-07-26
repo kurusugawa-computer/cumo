@@ -19,4 +19,8 @@ export class Overlay {
       this.__elem.style.top = '' + y + 'px';
       this.__elem.style.left = '' + x + 'px';
     }
+
+    dispose () {
+      this.__elem.remove();
+    }
 }

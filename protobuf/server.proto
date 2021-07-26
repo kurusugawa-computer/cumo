@@ -10,6 +10,7 @@ message ServerCommand {
         SetCamera set_camera = 5;
         AddObject add_object = 6;
         SetKeyEventHandler set_key_event_handler = 7;
+        RemoveObject remove_object = 8;
     }
 }
 
@@ -84,6 +85,13 @@ message AddObject {
         oneof Contents {
             string text = 2;
         }
+    }
+}
+
+message RemoveObject {
+    oneof Object {
+        bool all = 1;
+        bytes by_uuid = 2;
     }
 }
 
