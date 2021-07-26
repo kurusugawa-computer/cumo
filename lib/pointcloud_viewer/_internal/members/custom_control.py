@@ -198,3 +198,21 @@ def add_custom_colorpicker(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+
+
+def remove_all_custom_controls(
+    self: PointCloudViewer
+) -> None:
+    """すべてのカスタムコントロールを削除する。
+    """
+    remove_custom_control = server_pb2.RemoveCustomControl()
+    remove_custom_control.all = True
+
+    obj = server_pb2.ServerCommand()
+    obj.remove_custom_control.CopyFrom(remove_custom_control)
+
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)

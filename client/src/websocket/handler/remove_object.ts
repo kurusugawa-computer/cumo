@@ -32,9 +32,5 @@ export function handleRemoveAll (websocket: WebSocket, commandID: Uint8Array, vi
   }
   viewer.overlays = [];
 
-  for (let i = viewer.guiCustom.__controllers.length - 1; i >= 0; i--) {
-    viewer.guiCustom.__controllers[i].remove();
-  }
-
   sendSuccess(websocket, commandID, 'success');
 }

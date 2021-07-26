@@ -7,6 +7,7 @@ import { handleAddControl } from './handler/add_control';
 import { handleAddObject } from './handler/add_object';
 import { handleScreenCapture } from './handler/capture_screen';
 import { handleLogMessage } from './handler/log_message';
+import { handleRemoveControl } from './handler/remove_control';
 import { handleRemoveObject } from './handler/remove_object';
 import { handleSetCamera } from './handler/set_camera';
 import { handleSetKeyEvent } from './handler/set_key_event';
@@ -49,6 +50,9 @@ function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message
       break;
     case commandCase.REMOVE_OBJECT:
       handleRemoveObject(websocket, commandID, viewer, message.getRemoveObject());
+      break;
+    case commandCase.REMOVE_CUSTOM_CONTROL:
+      handleRemoveControl(websocket, commandID, viewer, message.getRemoveCustomControl());
       break;
     default:
       sendFailure(websocket, message.getUuid_asU8(), 'message has not any command');

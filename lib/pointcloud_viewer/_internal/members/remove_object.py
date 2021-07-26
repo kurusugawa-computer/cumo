@@ -7,10 +7,10 @@ from uuid import uuid4
 from pointcloud_viewer._internal.protobuf import server_pb2
 
 
-def remove_all(
+def remove_all_objects(
     self: PointCloudViewer
 ) -> None:
-    """すべての点群とオーバーレイ、カスタムコントロールを削除する。
+    """すべての点群とオーバーレイを削除する。
     """
     remove_object = server_pb2.RemoveObject()
     remove_object.all = True

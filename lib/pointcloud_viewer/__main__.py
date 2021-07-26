@@ -37,7 +37,8 @@ def main():
     print("open: http://{}:{}".format(host, http_port))
     print("setup...")
 
-    viewer.remove_all()
+    viewer.remove_all_objects()
+    viewer.remove_all_custom_controls()
 
     viewer.send_pointcloud_from_open3d(o3d_pc)
 

@@ -2,6 +2,7 @@
 name = "pointcloud_viewer"
 version = "0.1.0"
 description = ""
+authors = ["Kurusugawa Computer"]
 include = [
     "pointcloud_viewer/public/*",
     "pointcloud_viewer/_internal/protobuf/*",
