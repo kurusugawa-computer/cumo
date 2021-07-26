@@ -3,7 +3,7 @@ import * as PB from '../../protobuf/server_pb.js';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
 
-export function handleRemoveObject (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, removeObject: PB.RemoveObject | undefined): void {
+export function handleRemoveObject (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, removeObject: PB.RemoveObject | undefined): void {
   if (removeObject === undefined) {
     sendFailure(websocket, commandID, 'failed to get add_object command');
     return;
@@ -22,7 +22,7 @@ export function handleRemoveObject (websocket: WebSocket, commandID: Uint8Array,
   }
 }
 
-export function handleRemoveAll (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer) {
+export function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
   for (let i = viewer.scene.children.length - 1; i >= 0; i--) {
     viewer.scene.remove(viewer.scene.children[i]);
   }

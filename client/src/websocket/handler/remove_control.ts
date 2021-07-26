@@ -4,7 +4,7 @@ import { PointCloudViewer } from '../../viewer';
 
 export function handleRemoveControl (
   websocket: WebSocket,
-  commandID: Uint8Array,
+  commandID: string,
   viewer: PointCloudViewer,
   removeControl: PB.RemoveCustomControl | undefined
 ) {
@@ -25,7 +25,7 @@ export function handleRemoveControl (
   }
 }
 
-function handleRemoveAll (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer) {
+function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
   for (let i = viewer.guiCustom.__controllers.length - 1; i >= 0; i--) {
     viewer.guiCustom.__controllers[i].remove();
   }

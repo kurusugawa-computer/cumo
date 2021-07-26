@@ -2,7 +2,7 @@ import * as PB from '../../protobuf/server_pb.js';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
 
-export function handleSetCamera (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, camera: PB.SetCamera | undefined): void {
+export function handleSetCamera (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, camera: PB.SetCamera | undefined): void {
   if (camera === undefined) {
     sendFailure(websocket, commandID, 'failed to get camera parameter');
     return;
@@ -27,7 +27,7 @@ export function handleSetCamera (websocket: WebSocket, commandID: Uint8Array, vi
   }
 }
 
-function setOrthographicCamera (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, frustumHeight: number) {
+function setOrthographicCamera (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, frustumHeight: number) {
   viewer.config.camera.orthographic.frustum = frustumHeight;
 
   const aspect = window.innerWidth / window.innerHeight;
@@ -43,7 +43,7 @@ function setOrthographicCamera (websocket: WebSocket, commandID: Uint8Array, vie
   sendSuccess(websocket, commandID, 'success');
 }
 
-function setPerspectiveCamera (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, fov: number) {
+function setPerspectiveCamera (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, fov: number) {
   viewer.config.camera.perspective.fov = fov;
   viewer.perspectiveCamera.fov = fov;
   viewer.perspectiveCamera.updateProjectionMatrix();
@@ -53,7 +53,7 @@ function setPerspectiveCamera (websocket: WebSocket, commandID: Uint8Array, view
   sendSuccess(websocket, commandID, 'success');
 }
 
-function setCameraPosition (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, position: PB.VecXYZf | undefined) {
+function setCameraPosition (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, position: PB.VecXYZf | undefined) {
   if (position === undefined) {
     sendFailure(websocket, commandID, 'failed to get camera position');
     return;
@@ -65,7 +65,7 @@ function setCameraPosition (websocket: WebSocket, commandID: Uint8Array, viewer:
   sendSuccess(websocket, commandID, 'success');
 }
 
-function setCameraTarget (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, target: PB.VecXYZf | undefined) {
+function setCameraTarget (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, target: PB.VecXYZf | undefined) {
   if (target === undefined) {
     sendFailure(websocket, commandID, 'failed to get camera position');
     return;

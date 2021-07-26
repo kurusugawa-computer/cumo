@@ -2,7 +2,7 @@ import html2canvas from 'html2canvas';
 import { sendFailure, sendImage } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
 
-export function handleScreenCapture (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer) {
+export function handleScreenCapture (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
   const divcanvas = viewer.getdiv;
 
   html2canvas(divcanvas).then((canvas) => {

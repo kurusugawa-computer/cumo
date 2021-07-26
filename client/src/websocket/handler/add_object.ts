@@ -7,7 +7,7 @@ import { Overlay } from '../../overlay';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
 
-export function handleAddObject (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, addObject: PB.AddObject | undefined): void {
+export function handleAddObject (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, addObject: PB.AddObject | undefined): void {
   if (addObject === undefined) {
     sendFailure(websocket, commandID, 'failed to get add_object command');
     return;
@@ -29,7 +29,7 @@ export function handleAddObject (websocket: WebSocket, commandID: Uint8Array, vi
   }
 }
 
-export function handleOverlay (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, overlay: PB.AddObject.Overlay | undefined) {
+export function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, overlay: PB.AddObject.Overlay | undefined) {
   if (overlay === undefined || !overlay.hasPosition()) {
     sendFailure(websocket, commandID, 'failed to get overlay command');
     return;
@@ -64,7 +64,7 @@ export function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, 
   viewer.overlays.push(overlay);
 }
 
-export function handleLineSet (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, lineset: PB.AddObject.LineSet | undefined): void {
+export function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, lineset: PB.AddObject.LineSet | undefined): void {
   if (lineset === undefined) {
     sendFailure(websocket, commandID, 'failed to get lineset');
     return;
@@ -94,7 +94,7 @@ export function handleLineSet (websocket: WebSocket, commandID: Uint8Array, view
 
 export function handlePointCloud (
   websocket: WebSocket,
-  commandID: Uint8Array,
+  commandID: string,
   pbPointcloud: PB.AddObject.PointCloud | undefined,
   viewer: PointCloudViewer
 ): void {

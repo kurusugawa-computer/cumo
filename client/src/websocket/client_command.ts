@@ -1,6 +1,6 @@
 import * as PB from '../protobuf/client_pb.js';
 
-export function sendSuccess (websocket: WebSocket, commandID: Uint8Array, message: string): void {
+export function sendSuccess (websocket: WebSocket, commandID: string, message: string): void {
   const resultSuccess = new PB.Result();
   resultSuccess.setSuccess(message);
 
@@ -11,7 +11,7 @@ export function sendSuccess (websocket: WebSocket, commandID: Uint8Array, messag
   websocket.send(command.serializeBinary());
 }
 
-export function sendFailure (websocket: WebSocket, commandID: Uint8Array, message: string): void {
+export function sendFailure (websocket: WebSocket, commandID: string, message: string): void {
   const resultFailure = new PB.Result();
   resultFailure.setFailure(message);
 
@@ -23,7 +23,7 @@ export function sendFailure (websocket: WebSocket, commandID: Uint8Array, messag
   console.error('error: ' + message);
 }
 
-export function sendImage (websocket: WebSocket, commandID: Uint8Array, blob: Blob): Promise<void> {
+export function sendImage (websocket: WebSocket, commandID: string, blob: Blob): Promise<void> {
   return new Promise(function (resolve: () => void, reject: (reason?: any) => void) {
     blob.arrayBuffer().then(
       function (buffer: ArrayBuffer): void {
@@ -44,7 +44,7 @@ export function sendImage (websocket: WebSocket, commandID: Uint8Array, blob: Bl
   });
 }
 
-export function sendControlChanged (websocket: WebSocket, commandID: Uint8Array, value: number | boolean | string) {
+export function sendControlChanged (websocket: WebSocket, commandID: string, value: number | boolean | string) {
   const changed = new PB.ControlChanged();
   switch (typeof (value)) {
     case 'boolean':
@@ -78,7 +78,7 @@ function KeyboardEvent2Protobuf (event: KeyboardEvent): PB.KeyEventOccurred.KeyE
   return ret;
 }
 
-export function sendKeyUp (websocket: WebSocket, commandID: Uint8Array, event: KeyboardEvent) {
+export function sendKeyUp (websocket: WebSocket, commandID: string, event: KeyboardEvent) {
   const keyEventOccurred = new PB.KeyEventOccurred();
   keyEventOccurred.setKeyup(KeyboardEvent2Protobuf(event));
   const command = new PB.ClientCommand();
@@ -87,7 +87,7 @@ export function sendKeyUp (websocket: WebSocket, commandID: Uint8Array, event: K
   websocket.send(command.serializeBinary());
 }
 
-export function sendKeyDown (websocket: WebSocket, commandID: Uint8Array, event: KeyboardEvent) {
+export function sendKeyDown (websocket: WebSocket, commandID: string, event: KeyboardEvent) {
   const keyEventOccurred = new PB.KeyEventOccurred();
   keyEventOccurred.setKeydown(KeyboardEvent2Protobuf(event));
   const command = new PB.ClientCommand();
@@ -96,7 +96,7 @@ export function sendKeyDown (websocket: WebSocket, commandID: Uint8Array, event:
   websocket.send(command.serializeBinary());
 }
 
-export function sendKeyPress (websocket: WebSocket, commandID: Uint8Array, event: KeyboardEvent) {
+export function sendKeyPress (websocket: WebSocket, commandID: string, event: KeyboardEvent) {
   const keyEventOccurred = new PB.KeyEventOccurred();
   keyEventOccurred.setKeypress(KeyboardEvent2Protobuf(event));
   const command = new PB.ClientCommand();

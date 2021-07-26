@@ -4,7 +4,7 @@ import { PointCloudViewer } from '../../viewer';
 
 export function handleAddControl (
   websocket: WebSocket,
-  commandID: Uint8Array,
+  commandID: string,
   viewer: PointCloudViewer,
   control: PB.CustomControl | undefined
 ) {
@@ -12,7 +12,7 @@ export function handleAddControl (
     sendFailure(websocket, commandID, 'failure to get control');
     return;
   }
-  const propertyName = 'custom_' + btoa(String.fromCharCode(...commandID));
+  const propertyName = 'custom_' + commandID;
   switch (control.getControlCase()) {
     case PB.CustomControl.ControlCase.BUTTON:
       {

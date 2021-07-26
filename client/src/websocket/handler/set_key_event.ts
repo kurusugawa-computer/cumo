@@ -2,7 +2,7 @@ import * as PB from '../../protobuf/server_pb.js';
 import { PointCloudViewer } from '../../viewer';
 import { sendFailure, sendKeyDown, sendKeyPress, sendKeyUp, sendSuccess } from '../client_command';
 
-export function handleSetKeyEvent (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, setKeyEventHandler: PB.SetKeyEventHandler | undefined) {
+export function handleSetKeyEvent (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, setKeyEventHandler: PB.SetKeyEventHandler | undefined) {
   if (setKeyEventHandler === undefined) {
     sendFailure(websocket, commandID, 'failed to get command');
     return;
@@ -24,7 +24,7 @@ export function handleSetKeyEvent (websocket: WebSocket, commandID: Uint8Array, 
   }
 }
 
-function handleSetKeyUp (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, enable: boolean | undefined) {
+function handleSetKeyUp (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, enable: boolean | undefined) {
   if (enable === undefined) {
     sendFailure(websocket, commandID, 'failed to get command');
     return;
@@ -40,7 +40,7 @@ function handleSetKeyUp (websocket: WebSocket, commandID: Uint8Array, viewer: Po
   sendSuccess(websocket, commandID, 'success');
 }
 
-function handleSetKeyDown (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, enable: boolean | undefined) {
+function handleSetKeyDown (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, enable: boolean | undefined) {
   if (enable === undefined) {
     sendFailure(websocket, commandID, 'failed to get command');
     return;
@@ -56,7 +56,7 @@ function handleSetKeyDown (websocket: WebSocket, commandID: Uint8Array, viewer: 
   sendSuccess(websocket, commandID, 'success');
 }
 
-function handleSetKeyPress (websocket: WebSocket, commandID: Uint8Array, viewer: PointCloudViewer, enable: boolean | undefined) {
+function handleSetKeyPress (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, enable: boolean | undefined) {
   if (enable === undefined) {
     sendFailure(websocket, commandID, 'failed to get command');
     return;

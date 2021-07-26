@@ -2,7 +2,7 @@ syntax = "proto3";
 package Client;
 
 message ClientCommand {
-    bytes UUID = 1;
+    string UUID = 1;
     oneof Command {
         string log_message = 2;
         Result result = 3;

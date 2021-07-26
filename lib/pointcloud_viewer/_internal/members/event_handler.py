@@ -22,7 +22,7 @@ def _wait_until(self: PointCloudViewer, uuid: UUID) -> client_pb2.ClientCommand:
             command.ParseFromString(data)
         except DecodeError:
             raise RuntimeError("failed to parsing message")
-        if UUID(bytes_le=command.UUID) == uuid:
+        if UUID(hex=command.UUID) == uuid:
             return command
         else:
             self._handle_message(command)
@@ -49,7 +49,7 @@ def _set_custom_handler(self: PointCloudViewer, uuid: UUID, name: str, func: Cal
 
 
 def _handle_control_changed(self: PointCloudViewer, command: client_pb2.ClientCommand):
-    uuid = UUID(bytes_le=command.UUID)
+    uuid = UUID(hex=command.UUID)
     on_changed = self._get_custom_handler(uuid, "changed")
     if on_changed != None:
         if command.control_changed.HasField("number"):
@@ -107,6 +107,6 @@ def handle_keypress(self: PointCloudViewer, ev_pb: client_pb2.KeyEventOccurred.K
 
 
 def _send_data(self: PointCloudViewer, pbobj: server_pb2.ServerCommand, uuid: UUID) -> None:
-    pbobj.UUID = uuid.bytes_le
+    pbobj.UUID = str(uuid)
     data = base64.b64encode(pbobj.SerializeToString())
     self._websocket_broadcasting_queue.put(data.decode())

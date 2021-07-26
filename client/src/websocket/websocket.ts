@@ -28,7 +28,7 @@ export function connectWebSocket (viewer: PointCloudViewer, url: string) {
 
 function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message: PB.ServerCommand) {
   const commandCase = PB.ServerCommand.CommandCase;
-  const commandID = message.getUuid_asU8();
+  const commandID = message.getUuid();
   switch (message.getCommandCase()) {
     case commandCase.LOG_MESSAGE:
       handleLogMessage(websocket, commandID, message.getLogMessage());
@@ -55,7 +55,7 @@ function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message
       handleRemoveControl(websocket, commandID, viewer, message.getRemoveCustomControl());
       break;
     default:
-      sendFailure(websocket, message.getUuid_asU8(), 'message has not any command');
+      sendFailure(websocket, commandID, 'message has not any command');
       break;
   }
 }

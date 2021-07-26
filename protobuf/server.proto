@@ -2,7 +2,7 @@ syntax = "proto3";
 package Server;
 
 message ServerCommand {
-    bytes UUID = 1;
+    string UUID = 1;
     oneof Command {
         string log_message = 2;
         bool capture_screen = 3;
@@ -61,7 +61,7 @@ message CustomControl {
 message RemoveCustomControl {
     oneof Object {
         bool all = 1;
-        bytes by_uuid = 2;
+        string by_uuid = 2;
     }
 }
 
@@ -99,7 +99,7 @@ message AddObject {
 message RemoveObject {
     oneof Object {
         bool all = 1;
-        bytes by_uuid = 2;
+        string by_uuid = 2;
     }
 }
 
