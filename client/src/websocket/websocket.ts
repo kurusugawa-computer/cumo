@@ -28,7 +28,7 @@ export function connectWebSocket (viewer: PointCloudViewer, url: string) {
 
 function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message: PB.ServerCommand) {
   const commandCase = PB.ServerCommand.CommandCase;
-  const commandID = message.getUuid();
+  const commandID = message.getUuid().toUpperCase();
   switch (message.getCommandCase()) {
     case commandCase.LOG_MESSAGE:
       handleLogMessage(websocket, commandID, message.getLogMessage());

@@ -47,8 +47,8 @@ export function handleOverlay (websocket: WebSocket, commandID: string, viewer: 
         div.innerText = overlay.getText();
         div.style.color = 'white';
         (div.style as any).mixColorBlend = 'difference';
-        addOverlayHTML(viewer, div, position);
-        sendSuccess(websocket, commandID, 'success');
+        addOverlayHTML(viewer, div, position, commandID);
+        sendSuccess(websocket, commandID, commandID);
       }
       break;
     default:
@@ -57,10 +57,10 @@ export function handleOverlay (websocket: WebSocket, commandID: string, viewer: 
   }
 }
 
-export function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf) {
+export function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, commandID: string) {
   viewer.overlayContainer.appendChild(element);
   const p = new THREE.Vector3(position.getX(), position.getY(), position.getZ());
-  const overlay = new Overlay(element, p);
+  const overlay = new Overlay(element, p, commandID);
   viewer.overlays.push(overlay);
 }
 
@@ -88,8 +88,7 @@ export function handleLineSet (websocket: WebSocket, commandID: string, viewer: 
   const material = new THREE.LineBasicMaterial();
   const linesegments = new THREE.LineSegments(geometry, material);
   viewer.scene.add(linesegments);
-
-  sendSuccess(websocket, commandID, 'success');
+  sendSuccess(websocket, commandID, linesegments.uuid);
 }
 
 export function handlePointCloud (
@@ -113,5 +112,6 @@ export function handlePointCloud (
     pointcloud.material.needsUpdate = true;
   }
   viewer.scene.add(pointcloud);
-  sendSuccess(websocket, commandID, 'success');
+  console.log(pointcloud.uuid);
+  sendSuccess(websocket, commandID, pointcloud.uuid);
 }

@@ -13,7 +13,7 @@ from pointcloud_viewer._internal.protobuf import server_pb2
 def send_pointcloud_from_open3d(
     self: PointCloudViewer,
     pc: open3d.geometry.PointCloud,
-) -> None:
+) -> UUID:
     """点群をブラウザに送信し、表示させる。
 
     :param pc: 点群。色付きの場合は反映される
@@ -52,12 +52,15 @@ def send_pointcloud_from_open3d(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
 
 
 def send_lineset_from_open3d(
     self: PointCloudViewer,
     lineset: open3d.geometry.LineSet,
-) -> None:
+) -> UUID:
     """LineSetをブラウザに送信し、表示させる。
 
     :param lineset: LineSet。
@@ -84,6 +87,9 @@ def send_lineset_from_open3d(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
 
 
 def send_overlay_text(
@@ -92,7 +98,7 @@ def send_overlay_text(
     x: float = 0,
     y: float = 0,
     z: float = 0,
-) -> None:
+) -> UUID:
     """特定の座標を左上として文字列をオーバーレイさせる。
 
     :param text: 表示させる文字列
@@ -121,3 +127,6 @@ def send_overlay_text(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)

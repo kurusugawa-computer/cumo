@@ -14,7 +14,7 @@ export function handleRemoveObject (websocket: WebSocket, commandID: string, vie
       handleRemoveAll(websocket, commandID, viewer);
       break;
     case objectCase.BY_UUID:
-      console.error('unimplemented');
+      handleRemoveByUUID(websocket, commandID, viewer, removeObject.getByUuid());
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any object');
@@ -22,7 +22,7 @@ export function handleRemoveObject (websocket: WebSocket, commandID: string, vie
   }
 }
 
-export function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
+function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
   for (let i = viewer.scene.children.length - 1; i >= 0; i--) {
     viewer.scene.remove(viewer.scene.children[i]);
   }
@@ -33,4 +33,25 @@ export function handleRemoveAll (websocket: WebSocket, commandID: string, viewer
   viewer.overlays = [];
 
   sendSuccess(websocket, commandID, 'success');
+}
+
+function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, uuid: string) {
+  // scene.getObjectById もあるがthree.jsの外で作ったオブジェクトも統一的に扱えるようにUUIDを使う
+  const threejsObject = viewer.scene.getObjectByProperty('uuid', uuid.toUpperCase());
+  console.log(uuid, threejsObject);
+  if (threejsObject !== undefined) {
+    viewer.scene.remove(threejsObject);
+    sendSuccess(websocket, commandID, 'success');
+    return;
+  }
+  for (let i = 0; i < viewer.overlays.length; i++) {
+    const overlay = viewer.overlays[i];
+    if (overlay.uuid === uuid.toUpperCase()) {
+      overlay.dispose();
+      viewer.overlays.splice(i, 1);
+      sendSuccess(websocket, commandID, 'success');
+      return;
+    }
+  }
+  sendFailure(websocket, commandID, 'object not found');
 }
