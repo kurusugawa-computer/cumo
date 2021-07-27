@@ -25,7 +25,7 @@ class PointCloudViewer:
 
     from pointcloud_viewer._internal.members.capture_screen import capture_screen
     from pointcloud_viewer._internal.members.camera import set_camera_position, set_camera_target, set_orthographic_camera, set_perspective_camera
-    from pointcloud_viewer._internal.members.custom_control import add_custom_button, add_custom_checkbox, add_custom_colorpicker, add_custom_selectbox, add_custom_slider, add_custom_textbox, remove_all_custom_controls
+    from pointcloud_viewer._internal.members.custom_control import add_custom_button, add_custom_checkbox, add_custom_colorpicker, add_custom_selectbox, add_custom_slider, add_custom_textbox, remove_all_custom_controls, remove_custom_control
     from pointcloud_viewer._internal.members.internal_utils import __init__
     from pointcloud_viewer._internal.members.send_object import send_lineset_from_open3d, send_overlay_text, send_pointcloud_from_open3d
     from pointcloud_viewer._internal.members.utils import wait_forever, console_log, start

@@ -38,7 +38,6 @@ function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: Point
 function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, uuid: string) {
   // scene.getObjectById もあるがthree.jsの外で作ったオブジェクトも統一的に扱えるようにUUIDを使う
   const threejsObject = viewer.scene.getObjectByProperty('uuid', uuid.toUpperCase());
-  console.log(uuid, threejsObject);
   if (threejsObject !== undefined) {
     viewer.scene.remove(threejsObject);
     sendSuccess(websocket, commandID, 'success');

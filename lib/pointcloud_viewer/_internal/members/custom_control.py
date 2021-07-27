@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 from typing import Callable, Optional
 from pointcloud_viewer._internal.protobuf import server_pb2
 
@@ -16,7 +16,7 @@ def add_custom_slider(
     step: float = 1,
     init_value: float = 50,
     on_changed: Optional[Callable[[float], None]] = None,
-) -> None:
+) -> UUID:
     """カスタムフォルダにスライダーを追加する。
 
     :param name: 表示名
@@ -48,6 +48,9 @@ def add_custom_slider(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
 
 
 def add_custom_checkbox(
@@ -55,7 +58,7 @@ def add_custom_checkbox(
     name: str = "checkbox",
     init_value: bool = False,
     on_changed: Optional[Callable[[bool], None]] = None,
-) -> None:
+) -> UUID:
     """カスタムフォルダーにチェックボックスを追加する。
 
     :param name: 表示名
@@ -78,6 +81,9 @@ def add_custom_checkbox(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
 
 
 def add_custom_textbox(
@@ -85,7 +91,7 @@ def add_custom_textbox(
     name: str = "textbox",
     init_value: str = "",
     on_changed: Optional[Callable[[bool], None]] = None,
-) -> None:
+) -> UUID:
     """カスタムフォルダーにテキストボックスを追加する。
 
     :param name: 表示名
@@ -108,6 +114,9 @@ def add_custom_textbox(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
 
 
 def add_custom_selectbox(
@@ -116,7 +125,7 @@ def add_custom_selectbox(
     name: str = "selectbox",
     init_value: str = "",
     on_changed: Optional[Callable[[bool], None]] = None,
-) -> None:
+) -> UUID:
     """カスタムフォルダーにセレクトボックスを追加する。
 
     :param items: 要素の文字列のリスト
@@ -142,13 +151,16 @@ def add_custom_selectbox(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
 
 
 def add_custom_button(
     self: PointCloudViewer,
     name: str = "button",
     on_changed: Optional[Callable[[], None]] = None,
-) -> None:
+) -> UUID:
     """カスタムフォルダーにボタンを追加する。
 
     :param name: 表示名
@@ -168,6 +180,9 @@ def add_custom_button(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
 
 
 def add_custom_colorpicker(
@@ -175,7 +190,7 @@ def add_custom_colorpicker(
     name: str = "color",
     init_value: str = "#000",
     on_changed: Optional[Callable[[], None]] = None,
-) -> None:
+) -> UUID:
     """カスタムフォルダーにカラーピッカーを追加する。
 
     :param name: 表示名
@@ -198,6 +213,9 @@ def add_custom_colorpicker(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
 
 
 def remove_all_custom_controls(
@@ -207,6 +225,25 @@ def remove_all_custom_controls(
     """
     remove_custom_control = server_pb2.RemoveCustomControl()
     remove_custom_control.all = True
+
+    obj = server_pb2.ServerCommand()
+    obj.remove_custom_control.CopyFrom(remove_custom_control)
+
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+
+
+def remove_custom_control(
+    self: PointCloudViewer,
+    uuid: UUID
+) -> None:
+    """指定したUUIDを持つカスタムコントロールを削除する。
+    """
+    remove_custom_control = server_pb2.RemoveCustomControl()
+    remove_custom_control.by_uuid = str(uuid)
 
     obj = server_pb2.ServerCommand()
     obj.remove_custom_control.CopyFrom(remove_custom_control)

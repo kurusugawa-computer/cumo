@@ -18,7 +18,7 @@ export function handleRemoveControl (
       handleRemoveAll(websocket, commandID, viewer);
       break;
     case ObjectCase.BY_UUID:
-      console.error('unimplemented');
+      handleRemoveByUUID(websocket, commandID, viewer, removeControl.getByUuid());
       break;
     default:
       break;
@@ -31,4 +31,16 @@ function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: Point
   }
 
   sendSuccess(websocket, commandID, 'success');
+}
+
+function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, uuid: string) {
+  for (let i = 0; i < viewer.guiCustom.__controllers.length; i++) {
+    const controller = viewer.guiCustom.__controllers[i];
+    if (controller.property === uuid.toUpperCase()) {
+      controller.remove();
+      sendSuccess(websocket, commandID, 'success');
+      return;
+    }
+  }
+  sendFailure(websocket, commandID, 'control not found');
 }

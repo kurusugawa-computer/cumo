@@ -112,6 +112,5 @@ export function handlePointCloud (
     pointcloud.material.needsUpdate = true;
   }
   viewer.scene.add(pointcloud);
-  console.log(pointcloud.uuid);
   sendSuccess(websocket, commandID, pointcloud.uuid);
 }

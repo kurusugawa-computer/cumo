@@ -12,7 +12,7 @@ export function handleAddControl (
     sendFailure(websocket, commandID, 'failure to get control');
     return;
   }
-  const propertyName = 'custom_' + commandID;
+  const propertyName = commandID;
   switch (control.getControlCase()) {
     case PB.CustomControl.ControlCase.BUTTON:
       {
@@ -130,5 +130,5 @@ export function handleAddControl (
       sendFailure(websocket, commandID, 'invalid command');
       return;
   }
-  sendSuccess(websocket, commandID, 'success');
+  sendSuccess(websocket, commandID, commandID);
 }
