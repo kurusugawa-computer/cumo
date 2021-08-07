@@ -18,6 +18,9 @@ def send_pointcloud_from_open3d(
 
     :param pc: 点群。色付きの場合は反映される
     :type pc: open3d.geometry.PointCloud
+
+    Returns:
+        UUID: 表示した点群に対応するID。後から操作する際に使う
     """
     pcd: pypcd.PointCloud
     if len(pc.points) == len(pc.colors):
@@ -65,6 +68,9 @@ def send_lineset_from_open3d(
 
     :param lineset: LineSet。
     :type lineset: open3d.geometry.LineSet
+
+    Returns:
+        UUID: 表示したLineSetに対応するID。後から操作する際に使う
     """
     pb_lineset = server_pb2.AddObject.LineSet()
     for v in numpy.asarray(lineset.points):
@@ -109,6 +115,9 @@ def send_overlay_text(
     :type y: float, optional
     :param z: オーバーレイが追従する点のz座標
     :type z: float, optional
+
+    Returns:
+        UUID: オーバーレイに対応するID。後から操作する際に使う
     """
     overlay = server_pb2.AddObject.Overlay()
     position = server_pb2.VecXYZf()

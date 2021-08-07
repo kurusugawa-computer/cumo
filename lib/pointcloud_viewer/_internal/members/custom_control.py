@@ -31,6 +31,9 @@ def add_custom_slider(
     :type init_value: float, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にスライダーの設定値が渡される
     :type on_changed: Optional[Callable[[float], None]], optional
+
+    Returns:
+        UUID: コントロールに対応するID。後から操作する際に使う
     """
     obj = server_pb2.ServerCommand()
     slider = server_pb2.CustomControl.Slider()
@@ -67,6 +70,9 @@ def add_custom_checkbox(
     :type init_value: bool, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にチェックボックスの設定値が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
+
+    Returns:
+        UUID: コントロールに対応するID。後から操作する際に使う
     """
     checkbox = server_pb2.CustomControl.CheckBox()
     checkbox.name = name
@@ -100,6 +106,9 @@ def add_custom_textbox(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にテキストボックスの値が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
+
+    Returns:
+        UUID: コントロールに対応するID。後から操作する際に使う
     """
     textbox = server_pb2.CustomControl.TextBox()
     textbox.name = name
@@ -136,6 +145,9 @@ def add_custom_selectbox(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に選択された要素の文字列が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
+
+    Returns:
+        UUID: コントロールに対応するID。後から操作する際に使う
     """
     selectbox = server_pb2.CustomControl.SelectBox()
     selectbox.name = name
@@ -167,6 +179,9 @@ def add_custom_button(
     :type name: str, optional
     :param on_changed: ボタンが押されたときに呼ばれるコールバック関数。引数に ``True`` が渡される
     :type on_changed: Optional[Callable[[], None]], optional
+
+    Returns:
+        UUID: コントロールに対応するID。後から操作する際に使う
     """
     button = server_pb2.CustomControl.Button()
     button.name = name
@@ -199,6 +214,9 @@ def add_custom_colorpicker(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に色を表す文字列が渡される
     :type on_changed: Optional[Callable[[], None]], optional
+
+    Returns:
+        UUID: コントロールに対応するID。後から操作する際に使う
     """
     picker = server_pb2.CustomControl.ColorPicker()
     picker.name = name
@@ -241,6 +259,9 @@ def remove_custom_control(
     uuid: UUID
 ) -> None:
     """指定したUUIDを持つカスタムコントロールを削除する。
+
+    Args:
+        uuid (UUID): 削除するコントロールに対応するID
     """
     remove_custom_control = server_pb2.RemoveCustomControl()
     remove_custom_control.by_uuid = str(uuid)

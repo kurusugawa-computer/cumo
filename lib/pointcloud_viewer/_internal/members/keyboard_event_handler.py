@@ -14,6 +14,14 @@ def add_keyup_handler(
     self: PointCloudViewer,
     handler: Callable[[KeyboardEvent, UUID], None]
 ) -> UUID:
+    """ブラウザでkeyupイベントが発生したときに呼ばれるハンドラーを登録する。
+
+    Args:
+        handler (Callable[[KeyboardEvent, UUID], None]): ブラウザでkeyupイベントが発生したときに呼ばれるハンドラー
+
+    Returns:
+        UUID: ハンドラーに対応するID。後から操作する際に使う
+    """
     uuid = uuid4()
     if not "keyup" in self._key_event_handlers:
         self._key_event_handlers["keyup"] = dict()
@@ -34,6 +42,11 @@ def remove_keyup_handler(
     self: PointCloudViewer,
     uuid: UUID
 ) -> None:
+    """ブラウザでkeyupイベントが発生したときに呼ばれるハンドラーを削除する。
+
+    Args:
+        uuid (UUID): ブラウザでkeyupイベントが発生したときに呼ばれるハンドラーのID
+    """
     if not "keyup" in self._key_event_handlers:
         raise KeyError(uuid)
     if not uuid in self._key_event_handlers["keyup"]:
@@ -54,6 +67,14 @@ def add_keydown_handler(
     self: PointCloudViewer,
     handler: Callable[[KeyboardEvent, UUID], None]
 ) -> UUID:
+    """ブラウザでkeydownイベントが発生したときに呼ばれるハンドラーを登録する。
+
+    Args:
+        handler (Callable[[KeyboardEvent, UUID], None]): ブラウザでkeydownイベントが発生したときに呼ばれるハンドラー
+
+    Returns:
+        UUID: ハンドラーに対応するID。後から操作する際に使う
+    """
     uuid = uuid4()
     if not "keydown" in self._key_event_handlers:
         self._key_event_handlers["keydown"] = dict()
@@ -74,6 +95,11 @@ def remove_keydown_handler(
     self: PointCloudViewer,
     uuid: UUID
 ) -> None:
+    """ブラウザでkeydownイベントが発生したときに呼ばれるハンドラーを削除する。
+
+    Args:
+        uuid (UUID): ブラウザでkeydownイベントが発生したときに呼ばれるハンドラーのID
+    """
     if not "keydown" in self._key_event_handlers:
         raise KeyError(uuid)
     if not uuid in self._key_event_handlers["keydown"]:
@@ -94,6 +120,14 @@ def add_keypress_handler(
     self: PointCloudViewer,
     handler: Callable[[KeyboardEvent, UUID], None]
 ) -> UUID:
+    """ブラウザでkeypressイベントが発生したときに呼ばれるハンドラーを登録する。
+
+    Args:
+        handler (Callable[[KeyboardEvent, UUID], None]): ブラウザでkeypressイベントが発生したときに呼ばれるハンドラー
+
+    Returns:
+        UUID: ハンドラーに対応するID。後から操作する際に使う
+    """
     uuid = uuid4()
     if not "keypress" in self._key_event_handlers:
         self._key_event_handlers["keypress"] = dict()
@@ -114,6 +148,11 @@ def remove_keypress_handler(
     self: PointCloudViewer,
     uuid: UUID
 ) -> None:
+    """ブラウザでkeypressイベントが発生したときに呼ばれるハンドラーを削除する。
+
+    Args:
+        uuid (UUID): ブラウザでkeypressイベントが発生したときに呼ばれるハンドラーのID
+    """
     if not "keypress" in self._key_event_handlers:
         raise KeyError(uuid)
     if not uuid in self._key_event_handlers["keypress"]:
