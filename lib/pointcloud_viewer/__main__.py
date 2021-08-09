@@ -1,6 +1,7 @@
 from uuid import UUID
 import numpy
 import open3d as open3d
+from pypcd import pypcd
 
 from argparse import ArgumentParser
 
@@ -17,18 +18,24 @@ def main():
     parser.add_argument("pcd_filepath")
     args = parser.parse_args()
 
-    o3d_pc = open3d.io.read_point_cloud(args.pcd_filepath)
-    n = 65536
-    o3d_pc = o3d_pc.uniform_down_sample(
-        (len(o3d_pc.points) + n - 1)//n
-    )
-    xyz = numpy.asarray(o3d_pc.points)
+    pypcd_pc = pypcd.point_cloud_from_path(args.pcd_filepath)
+
+    pc_data: numpy.ndarray = pypcd_pc.pc_data
+
+    xyz = numpy.stack([pc_data["x"], pc_data["y"], pc_data["z"]], axis=1)
+
     xyz[:, 0] -= xyz[:, 0].mean()
     xyz[:, 1] -= xyz[:, 1].mean()
     xyz[:, 2] -= xyz[:, 2].mean()
-    o3d_pc.points = open3d.utility.Vector3dVector(xyz)
-
     radius = numpy.amax(xyz[:, 0]**2 + xyz[:, 1]**2 + xyz[:, 2]**2)**0.5
+
+    rgb_u32: numpy.ndarray = pc_data["rgb"]
+    rgb_u32.dtype = "uint32"
+    r_u8: numpy.ndarray = ((rgb_u32 & 0xff0000) >> 16).astype("uint8")
+    g_u8: numpy.ndarray = ((rgb_u32 & 0x00ff00) >> 8).astype("uint8")
+    b_u8: numpy.ndarray = (rgb_u32 & 0x0000ff).astype("uint8")
+
+    rgb = numpy.stack([r_u8, g_u8, b_u8], axis=1)
 
     viewer = PointCloudViewer(
         host=host, websocket_port=websocket_port, http_port=http_port, autostart=True
@@ -39,7 +46,10 @@ def main():
     viewer.remove_all_objects()
     viewer.remove_all_custom_controls()
 
-    viewer.send_pointcloud_from_open3d(o3d_pc)
+    viewer.send_pointcloud(xyz=xyz, rgb=rgb)
+    # or:
+    #   import numpy.lib.recfunctions as rf
+    #   viewer.send_pointcloud(xyzrgb=rf.structured_to_unstructured(pc_data))
 
     points = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1],
               [0, 1, 1], [1, 1, 1]]

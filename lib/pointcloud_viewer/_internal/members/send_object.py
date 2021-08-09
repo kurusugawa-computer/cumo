@@ -8,39 +8,75 @@ import numpy
 from pypcd import pypcd
 import open3d
 from pointcloud_viewer._internal.protobuf import server_pb2
+from typing import Optional
 
 
-def send_pointcloud_from_open3d(
+def send_pointcloud(
     self: PointCloudViewer,
-    pc: open3d.geometry.PointCloud,
+    xyz: Optional[numpy.ndarray] = None,
+    rgb: Optional[numpy.ndarray] = None,
+    xyzrgb: Optional[numpy.ndarray] = None
 ) -> UUID:
     """点群をブラウザに送信し、表示させる。
 
-    :param pc: 点群。色付きの場合は反映される
-    :type pc: open3d.geometry.PointCloud
+    Args:
+        xyz (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。各行が点のx,y,z座標を表す。
+        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が uint8 の ndarray 。各行が点のr,g,bを表す。
+        xyzrgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。
+            各行が点のx,y,z座標とrgbを表す。rgbは24ビットのrgb値を r<<16 + g<<8 + b のように float32 にエンコードしたもの。
 
     Returns:
         UUID: 表示した点群に対応するID。後から操作する際に使う
     """
+    # 引数チェック
+    if xyz is None and xyzrgb is None:
+        raise ValueError("xyz or xyzrgb is required")
+    if xyz is not None and not(len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
+        raise ValueError(
+            "points must be float32 array of shape (num_points, 3)"
+        )
+    if rgb is not None:
+        if xyz is None:
+            raise ValueError("xyz is required with rgb")
+        shape_is_valid = len(rgb.shape) == 2 and rgb.shape[1] == 3
+        length_is_same = shape_is_valid and rgb.shape[0] == xyz.shape[0]
+        type_is_valid = rgb.dtype == "uint8"
+
+        if not (shape_is_valid and length_is_same and type_is_valid):
+            raise ValueError(
+                "colors must be uint8 array of shape (num_points, 3)"
+            )
+    if xyzrgb is not None and not(len(xyzrgb.shape) == 2 and xyzrgb.shape[1] == 4 and xyzrgb.dtype == "float32"):
+        raise ValueError(
+            "xyzrgb must be float32 array of shape (num_points, 4)"
+        )
+
+    # pcdデータ作成
     pcd: pypcd.PointCloud
-    if len(pc.points) == len(pc.colors):
-        colors_f32 = numpy.asarray(pc.colors)
-        colors_f32 *= 255
-        colors = colors_f32.astype(numpy.uint32)
+    if xyz is not None:
+        if rgb is not None:
+            rgb_u32 = rgb.astype("uint32")
+            rgb_f32: numpy.ndarray = (
+                (rgb_u32[:, 0] << 16)
+                + (rgb_u32[:, 1] << 8)
+                + rgb_u32[:, 2]
+            )
+            rgb_f32.dtype = "float32"
 
-        rgb = (colors[:, 0] << 16) | (colors[:, 1] << 8) | colors[:, 2]
-        rgb.dtype = numpy.float32
-
-        xyzrgb = numpy.column_stack((
-            numpy.asarray(pc.points).astype(numpy.float32),
-            rgb,
-        ))
-        pcd = pypcd.make_xyz_rgb_point_cloud(xyzrgb)
+            concatenated: numpy.ndarray = numpy.column_stack((
+                xyz,
+                rgb_f32,
+            ))
+            pcd = pypcd.make_xyz_rgb_point_cloud(concatenated)
+        else:
+            pcd = pypcd.make_xyz_point_cloud(xyz)
     else:
-        xyz = numpy.asarray(pc.points).astype(numpy.float32)
-        pcd = pypcd.make_xyz_point_cloud(xyz)
+        assert xyzrgb is not None
+        pcd = pypcd.make_xyz_rgb_point_cloud(xyzrgb)
+
     pcd_bytes = pcd.save_pcd_to_buffer()
 
+    # 送信
     cloud = server_pb2.AddObject.PointCloud()
     cloud.pcd_data = pcd_bytes
 
