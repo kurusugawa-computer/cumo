@@ -1,6 +1,5 @@
 from uuid import UUID
 import numpy
-import open3d as open3d
 from pypcd import pypcd
 
 from argparse import ArgumentParser
@@ -51,22 +50,25 @@ def main():
     #   import numpy.lib.recfunctions as rf
     #   viewer.send_pointcloud(xyzrgb=rf.structured_to_unstructured(pc_data))
 
-    points = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0], [0, 0, 1], [1, 0, 1],
-              [0, 1, 1], [1, 1, 1]]
-    lines = [[0, 1], [0, 2], [1, 3], [2, 3], [4, 5], [4, 6], [5, 7], [6, 7],
-             [0, 4], [1, 5], [2, 6], [3, 7]]
-    line_set = open3d.geometry.LineSet()
-    line_set.points = open3d.utility.Vector3dVector(points)
-    line_set.lines = open3d.utility.Vector2iVector(lines)
+    points = numpy.array([
+        [0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+        [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]
+    ])
+    points = points * (radius*2) - numpy.ones((3,))*radius
+    points = points.astype("float32")
 
-    line_set.scale(radius*2, (0, 0, 0))
-    line_set.translate((-radius, -radius, -radius))
+    lines = numpy.array([
+        [0, 1], [0, 2], [1, 3], [2, 3],
+        [4, 5], [4, 6], [5, 7], [6, 7],
+        [0, 4], [1, 5], [2, 6], [3, 7]
+    ]).astype("uint64")
 
-    for point in line_set.points:
+    viewer.send_lineset(points, lines)
+
+    for point in points:
         text = "%.2f,%.2f,%.2f" % tuple(point)
         viewer.send_overlay_text(text, point[0], point[1], point[2])
 
-    viewer.send_lineset_from_open3d(line_set)
     viewer.set_orthographic_camera(frustum_height=radius*2)
 
     def save_png(name: str, data: bytes) -> None:

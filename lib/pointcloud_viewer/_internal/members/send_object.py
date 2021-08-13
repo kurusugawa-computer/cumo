@@ -6,7 +6,6 @@ if TYPE_CHECKING:
 from uuid import UUID, uuid4
 import numpy
 from pypcd import pypcd
-import open3d
 from pointcloud_viewer._internal.protobuf import server_pb2
 from typing import Optional
 
@@ -33,7 +32,7 @@ def send_pointcloud(
         raise ValueError("xyz or xyzrgb is required")
     if xyz is not None and not(len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
         raise ValueError(
-            "points must be float32 array of shape (num_points, 3)"
+            "xyz must be float32 array of shape (num_points, 3)"
         )
     if rgb is not None:
         if xyz is None:
@@ -44,7 +43,7 @@ def send_pointcloud(
 
         if not (shape_is_valid and length_is_same and type_is_valid):
             raise ValueError(
-                "colors must be uint8 array of shape (num_points, 3)"
+                "rgb must be uint8 array of shape (num_points, 3)"
             )
     if xyzrgb is not None and not(len(xyzrgb.shape) == 2 and xyzrgb.shape[1] == 4 and xyzrgb.dtype == "float32"):
         raise ValueError(
@@ -96,26 +95,38 @@ def send_pointcloud(
     return UUID(hex=ret.result.success)
 
 
-def send_lineset_from_open3d(
+def send_lineset(
     self: PointCloudViewer,
-    lineset: open3d.geometry.LineSet,
+    xyz: numpy.ndarray,
+    from_to: numpy.ndarray,
 ) -> UUID:
-    """LineSetをブラウザに送信し、表示させる。
+    """Linesetをブラウザに送信し、表示させる。
 
-    :param lineset: LineSet。
-    :type lineset: open3d.geometry.LineSet
+    Args:
+        xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が線分の端点のx,y,z座標を表す。
+        from_to (numpy.ndarray): shape が (num_lines,2) で dtype が uint64 の ndarray 。各行が線分の端点のインデックスによって1本の線分を表す。
 
     Returns:
-        UUID: 表示したLineSetに対応するID。後から操作する際に使う
+        UUID: 表示したLinesetに対応するID。後から操作する際に使う
     """
+    if not (len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
+        raise ValueError("xyz must be float32 array of shape (num_points,3)")
+    if not (len(from_to.shape) == 2 and from_to.shape[1] == 2 and from_to.dtype == "uint64"):
+        raise ValueError("from_to must be uint64 array of shape (num_lines,2)")
+
+    num_points = xyz.shape[0]
+
     pb_lineset = server_pb2.AddObject.LineSet()
-    for v in numpy.asarray(lineset.points):
+    for v in xyz:
         p = server_pb2.VecXYZf()
         p.x = v[0]
         p.y = v[1]
         p.z = v[2]
         pb_lineset.points.append(p)
-    for l in numpy.asarray(lineset.lines):
+    for l in from_to:
+        if not (0 <= l[0] and l[0] < num_points and 0 <= l[1] and l[1] < num_points):
+            raise ValueError(
+                "value of from_to element must be 0 <= and < num_points")
         pb_lineset.from_index.append(l[0])
         pb_lineset.to_index.append(l[1])
 
