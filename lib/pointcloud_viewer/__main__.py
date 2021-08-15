@@ -51,23 +51,30 @@ def main():
     #   viewer.send_pointcloud(xyzrgb=rf.structured_to_unstructured(pc_data))
 
     points = numpy.array([
-        [0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
-        [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]
+        [0, 0, 0],
+        [1, 0, 0], [0, 1, 0], [0, 0, 1],
+        [1, 1, 0], [1, 0, 1], [0, 1, 1],
+        [2, 0, 0], [0, 2, 0], [0, 0, 2]
     ])
-    points = points * (radius*2) - numpy.ones((3,))*radius
+    points = points * numpy.ones((3,))*0.1
     points = points.astype("float32")
 
     lines = numpy.array([
-        [0, 1], [0, 2], [1, 3], [2, 3],
-        [4, 5], [4, 6], [5, 7], [6, 7],
-        [0, 4], [1, 5], [2, 6], [3, 7]
+        [0, 7], [0, 8], [0, 9]
     ]).astype("uint64")
-
     viewer.send_lineset(points, lines)
 
-    for point in points:
-        text = "%.2f,%.2f,%.2f" % tuple(point)
-        viewer.send_overlay_text(text, point[0], point[1], point[2])
+    viewer.send_overlay_text("x", points[7][0], points[7][1], points[7][2])
+    viewer.send_overlay_text("y", points[8][0], points[8][1], points[8][2])
+    viewer.send_overlay_text("z", points[9][0], points[9][1], points[9][2])
+
+    triangles = numpy.array([
+        [0, 1, 2], [0, 2, 3], [3, 1, 0]
+    ]).astype("uint64")
+    colors = numpy.array([
+        [1, 1, 1], [1, 0, 0], [0, 1, 0], [0, 0, 1]
+    ]).astype("float32")
+    viewer.send_mesh(points, triangles, colors)
 
     viewer.set_orthographic_camera(frustum_height=radius*2)
 

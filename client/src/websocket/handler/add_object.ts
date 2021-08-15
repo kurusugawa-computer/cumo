@@ -18,10 +18,13 @@ export function handleAddObject (websocket: WebSocket, commandID: string, viewer
       handleLineSet(websocket, commandID, viewer, addObject.getLineSet());
       break;
     case objectCase.POINT_CLOUD:
-      handlePointCloud(websocket, commandID, addObject.getPointCloud(), viewer);
+      handlePointCloud(websocket, commandID, viewer, addObject.getPointCloud());
       break;
     case objectCase.OVERLAY:
       handleOverlay(websocket, commandID, viewer, addObject.getOverlay());
+      break;
+    case objectCase.MESH:
+      handleMesh(websocket, commandID, viewer, addObject.getMesh());
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any object');
@@ -29,7 +32,7 @@ export function handleAddObject (websocket: WebSocket, commandID: string, viewer
   }
 }
 
-export function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, overlay: PB.AddObject.Overlay | undefined) {
+function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, overlay: PB.AddObject.Overlay | undefined) {
   if (overlay === undefined || !overlay.hasPosition()) {
     sendFailure(websocket, commandID, 'failed to get overlay command');
     return;
@@ -46,7 +49,7 @@ export function handleOverlay (websocket: WebSocket, commandID: string, viewer: 
         const div = document.createElement('div');
         div.innerText = overlay.getText();
         div.style.color = 'white';
-        (div.style as any).mixColorBlend = 'difference';
+        (div.style as any).mixBlendMode = 'difference';
         addOverlayHTML(viewer, div, position, commandID);
         sendSuccess(websocket, commandID, commandID);
       }
@@ -57,14 +60,56 @@ export function handleOverlay (websocket: WebSocket, commandID: string, viewer: 
   }
 }
 
-export function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, commandID: string) {
+function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, commandID: string) {
   viewer.overlayContainer.appendChild(element);
   const p = new THREE.Vector3(position.getX(), position.getY(), position.getZ());
   const overlay = new Overlay(element, p, commandID);
   viewer.overlays.push(overlay);
 }
 
-export function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, lineset: PB.AddObject.LineSet | undefined): void {
+function handleMesh (websocket: WebSocket, commandID:string, viewer: PointCloudViewer, PBmesh: PB.AddObject.Mesh | undefined):void {
+  if (PBmesh === undefined) {
+    sendFailure(websocket, commandID, 'failed to get mesh');
+    return;
+  }
+  const points = PBmesh.getPointsList();
+  const positions: number[] = [];
+  for (let i = 0; i < points.length; i++) {
+    const v = points[i];
+    positions.push(v.getX(), v.getY(), v.getZ());
+  }
+  const a = PBmesh.getVertexAIndexList();
+  const b = PBmesh.getVertexBIndexList();
+  const c = PBmesh.getVertexCIndexList();
+  const indices: number[] = [];
+  for (let i = 0; i < a.length; i++) {
+    indices.push(a[i], b[i], c[i]);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setIndex(indices);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  const material = new THREE.MeshBasicMaterial();
+
+  const PBcolors = PBmesh.getColorsList();
+  if (PBcolors.length !== 0) {
+    material.vertexColors = true;
+    const colors: number[] = [];
+    for (let i = 0; i < PBcolors.length; i++) {
+      colors.push(
+        Math.max(Math.min(1, PBcolors[i].getR())),
+        Math.max(Math.min(1, PBcolors[i].getG())),
+        Math.max(Math.min(1, PBcolors[i].getB()))
+      );
+    }
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  }
+
+  const mesh = new THREE.Mesh(geometry, material);
+  viewer.scene.add(mesh);
+  sendSuccess(websocket, commandID, mesh.uuid);
+}
+
+function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, lineset: PB.AddObject.LineSet | undefined): void {
   if (lineset === undefined) {
     sendFailure(websocket, commandID, 'failed to get lineset');
     return;
@@ -91,11 +136,11 @@ export function handleLineSet (websocket: WebSocket, commandID: string, viewer: 
   sendSuccess(websocket, commandID, linesegments.uuid);
 }
 
-export function handlePointCloud (
+function handlePointCloud (
   websocket: WebSocket,
   commandID: string,
-  pbPointcloud: PB.AddObject.PointCloud | undefined,
-  viewer: PointCloudViewer
+  viewer: PointCloudViewer,
+  pbPointcloud: PB.AddObject.PointCloud | undefined
 ): void {
   if (pbPointcloud === undefined) {
     sendFailure(websocket, commandID, 'failure to get pointcloud');

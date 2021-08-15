@@ -145,6 +145,66 @@ def send_lineset(
     return UUID(hex=ret.result.success)
 
 
+def send_mesh(
+    self: PointCloudViewer,
+    xyz: numpy.ndarray,
+    indices: numpy.ndarray,
+    rgb: Optional[numpy.ndarray] = None
+) -> UUID:
+    if not (len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
+        raise ValueError("xyz must be float32 array of shape (num_points,3)")
+    if not (len(indices.shape) == 2 and indices.shape[1] == 3 and indices.dtype == "uint64"):
+        raise ValueError(
+            "indices must be uint64 array of shape (num_triangles,3)"
+        )
+    if rgb is not None:
+        shape_is_valid = len(rgb.shape) == 2 and rgb.shape[1] == 3
+        type_is_valid = rgb.dtype == "float32"
+
+        if not (shape_is_valid and type_is_valid):
+            raise ValueError(
+                "rgb must be uint8 array of shape (num_triangles, 3)"
+            )
+
+    num_points = xyz.shape[0]
+
+    pb_mesh = server_pb2.AddObject.Mesh()
+    for v in xyz:
+        p = server_pb2.VecXYZf()
+        p.x = v[0]
+        p.y = v[1]
+        p.z = v[2]
+        pb_mesh.points.append(p)
+    for l in indices:
+        for i in range(3):
+            if not (0 <= l[i] and l[i] < num_points):
+                raise ValueError(
+                    "value of indices element must be 0 <= and < num_points")
+        pb_mesh.vertex_a_index.append(l[0])
+        pb_mesh.vertex_b_index.append(l[1])
+        pb_mesh.vertex_c_index.append(l[2])
+    if rgb is not None:
+        for l in rgb:
+            c = server_pb2.VecRGBf()
+            c.r = l[0]
+            c.g = l[1]
+            c.b = l[2]
+            pb_mesh.colors.append(c)
+    add_obj = server_pb2.AddObject()
+    add_obj.mesh.CopyFrom(pb_mesh)
+    obj = server_pb2.ServerCommand()
+    obj.add_object.CopyFrom(add_obj)
+
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
+
+
 def send_overlay_text(
     self: PointCloudViewer,
     text: str,
