@@ -151,6 +151,16 @@ def send_mesh(
     indices: numpy.ndarray,
     rgb: Optional[numpy.ndarray] = None
 ) -> UUID:
+    """Meshをブラウザに送信し、表示させる。
+
+    Args:
+        xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のx,y,z座標を表す。
+        indices (numpy.ndarray): shape が (num_triangles,3) で dtype が uint64 の ndarray 。各行が頂点のインデックスによって1枚の三角形を表す。
+        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のr,g,bを0から1までの数値で表す。
+
+    Returns:
+        UUID: 表示したMeshに対応するID。後から操作する際に使う
+    """
     if not (len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
         raise ValueError("xyz must be float32 array of shape (num_points,3)")
     if not (len(indices.shape) == 2 and indices.shape[1] == 3 and indices.dtype == "uint64"):
