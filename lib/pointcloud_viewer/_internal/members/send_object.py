@@ -281,6 +281,18 @@ def send_overlay_image(
     y: float = 0,
     z: float = 0,
 ) -> UUID:
+    """特定の座標を左上として画像をオーバーレイさせる。
+
+    Args:
+        data (bytes): 画像データ。jpg,pngに対応
+        width (int): オーバーレイの幅をピクセルで指定
+        x (float, optional): オーバーレイが追従する点のx座標
+        y (float, optional): オーバーレイが追従する点のy座標
+        z (float, optional): オーバーレイが追従する点のz座標
+
+    Returns:
+        UUID: オーバーレイに対応するID。後から操作する際に使う
+    """
     overlay = server_pb2.AddObject.Overlay()
 
     position = server_pb2.VecXYZf()
