@@ -3,6 +3,7 @@ import * as PB from '../../protobuf/server_pb.js';
 import { PCDLoader } from 'three/examples/jsm/loaders/PCDLoader';
 
 import * as THREE from 'three';
+import * as imageType from 'image-type';
 import { Overlay } from '../../overlay';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
@@ -63,7 +64,15 @@ function addOverlayImage (websocket: WebSocket, commandID: string, viewer: Point
   }
   const div = document.createElement('div');
   const img = document.createElement('img');
-  img.src = 'data:image;base64,' + image.getData_asB64();
+
+  const data = image.getData_asU8();
+  const type = imageType.default(data);
+  if (type === null) {
+    sendFailure(websocket, commandID, 'unknown data type');
+    return;
+  }
+
+  img.src = 'data:' + type.mime + ';base64,' + image.getData_asB64();
   img.style.width = '100%';
   div.style.width = image.getWidth() + 'px';
   div.appendChild(img);
