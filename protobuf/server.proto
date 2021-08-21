@@ -93,6 +93,11 @@ message AddObject {
         VecXYZf position = 1;
         oneof Contents {
             string text = 2;
+            Image image = 3;
+        }
+        message Image {
+            bytes data = 1;
+            int32 width = 2;
         }
     }
     message Mesh {

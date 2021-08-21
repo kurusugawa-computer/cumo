@@ -45,19 +45,39 @@ function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCl
   const contentsCase = PB.AddObject.Overlay.ContentsCase;
   switch (overlay.getContentsCase()) {
     case contentsCase.TEXT:
-      {
-        const div = document.createElement('div');
-        div.innerText = overlay.getText();
-        div.style.color = 'white';
-        (div.style as any).mixBlendMode = 'difference';
-        addOverlayHTML(viewer, div, position, commandID);
-        sendSuccess(websocket, commandID, commandID);
-      }
+      addOverlayText(websocket, commandID, viewer, overlay.getText(), position);
+      break;
+    case contentsCase.IMAGE:
+      addOverlayImage(websocket, commandID, viewer, overlay.getImage(), position);
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any contents');
       break;
   }
+}
+
+function addOverlayImage (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, image: PB.AddObject.Overlay.Image | undefined, position: PB.VecXYZf) {
+  if (image === undefined) {
+    sendFailure(websocket, commandID, 'failed to get image');
+    return;
+  }
+  const div = document.createElement('div');
+  const img = document.createElement('img');
+  img.src = 'data:image;base64,' + image.getData_asB64();
+  img.style.width = '100%';
+  div.style.width = image.getWidth() + 'px';
+  div.appendChild(img);
+  addOverlayHTML(viewer, div, position, commandID);
+  sendSuccess(websocket, commandID, commandID);
+}
+
+function addOverlayText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, text: string, position: PB.VecXYZf) {
+  const div = document.createElement('div');
+  div.innerText = text;
+  div.style.color = 'white';
+  (div.style as any).mixBlendMode = 'difference';
+  addOverlayHTML(viewer, div, position, commandID);
+  sendSuccess(websocket, commandID, commandID);
 }
 
 function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, commandID: string) {

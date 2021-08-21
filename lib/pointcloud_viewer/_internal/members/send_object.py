@@ -10,6 +10,37 @@ from pointcloud_viewer._internal.protobuf import server_pb2
 from typing import Optional
 
 
+def send_pointcloud_pcd(
+    self: PointCloudViewer,
+    pcd_bytes: bytes,
+) -> UUID:
+    """点群をブラウザに送信し、表示させる。
+
+    Args:
+        pcd_bytes (bytes): pcd形式のデータ。
+
+    Returns:
+        UUID: 表示した点群に対応するID。後から操作する際に使う
+    """
+    cloud = server_pb2.AddObject.PointCloud()
+    cloud.pcd_data = pcd_bytes
+
+    add_obj = server_pb2.AddObject()
+    add_obj.point_cloud.CopyFrom(cloud)
+
+    obj = server_pb2.ServerCommand()
+    obj.add_object.CopyFrom(add_obj)
+
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
+
+
 def send_pointcloud(
     self: PointCloudViewer,
     xyz: Optional[numpy.ndarray] = None,
@@ -76,23 +107,7 @@ def send_pointcloud(
     pcd_bytes = pcd.save_pcd_to_buffer()
 
     # 送信
-    cloud = server_pb2.AddObject.PointCloud()
-    cloud.pcd_data = pcd_bytes
-
-    add_obj = server_pb2.AddObject()
-    add_obj.point_cloud.CopyFrom(cloud)
-
-    obj = server_pb2.ServerCommand()
-    obj.add_object.CopyFrom(add_obj)
-
-    uuid = uuid4()
-    self._send_data(obj, uuid)
-    ret = self._wait_until(uuid)
-    if ret.result.HasField("failure"):
-        raise RuntimeError(ret.result.failure)
-    if not ret.result.HasField("success"):
-        raise RuntimeError("unexpected response")
-    return UUID(hex=ret.result.success)
+    return self.send_pointcloud_pcd(pcd_bytes)
 
 
 def send_lineset(
@@ -243,6 +258,42 @@ def send_overlay_text(
     position.z = z
     overlay.position.CopyFrom(position)
     overlay.text = text
+    add_obj = server_pb2.AddObject()
+    add_obj.overlay.CopyFrom(overlay)
+    obj = server_pb2.ServerCommand()
+    obj.add_object.CopyFrom(add_obj)
+
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
+
+
+def send_overlay_image(
+    self: PointCloudViewer,
+    data: bytes,
+    width: int,
+    x: float = 0,
+    y: float = 0,
+    z: float = 0,
+) -> UUID:
+    overlay = server_pb2.AddObject.Overlay()
+
+    position = server_pb2.VecXYZf()
+    position.x = x
+    position.y = y
+    position.z = z
+    overlay.position.CopyFrom(position)
+
+    image = server_pb2.AddObject.Overlay.Image()
+    image.data = data
+    image.width = width
+    overlay.image.CopyFrom(image)
+
     add_obj = server_pb2.AddObject()
     add_obj.overlay.CopyFrom(overlay)
     obj = server_pb2.ServerCommand()
