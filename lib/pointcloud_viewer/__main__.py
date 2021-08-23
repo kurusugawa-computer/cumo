@@ -40,7 +40,7 @@ def main():
 
     lines = numpy.array([
         [0, 7], [0, 8], [0, 9]
-    ]).astype("uint64")
+    ]).astype("uint32")
     viewer.send_lineset(points, lines)
 
     viewer.send_overlay_text("x", points[7][0], points[7][1], points[7][2])
@@ -49,7 +49,7 @@ def main():
 
     triangles = numpy.array([
         [0, 1, 2], [0, 2, 3], [3, 1, 0]
-    ]).astype("uint64")
+    ]).astype("uint32")
     colors = numpy.array([
         [1, 1, 1], [1, 0, 0], [0, 1, 0], [0, 0, 1]
     ]).astype("float32")

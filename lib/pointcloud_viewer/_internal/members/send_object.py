@@ -119,15 +119,15 @@ def send_lineset(
 
     Args:
         xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が線分の端点のx,y,z座標を表す。
-        from_to (numpy.ndarray): shape が (num_lines,2) で dtype が uint64 の ndarray 。各行が線分の端点のインデックスによって1本の線分を表す。
+        from_to (numpy.ndarray): shape が (num_lines,2) で dtype が uint32 の ndarray 。各行が線分の端点のインデックスによって1本の線分を表す。
 
     Returns:
         UUID: 表示したLinesetに対応するID。後から操作する際に使う
     """
     if not (len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
         raise ValueError("xyz must be float32 array of shape (num_points,3)")
-    if not (len(from_to.shape) == 2 and from_to.shape[1] == 2 and from_to.dtype == "uint64"):
-        raise ValueError("from_to must be uint64 array of shape (num_lines,2)")
+    if not (len(from_to.shape) == 2 and from_to.shape[1] == 2 and from_to.dtype == "uint32"):
+        raise ValueError("from_to must be uint32 array of shape (num_lines,2)")
 
     num_points = xyz.shape[0]
 
@@ -170,7 +170,7 @@ def send_mesh(
 
     Args:
         xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のx,y,z座標を表す。
-        indices (numpy.ndarray): shape が (num_triangles,3) で dtype が uint64 の ndarray 。各行が頂点のインデックスによって1枚の三角形を表す。
+        indices (numpy.ndarray): shape が (num_triangles,3) で dtype が uint32 の ndarray 。各行が頂点のインデックスによって1枚の三角形を表す。
         rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のr,g,bを0から1までの数値で表す。
 
     Returns:
@@ -178,9 +178,9 @@ def send_mesh(
     """
     if not (len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
         raise ValueError("xyz must be float32 array of shape (num_points,3)")
-    if not (len(indices.shape) == 2 and indices.shape[1] == 3 and indices.dtype == "uint64"):
+    if not (len(indices.shape) == 2 and indices.shape[1] == 3 and indices.dtype == "uint32"):
         raise ValueError(
-            "indices must be uint64 array of shape (num_triangles,3)"
+            "indices must be uint32 array of shape (num_triangles,3)"
         )
     if rgb is not None:
         shape_is_valid = len(rgb.shape) == 2 and rgb.shape[1] == 3

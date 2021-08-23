@@ -26,10 +26,10 @@ message CustomControl {
     }
     message Slider {
         string name = 1;
-        double min = 2;
-        double max = 3;
-        double step = 4;
-        double init_value = 5;
+        float min = 2;
+        float max = 3;
+        float step = 4;
+        float init_value = 5;
     }
 
     message CheckBox {
