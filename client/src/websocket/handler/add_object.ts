@@ -84,7 +84,7 @@ function addOverlayText (websocket: WebSocket, commandID: string, viewer: PointC
   const div = document.createElement('div');
   div.innerText = text;
   div.style.color = 'white';
-  (div.style as any).mixBlendMode = 'difference';
+  div.style.mixBlendMode = 'difference';
   addOverlayHTML(viewer, div, position, commandID);
   sendSuccess(websocket, commandID, commandID);
 }

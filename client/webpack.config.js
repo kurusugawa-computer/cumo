@@ -10,7 +10,8 @@ module.exports = {
   entry: './src/index.ts',
   output: {
     filename: 'bundle.js',
-    path: `${outputpath}`
+    path: `${outputpath}`,
+    clean: true
   },
   module: {
     rules: [
