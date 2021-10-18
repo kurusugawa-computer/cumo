@@ -114,13 +114,14 @@ def send_lineset(
     self: PointCloudViewer,
     xyz: numpy.ndarray,
     from_to: numpy.ndarray,
+    rgb: Optional[numpy.ndarray] = None,
 ) -> UUID:
     """Linesetをブラウザに送信し、表示させる。
 
     Args:
         xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が線分の端点のx,y,z座標を表す。
         from_to (numpy.ndarray): shape が (num_lines,2) で dtype が uint32 の ndarray 。各行が線分の端点のインデックスによって1本の線分を表す。
-
+        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のr,g,bを0から1までの数値で表す。
     Returns:
         UUID: 表示したLinesetに対応するID。後から操作する際に使う
     """
@@ -128,6 +129,15 @@ def send_lineset(
         raise ValueError("xyz must be float32 array of shape (num_points,3)")
     if not (len(from_to.shape) == 2 and from_to.shape[1] == 2 and from_to.dtype == "uint32"):
         raise ValueError("from_to must be uint32 array of shape (num_lines,2)")
+
+    if rgb is not None:
+        shape_is_valid = len(rgb.shape) == 2 and rgb.shape[1] == 3
+        type_is_valid = rgb.dtype == "float32"
+
+        if not (shape_is_valid and type_is_valid):
+            raise ValueError(
+                "rgb must be float32 array of shape (num_triangles, 3)"
+            )
 
     num_points = xyz.shape[0]
 
@@ -145,6 +155,13 @@ def send_lineset(
         pb_lineset.from_index.append(l[0])
         pb_lineset.to_index.append(l[1])
 
+    if rgb is not None:
+        for l in rgb:
+            c = server_pb2.VecRGBf()
+            c.r = l[0]
+            c.g = l[1]
+            c.b = l[2]
+            pb_lineset.colors.append(c)
     add_obj = server_pb2.AddObject()
     add_obj.line_set.CopyFrom(pb_lineset)
     obj = server_pb2.ServerCommand()
@@ -188,7 +205,7 @@ def send_mesh(
 
         if not (shape_is_valid and type_is_valid):
             raise ValueError(
-                "rgb must be uint8 array of shape (num_triangles, 3)"
+                "rgb must be float32 array of shape (num_triangles, 3)"
             )
 
     num_points = xyz.shape[0]

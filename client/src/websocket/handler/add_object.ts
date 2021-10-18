@@ -156,10 +156,27 @@ function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCl
     indices.push(fromIndex[i]);
     indices.push(toIndex[i]);
   }
+
   const geometry = new THREE.BufferGeometry();
+  const material = new THREE.LineBasicMaterial();
+
+  const PBcolors = lineset.getColorsList();
+  if (PBcolors.length !== 0) {
+    material.vertexColors = true;
+    const colors: number[] = [];
+    for (let i = 0; i < PBcolors.length; i++) {
+      colors.push(
+        Math.max(Math.min(1, PBcolors[i].getR())),
+        Math.max(Math.min(1, PBcolors[i].getG())),
+        Math.max(Math.min(1, PBcolors[i].getB()))
+      );
+    }
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  }
+
   geometry.setIndex(indices);
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  const material = new THREE.LineBasicMaterial();
+
   const linesegments = new THREE.LineSegments(geometry, material);
   viewer.scene.add(linesegments);
   sendSuccess(websocket, commandID, linesegments.uuid);

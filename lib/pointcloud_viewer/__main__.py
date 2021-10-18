@@ -41,7 +41,13 @@ def main():
     lines = numpy.array([
         [0, 7], [0, 8], [0, 9]
     ]).astype("uint32")
-    viewer.send_lineset(points, lines)
+    colors = numpy.array([
+        [1, 1, 1],
+        [0, 0, 0], [0, 0, 0], [0, 0, 0],
+        [0, 0, 0], [0, 0, 0], [0, 0, 0],
+        [1, 0, 0], [0, 1, 0], [0, 0, 1],
+    ]).astype("float32")
+    viewer.send_lineset(points, lines, colors)
 
     viewer.send_overlay_text("x", points[7][0], points[7][1], points[7][2])
     viewer.send_overlay_text("y", points[8][0], points[8][1], points[8][2])
