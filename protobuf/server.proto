@@ -1,0 +1,137 @@
+syntax = "proto3";
+package Server;
+
+message ServerCommand {
+    string UUID = 1;
+    oneof Command {
+        string log_message = 2;
+        bool capture_screen = 3;
+        CustomControl add_custom_control = 4;
+        SetCamera set_camera = 5;
+        AddObject add_object = 6;
+        SetKeyEventHandler set_key_event_handler = 7;
+        RemoveObject remove_object = 8;
+        RemoveCustomControl remove_custom_control = 9;
+    }
+}
+
+message CustomControl {
+    oneof Control {
+        Slider slider = 1;
+        CheckBox checkbox = 2;
+        TextBox textbox = 3;
+        SelectBox selectbox = 4;
+        Button button = 5;
+        ColorPicker color_picker = 6;
+    }
+    message Slider {
+        string name = 1;
+        float min = 2;
+        float max = 3;
+        float step = 4;
+        float init_value = 5;
+    }
+
+    message CheckBox {
+        string name = 1;
+        bool init_value = 2;
+    }
+
+    message TextBox {
+        string name = 1;
+        string init_value = 2;
+    }
+
+    message SelectBox {
+        string name = 1;
+        repeated string items = 2;
+        string init_value = 3;
+    }
+
+    message Button {
+        string name = 1;
+    }
+
+    message ColorPicker {
+        string name = 1;
+        string init_value = 2;
+    }
+}
+
+message RemoveCustomControl {
+    oneof Object {
+        bool all = 1;
+        string by_uuid = 2;
+    }
+}
+
+message SetCamera {
+    oneof Camera {
+        float perspective_fov = 1;
+        float orthographic_frustum_height = 2;
+        VecXYZf position = 3;
+        VecXYZf target = 4;
+    }
+}
+
+message AddObject {
+    oneof Object {
+        LineSet line_set = 1;
+        PointCloud point_cloud = 2;
+        Overlay overlay = 3;
+        Mesh mesh = 4;
+    }
+    message LineSet {
+        repeated VecXYZf points = 1;
+        repeated int32 from_index = 2;
+        repeated int32 to_index = 3;
+    }
+    message PointCloud {
+        bytes pcd_data = 1;
+    }
+    message Overlay {
+        VecXYZf position = 1;
+        oneof Contents {
+            string text = 2;
+            Image image = 3;
+        }
+        message Image {
+            bytes data = 1;
+            int32 width = 2;
+        }
+    }
+    message Mesh {
+        repeated VecXYZf points = 1;
+        repeated int32 vertex_a_index = 2;
+        repeated int32 vertex_b_index = 3;
+        repeated int32 vertex_c_index = 4;
+        repeated VecRGBf colors = 5;
+    }
+}
+
+message RemoveObject {
+    oneof Object {
+        bool all = 1;
+        string by_uuid = 2;
+    }
+}
+
+message SetKeyEventHandler {
+    oneof Event {
+        bool keydown = 1;
+        bool keyup = 2;
+        bool keypress = 3;
+    }
+}
+
+message VecXYZf {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message VecRGBf {
+    float r = 1;
+    float g = 2;
+    float b = 3;
+}

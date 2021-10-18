@@ -1,0 +1,49 @@
+syntax = "proto3";
+package Client;
+
+message ClientCommand {
+    string UUID = 1;
+    oneof Command {
+        string log_message = 2;
+        Result result = 3;
+        Image image = 4;
+        ControlChanged control_changed = 5;
+        KeyEventOccurred key_event_occurred = 6;
+    }
+}
+
+message Result {
+    oneof Result {
+        string success = 1;
+        string failure = 2;
+    }
+}
+
+message Image {
+    bytes data = 1;
+}
+
+message ControlChanged {
+    oneof Value {
+        double number = 1;
+        string text = 2;
+        bool boolean = 3;
+    }
+}
+
+message KeyEventOccurred {
+    oneof Event {
+        KeyEvent keyup = 1;
+        KeyEvent keydown = 2;
+        KeyEvent keypress = 3;
+    }
+    message KeyEvent{
+        string key = 1;
+        string code = 2;
+        bool shiftKey = 3;
+        bool altKey = 4;
+        bool ctrlKey = 5;
+        bool metaKey = 6;
+        bool repeat = 7;
+    }
+}

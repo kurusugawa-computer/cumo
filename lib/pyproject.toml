@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "pointcloud_viewer"
+version = "0.1.0"
+description = ""
+authors = ["Kurusugawa Computer"]
+include = [
+    "pointcloud_viewer/public/*",
+    "pointcloud_viewer/_internal/protobuf/*",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.7,<3.9"
+protobuf = "^3.15.6"
+pypcd = {git = "https://github.com/DanielPollithy/pypcd.git"}
+websockets = "^8.1"
+numpy = "^1.20.2"
+
+[tool.poetry.dev-dependencies]
+autopep8 = "^1.5.5"
+Sphinx = "^4.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
