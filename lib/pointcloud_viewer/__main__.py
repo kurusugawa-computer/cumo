@@ -52,6 +52,7 @@ def main():
     viewer.send_overlay_text("x", points[7][0], points[7][1], points[7][2])
     viewer.send_overlay_text("y", points[8][0], points[8][1], points[8][2])
     viewer.send_overlay_text("z", points[9][0], points[9][1], points[9][2])
+    viewer.send_overlay_text(args.pcd_filepath, 10, 10, screen_coordinate=True)
 
     triangles = numpy.array([
         [0, 1, 2], [0, 2, 3], [3, 1, 0]

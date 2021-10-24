@@ -43,13 +43,14 @@ function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCl
     sendFailure(websocket, commandID, 'message has not position');
     return;
   }
+  const coordType = overlay.getType();
   const contentsCase = PB.AddObject.Overlay.ContentsCase;
   switch (overlay.getContentsCase()) {
     case contentsCase.TEXT:
-      addOverlayText(websocket, commandID, viewer, overlay.getText(), position);
+      addOverlayText(websocket, commandID, viewer, overlay.getText(), position, coordType);
       break;
     case contentsCase.IMAGE:
-      addOverlayImage(websocket, commandID, viewer, overlay.getImage(), position);
+      addOverlayImage(websocket, commandID, viewer, overlay.getImage(), position, coordType);
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any contents');
@@ -57,7 +58,7 @@ function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCl
   }
 }
 
-function addOverlayImage (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, image: PB.AddObject.Overlay.Image | undefined, position: PB.VecXYZf) {
+function addOverlayImage (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, image: PB.AddObject.Overlay.Image | undefined, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType) {
   if (image === undefined) {
     sendFailure(websocket, commandID, 'failed to get image');
     return;
@@ -76,23 +77,23 @@ function addOverlayImage (websocket: WebSocket, commandID: string, viewer: Point
   img.style.width = '100%';
   div.style.width = image.getWidth() + 'px';
   div.appendChild(img);
-  addOverlayHTML(viewer, div, position, commandID);
+  addOverlayHTML(viewer, div, position, coordType, commandID);
   sendSuccess(websocket, commandID, commandID);
 }
 
-function addOverlayText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, text: string, position: PB.VecXYZf) {
+function addOverlayText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, text: string, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType) {
   const div = document.createElement('div');
   div.innerText = text;
   div.style.color = 'white';
   div.style.mixBlendMode = 'difference';
-  addOverlayHTML(viewer, div, position, commandID);
+  addOverlayHTML(viewer, div, position, coordType, commandID);
   sendSuccess(websocket, commandID, commandID);
 }
 
-function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, commandID: string) {
+function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType, commandID: string) {
   viewer.overlayContainer.appendChild(element);
   const p = new THREE.Vector3(position.getX(), position.getY(), position.getZ());
-  const overlay = new Overlay(element, p, commandID);
+  const overlay = new Overlay(element, p, coordType, commandID);
   viewer.overlays.push(overlay);
 }
 

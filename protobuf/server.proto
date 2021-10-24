@@ -96,9 +96,14 @@ message AddObject {
             string text = 2;
             Image image = 3;
         }
+        CoordinateType type = 4;
         message Image {
             bytes data = 1;
             int32 width = 2;
+        }
+        enum CoordinateType {
+            WORLD_COORDINATE = 0;
+            SCREEN_COORDINATE = 1;
         }
     }
     message Mesh {

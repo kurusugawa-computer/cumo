@@ -253,6 +253,7 @@ def send_overlay_text(
     x: float = 0,
     y: float = 0,
     z: float = 0,
+    screen_coordinate: bool = False,
 ) -> UUID:
     """特定の座標を左上として文字列をオーバーレイさせる。
 
@@ -264,6 +265,8 @@ def send_overlay_text(
     :type y: float, optional
     :param z: オーバーレイが追従する点のz座標
     :type z: float, optional
+    :param screen_coordinate: Trueにするとオーバーレイが画面の指定の位置に固定される。このときzは無視される
+    :type screen_coordinate: bool, optional
 
     Returns:
         UUID: オーバーレイに対応するID。後から操作する際に使う
@@ -275,6 +278,10 @@ def send_overlay_text(
     position.z = z
     overlay.position.CopyFrom(position)
     overlay.text = text
+    if screen_coordinate:
+        overlay.type = server_pb2.AddObject.Overlay.CoordinateType.SCREEN_COORDINATE
+    else:
+        overlay.type = server_pb2.AddObject.Overlay.CoordinateType.WORLD_COORDINATE
     add_obj = server_pb2.AddObject()
     add_obj.overlay.CopyFrom(overlay)
     obj = server_pb2.ServerCommand()
@@ -297,6 +304,7 @@ def send_overlay_image(
     x: float = 0,
     y: float = 0,
     z: float = 0,
+    screen_coordinate: bool = False,
 ) -> UUID:
     """特定の座標を左上として画像をオーバーレイさせる。
 
@@ -306,6 +314,7 @@ def send_overlay_image(
         x (float, optional): オーバーレイが追従する点のx座標
         y (float, optional): オーバーレイが追従する点のy座標
         z (float, optional): オーバーレイが追従する点のz座標
+        screen_coordinate (bool, optional) Trueにするとオーバーレイが画面の指定の位置に固定される。このときzは無視される
 
     Returns:
         UUID: オーバーレイに対応するID。後から操作する際に使う
@@ -322,6 +331,11 @@ def send_overlay_image(
     image.data = data
     image.width = width
     overlay.image.CopyFrom(image)
+
+    if screen_coordinate:
+        overlay.type = server_pb2.AddObject.Overlay.CoordinateType.SCREEN_COORDINATE
+    else:
+        overlay.type = server_pb2.AddObject.Overlay.CoordinateType.WORLD_COORDINATE
 
     add_obj = server_pb2.AddObject()
     add_obj.overlay.CopyFrom(overlay)
