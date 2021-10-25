@@ -29,33 +29,38 @@ export function connectWebSocket (viewer: PointCloudViewer, url: string) {
 function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message: PB.ServerCommand) {
   const commandCase = PB.ServerCommand.CommandCase;
   const commandID = message.getUuid().toUpperCase();
-  switch (message.getCommandCase()) {
-    case commandCase.LOG_MESSAGE:
-      handleLogMessage(websocket, commandID, message.getLogMessage());
-      break;
-    case commandCase.CAPTURE_SCREEN:
-      handleScreenCapture(websocket, commandID, viewer);
-      break;
-    case commandCase.ADD_CUSTOM_CONTROL:
-      handleAddControl(websocket, commandID, viewer, message.getAddCustomControl());
-      break;
-    case commandCase.SET_CAMERA:
-      handleSetCamera(websocket, commandID, viewer, message.getSetCamera());
-      break;
-    case commandCase.ADD_OBJECT:
-      handleAddObject(websocket, commandID, viewer, message.getAddObject());
-      break;
-    case commandCase.SET_KEY_EVENT_HANDLER:
-      handleSetKeyEvent(websocket, commandID, viewer, message.getSetKeyEventHandler());
-      break;
-    case commandCase.REMOVE_OBJECT:
-      handleRemoveObject(websocket, commandID, viewer, message.getRemoveObject());
-      break;
-    case commandCase.REMOVE_CUSTOM_CONTROL:
-      handleRemoveControl(websocket, commandID, viewer, message.getRemoveCustomControl());
-      break;
-    default:
-      sendFailure(websocket, commandID, 'message has not any command');
-      break;
+  try {
+    switch (message.getCommandCase()) {
+      case commandCase.LOG_MESSAGE:
+        handleLogMessage(websocket, commandID, message.getLogMessage());
+        break;
+      case commandCase.CAPTURE_SCREEN:
+        handleScreenCapture(websocket, commandID, viewer);
+        break;
+      case commandCase.ADD_CUSTOM_CONTROL:
+        handleAddControl(websocket, commandID, viewer, message.getAddCustomControl());
+        break;
+      case commandCase.SET_CAMERA:
+        handleSetCamera(websocket, commandID, viewer, message.getSetCamera());
+        break;
+      case commandCase.ADD_OBJECT:
+        handleAddObject(websocket, commandID, viewer, message.getAddObject());
+        break;
+      case commandCase.SET_KEY_EVENT_HANDLER:
+        handleSetKeyEvent(websocket, commandID, viewer, message.getSetKeyEventHandler());
+        break;
+      case commandCase.REMOVE_OBJECT:
+        handleRemoveObject(websocket, commandID, viewer, message.getRemoveObject());
+        break;
+      case commandCase.REMOVE_CUSTOM_CONTROL:
+        handleRemoveControl(websocket, commandID, viewer, message.getRemoveCustomControl());
+        break;
+      default:
+        sendFailure(websocket, commandID, 'message has not any command');
+        break;
+    }
+  } catch (error) {
+    console.error(error);
+    sendFailure(websocket, commandID, `uncaught error: ${error}`);
   }
 }

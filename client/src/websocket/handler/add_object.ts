@@ -196,7 +196,15 @@ function handlePointCloud (
 
   const data = Uint8Array.from(atob(pbPointcloud.getPcdData_asB64()), c => c.charCodeAt(0)).buffer;
 
-  const pointcloud = new PCDLoader().parse(data, 'test');
+  let pointcloud: ReturnType<typeof PCDLoader.prototype.parse>;
+
+  try {
+    pointcloud = new PCDLoader().parse(data, 'test');
+  } catch (error) {
+    console.error(error);
+    sendFailure(websocket, commandID, `failed to parse pcd data: ${error}`);
+    return;
+  }
 
   if (pointcloud.material instanceof THREE.PointsMaterial) {
     pointcloud.material.size = 1;
