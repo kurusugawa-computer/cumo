@@ -20,16 +20,18 @@ export class Overlay {
   }
 
   render (canvas: HTMLCanvasElement, camera: THREE.Camera) {
-    let x = this.__position.x;
-    let y = this.__position.y;
+    let x: number;
+    let y: number;
 
     if (this.__coordType === CoordinateType.WORLD_COORDINATE) {
       const p = new THREE.Vector3().copy(this.__position);
       p.project(camera);
-      x = (canvas.width / 2) * (p.x + 1.0);
-      y = (canvas.height / 2) * (-p.y + 1.0);
+      x = (canvas.width / 2) * (p.x + 1.0) / window.devicePixelRatio;
+      y = (canvas.height / 2) * (-p.y + 1.0) / window.devicePixelRatio;
     } else {
       console.assert(this.__coordType === CoordinateType.SCREEN_COORDINATE);
+      x = this.__position.x;
+      y = this.__position.y;
     }
     this.__elem.style.top = '' + y + 'px';
     this.__elem.style.left = '' + x + 'px';

@@ -70,7 +70,17 @@ export class PointCloudViewer {
         preserveDrawingBuffer: true,
         logarithmicDepthBuffer: true
       });
+
+      let DPIChangeDetector = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+      const handleDPIChange = () => {
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        DPIChangeDetector.removeEventListener('change', handleDPIChange);
+        DPIChangeDetector = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+        DPIChangeDetector.addEventListener('change', handleDPIChange);
+      };
       this.renderer.setPixelRatio(window.devicePixelRatio);
+      DPIChangeDetector.addEventListener('change', handleDPIChange);
+
       this.renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(this.renderer.domElement);
 
