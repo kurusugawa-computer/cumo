@@ -42,11 +42,11 @@ def main():
         [0, 7], [0, 8], [0, 9]
     ]).astype("uint32")
     colors = numpy.array([
-        [1, 1, 1],
+        [255, 255, 255],
         [0, 0, 0], [0, 0, 0], [0, 0, 0],
         [0, 0, 0], [0, 0, 0], [0, 0, 0],
-        [1, 0, 0], [0, 1, 0], [0, 0, 1],
-    ]).astype("float32")
+        [255, 0, 0], [0, 255, 0], [0, 0, 255],
+    ]).astype("uint8")
     viewer.send_lineset(points, lines, colors)
 
     viewer.send_overlay_text("x", points[7][0], points[7][1], points[7][2])
@@ -58,8 +58,8 @@ def main():
         [0, 1, 2], [0, 2, 3], [3, 1, 0]
     ]).astype("uint32")
     colors = numpy.array([
-        [1, 1, 1], [1, 0, 0], [0, 1, 0], [0, 0, 1]
-    ]).astype("float32")
+        [255, 255, 255], [255, 0, 0], [0, 255, 0], [0, 0, 255]
+    ]).astype("uint8")
     viewer.send_mesh(points, triangles, colors)
 
     viewer.set_orthographic_camera(frustum_height=radius*2)

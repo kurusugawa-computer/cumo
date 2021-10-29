@@ -160,7 +160,7 @@ def send_lineset(
     Args:
         xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が線分の端点のx,y,z座標を表す。
         from_to (numpy.ndarray): shape が (num_lines,2) で dtype が uint32 の ndarray 。各行が線分の端点のインデックスによって1本の線分を表す。
-        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のr,g,bを0から1までの数値で表す。
+        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が uint8 の ndarray 。各行が頂点のr,g,bを表す。
     Returns:
         UUID: 表示したLinesetに対応するID。後から操作する際に使う
     """
@@ -171,11 +171,11 @@ def send_lineset(
 
     if rgb is not None:
         shape_is_valid = len(rgb.shape) == 2 and rgb.shape[1] == 3
-        type_is_valid = rgb.dtype == "float32"
+        type_is_valid = rgb.dtype == "uint8"
 
         if not (shape_is_valid and type_is_valid):
             raise ValueError(
-                "rgb must be float32 array of shape (num_triangles, 3)"
+                "rgb must be uint8 array of shape (num_triangles, 3)"
             )
 
     num_points = xyz.shape[0]
@@ -195,7 +195,9 @@ def send_lineset(
         pb_lineset.to_index.append(l[1])
 
     if rgb is not None:
-        for l in rgb:
+        rgb_f = rgb.astype('float32')
+        rgb_f /= 255
+        for l in rgb_f:
             c = server_pb2.VecRGBf()
             c.r = l[0]
             c.g = l[1]
@@ -227,7 +229,7 @@ def send_mesh(
     Args:
         xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のx,y,z座標を表す。
         indices (numpy.ndarray): shape が (num_triangles,3) で dtype が uint32 の ndarray 。各行が頂点のインデックスによって1枚の三角形を表す。
-        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のr,g,bを0から1までの数値で表す。
+        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が uint8 の ndarray 。各行が頂点のr,g,bを表す。
 
     Returns:
         UUID: 表示したMeshに対応するID。後から操作する際に使う
@@ -240,11 +242,11 @@ def send_mesh(
         )
     if rgb is not None:
         shape_is_valid = len(rgb.shape) == 2 and rgb.shape[1] == 3
-        type_is_valid = rgb.dtype == "float32"
+        type_is_valid = rgb.dtype == "uint8"
 
         if not (shape_is_valid and type_is_valid):
             raise ValueError(
-                "rgb must be float32 array of shape (num_triangles, 3)"
+                "rgb must be uint8 array of shape (num_triangles, 3)"
             )
 
     num_points = xyz.shape[0]
@@ -265,7 +267,9 @@ def send_mesh(
         pb_mesh.vertex_b_index.append(l[1])
         pb_mesh.vertex_c_index.append(l[2])
     if rgb is not None:
-        for l in rgb:
+        rgb_f = rgb.astype("float32")
+        rgb_f /= 255
+        for l in rgb_f:
             c = server_pb2.VecRGBf()
             c.r = l[0]
             c.g = l[1]
