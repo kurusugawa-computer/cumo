@@ -48,6 +48,7 @@ export class PointCloudViewer {
     }();
 
     constructor (private container: HTMLDivElement) {
+      // シーンのセットアップ
       const cameraNear = Number.EPSILON;
       const cameraFar = Number.MAX_SAFE_INTEGER;
 
@@ -66,6 +67,7 @@ export class PointCloudViewer {
       );
       this.orthographicCamera.position.set(1, 1, 1);
 
+      // レンダラーのセットアップ
       this.renderer = new THREE.WebGL1Renderer({
         preserveDrawingBuffer: true,
         logarithmicDepthBuffer: true
@@ -101,6 +103,7 @@ export class PointCloudViewer {
         this.controls.handleResize();
       });
 
+      // コントロールのセットアップ
       this.gui = new DAT.GUI();
 
       const guiControl = this.gui.addFolder('control');
@@ -111,9 +114,28 @@ export class PointCloudViewer {
         .name('perspective camera')
         .onChange((perspective: boolean) => this.switchCamera(perspective));
 
-      guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1);
-      guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1);
-      guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1);
+      guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); });
+      guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); }); ;
+      guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); });
+
+      // カメラコントロールのセットアップ
+
+      this.controls = this.createControls(this.perspectiveCamera);
+
+      container.style.position = 'relative';
+      container.style.height = '100vh';
+
+      this.renderer.domElement.style.position = 'absolute';
+
+      this.overlayContainer = document.createElement('div');
+      this.overlayContainer.style.position = 'absolute';
+      this.overlayContainer.style.height = '100%';
+      this.overlayContainer.style.width = '100%';
+      this.overlayContainer.style.pointerEvents = 'none';
+      this.overlayContainer.style.overflow = 'hidden';
+      container.appendChild(this.overlayContainer);
+
+      // レンダリングループ
 
       const render = () => {
         const camera = this.config.camera.usePerspective ? this.perspectiveCamera : this.orthographicCamera;
@@ -131,22 +153,6 @@ export class PointCloudViewer {
         this.controls.update();
         render();
       };
-
-      this.controls = this.createControls(this.perspectiveCamera);
-
-      container.style.position = 'relative';
-      container.style.height = '100vh';
-
-      this.renderer.domElement.style.position = 'absolute';
-
-      this.overlayContainer = document.createElement('div');
-      this.overlayContainer.style.position = 'absolute';
-      this.overlayContainer.style.height = '100%';
-      this.overlayContainer.style.width = '100%';
-      this.overlayContainer.style.pointerEvents = 'none';
-      this.overlayContainer.style.overflow = 'hidden';
-      container.appendChild(this.overlayContainer);
-
       animate();
     }
 
@@ -156,8 +162,10 @@ export class PointCloudViewer {
 
     switchCamera (perspective: boolean): void {
       this.controls.dispose();
-      this.config.camera.usePerspective = perspective;
-      this.gui.updateDisplay();
+      if (perspective !== this.config.camera.usePerspective) {
+        this.config.camera.usePerspective = perspective;
+        this.gui.updateDisplay();
+      }
       this.controls = this.createControls(perspective ? this.perspectiveCamera : this.orthographicCamera);
     }
 
@@ -166,7 +174,8 @@ export class PointCloudViewer {
       controls.staticMoving = true;
       controls.rotateSpeed = this.config.controls.rotateSpeed;
       controls.zoomSpeed = this.config.controls.zoomSpeed;
-      controls.panSpeed = this.config.controls.panSpeed;
+      console.log(this.config.controls.panSpeed, Math.pow(2, this.config.controls.panSpeed));
+      controls.panSpeed = Math.pow(2, this.config.controls.panSpeed);
       controls.keys[2] = 16; // shift to pan
       return controls;
     }
