@@ -6,46 +6,74 @@ if TYPE_CHECKING:
 from uuid import UUID, uuid4
 import numpy
 from pypcd import pypcd
+from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
 from pointcloud_viewer._internal.protobuf import server_pb2
+from pointcloud_viewer._internal.down_sample import down_sample_pointcloud
 from typing import Optional
+
+DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS = 1_000_000
 
 
 def send_pointcloud_pcd(
     self: PointCloudViewer,
     pcd_bytes: bytes,
+    down_sample: DownSampleStrategy = DownSampleStrategy.RANDOM_SAMPLE,
+    max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS
 ) -> UUID:
     """点群をブラウザに送信し、表示させる。
 
     Args:
         pcd_bytes (bytes): pcd形式のデータ。
-
+        down_sample (DownSampleStrategy, optional): DownSampleStrategy.NONE以外を指定すると一定以上の大きさの点群をダウンサンプルする。
+            DownSampleStrategy.NONEを指定すると渡されたデータをそのまま送信する。
+        max_num_points (int, optional): ダウンサンプルを行う場合、点数をこの数字以下に削減する。
     Returns:
         UUID: 表示した点群に対応するID。後から操作する際に使う
     """
-    cloud = server_pb2.AddObject.PointCloud()
-    cloud.pcd_data = pcd_bytes
 
-    add_obj = server_pb2.AddObject()
-    add_obj.point_cloud.CopyFrom(cloud)
+    if down_sample == DownSampleStrategy.NONE:
+        cloud = server_pb2.AddObject.PointCloud()
+        cloud.pcd_data = pcd_bytes
 
-    obj = server_pb2.ServerCommand()
-    obj.add_object.CopyFrom(add_obj)
+        add_obj = server_pb2.AddObject()
+        add_obj.point_cloud.CopyFrom(cloud)
 
-    uuid = uuid4()
-    self._send_data(obj, uuid)
-    ret = self._wait_until(uuid)
-    if ret.result.HasField("failure"):
-        raise RuntimeError(ret.result.failure)
-    if not ret.result.HasField("success"):
-        raise RuntimeError("unexpected response")
-    return UUID(hex=ret.result.success)
+        obj = server_pb2.ServerCommand()
+        obj.add_object.CopyFrom(add_obj)
+
+        uuid = uuid4()
+        self._send_data(obj, uuid)
+        ret = self._wait_until(uuid)
+        if ret.result.HasField("failure"):
+            raise RuntimeError(ret.result.failure)
+        if not ret.result.HasField("success"):
+            raise RuntimeError("unexpected response")
+        return UUID(hex=ret.result.success)
+    else:
+        pypcd_pc = pypcd.point_cloud_from_buffer(pcd_bytes)
+        pc_data: numpy.ndarray = pypcd_pc.pc_data
+
+        xyz = numpy.stack([pc_data["x"], pc_data["y"], pc_data["z"]], axis=1)
+
+        rgb_u32: numpy.ndarray = pc_data["rgb"]
+        rgb_u32.dtype = "uint32"
+        r_u8: numpy.ndarray = ((rgb_u32 & 0xff0000) >> 16).astype("uint8")
+        g_u8: numpy.ndarray = ((rgb_u32 & 0x00ff00) >> 8).astype("uint8")
+        b_u8: numpy.ndarray = (rgb_u32 & 0x0000ff).astype("uint8")
+
+        rgb = numpy.stack([r_u8, g_u8, b_u8], axis=1)
+
+        self.send_pointcloud(
+            xyz=xyz, rgb=rgb, down_sample=down_sample, max_num_points=max_num_points)
 
 
 def send_pointcloud(
     self: PointCloudViewer,
     xyz: Optional[numpy.ndarray] = None,
     rgb: Optional[numpy.ndarray] = None,
-    xyzrgb: Optional[numpy.ndarray] = None
+    xyzrgb: Optional[numpy.ndarray] = None,
+    down_sample: Optional[DownSampleStrategy] = DownSampleStrategy.RANDOM_SAMPLE,
+    max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS
 ) -> UUID:
     """点群をブラウザに送信し、表示させる。
 
@@ -54,6 +82,8 @@ def send_pointcloud(
         rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が uint8 の ndarray 。各行が点のr,g,bを表す。
         xyzrgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。
             各行が点のx,y,z座標とrgbを表す。rgbは24ビットのrgb値を r<<16 + g<<8 + b のように float32 にエンコードしたもの。
+        down_sample (DownSampleStrategy, optional): DownSampleStrategy.NONE以外を指定すると一定以上の大きさの点群をダウンサンプルする。
+        max_num_points (int, optional): ダウンサンプルを行う場合、点数をこの数字以下に削減する。
 
     Returns:
         UUID: 表示した点群に対応するID。後から操作する際に使う
@@ -97,30 +127,40 @@ def send_pointcloud(
                 xyz,
                 rgb_f32,
             ))
-            pcd = pypcd.make_xyz_rgb_point_cloud(concatenated)
+            pcd = pypcd.make_xyz_rgb_point_cloud(
+                down_sample_pointcloud(
+                    concatenated, down_sample, max_num_points=max_num_points)
+            )
         else:
-            pcd = pypcd.make_xyz_point_cloud(xyz)
+            pcd = pypcd.make_xyz_point_cloud(
+                down_sample_pointcloud(
+                    xyz, down_sample, max_num_points=max_num_points)
+            )
     else:
         assert xyzrgb is not None
-        pcd = pypcd.make_xyz_rgb_point_cloud(xyzrgb)
+        pcd = pypcd.make_xyz_rgb_point_cloud(
+            down_sample_pointcloud(xyzrgb, down_sample,
+                                   max_num_points=max_num_points)
+        )
 
     pcd_bytes = pcd.save_pcd_to_buffer()
 
     # 送信
-    return self.send_pointcloud_pcd(pcd_bytes)
+    return self.send_pointcloud_pcd(pcd_bytes, down_sample=DownSampleStrategy.NONE)
 
 
 def send_lineset(
     self: PointCloudViewer,
     xyz: numpy.ndarray,
     from_to: numpy.ndarray,
+    rgb: Optional[numpy.ndarray] = None,
 ) -> UUID:
     """Linesetをブラウザに送信し、表示させる。
 
     Args:
         xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が線分の端点のx,y,z座標を表す。
         from_to (numpy.ndarray): shape が (num_lines,2) で dtype が uint32 の ndarray 。各行が線分の端点のインデックスによって1本の線分を表す。
-
+        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が uint8 の ndarray 。各行が頂点のr,g,bを表す。
     Returns:
         UUID: 表示したLinesetに対応するID。後から操作する際に使う
     """
@@ -128,6 +168,15 @@ def send_lineset(
         raise ValueError("xyz must be float32 array of shape (num_points,3)")
     if not (len(from_to.shape) == 2 and from_to.shape[1] == 2 and from_to.dtype == "uint32"):
         raise ValueError("from_to must be uint32 array of shape (num_lines,2)")
+
+    if rgb is not None:
+        shape_is_valid = len(rgb.shape) == 2 and rgb.shape[1] == 3
+        type_is_valid = rgb.dtype == "uint8"
+
+        if not (shape_is_valid and type_is_valid):
+            raise ValueError(
+                "rgb must be uint8 array of shape (num_triangles, 3)"
+            )
 
     num_points = xyz.shape[0]
 
@@ -145,6 +194,15 @@ def send_lineset(
         pb_lineset.from_index.append(l[0])
         pb_lineset.to_index.append(l[1])
 
+    if rgb is not None:
+        rgb_f = rgb.astype('float32')
+        rgb_f /= 255
+        for l in rgb_f:
+            c = server_pb2.VecRGBf()
+            c.r = l[0]
+            c.g = l[1]
+            c.b = l[2]
+            pb_lineset.colors.append(c)
     add_obj = server_pb2.AddObject()
     add_obj.line_set.CopyFrom(pb_lineset)
     obj = server_pb2.ServerCommand()
@@ -171,7 +229,7 @@ def send_mesh(
     Args:
         xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のx,y,z座標を表す。
         indices (numpy.ndarray): shape が (num_triangles,3) で dtype が uint32 の ndarray 。各行が頂点のインデックスによって1枚の三角形を表す。
-        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が float32 の ndarray 。各行が頂点のr,g,bを0から1までの数値で表す。
+        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が uint8 の ndarray 。各行が頂点のr,g,bを表す。
 
     Returns:
         UUID: 表示したMeshに対応するID。後から操作する際に使う
@@ -184,7 +242,7 @@ def send_mesh(
         )
     if rgb is not None:
         shape_is_valid = len(rgb.shape) == 2 and rgb.shape[1] == 3
-        type_is_valid = rgb.dtype == "float32"
+        type_is_valid = rgb.dtype == "uint8"
 
         if not (shape_is_valid and type_is_valid):
             raise ValueError(
@@ -209,7 +267,9 @@ def send_mesh(
         pb_mesh.vertex_b_index.append(l[1])
         pb_mesh.vertex_c_index.append(l[2])
     if rgb is not None:
-        for l in rgb:
+        rgb_f = rgb.astype("float32")
+        rgb_f /= 255
+        for l in rgb_f:
             c = server_pb2.VecRGBf()
             c.r = l[0]
             c.g = l[1]
@@ -236,6 +296,7 @@ def send_overlay_text(
     x: float = 0,
     y: float = 0,
     z: float = 0,
+    screen_coordinate: bool = False,
 ) -> UUID:
     """特定の座標を左上として文字列をオーバーレイさせる。
 
@@ -247,6 +308,8 @@ def send_overlay_text(
     :type y: float, optional
     :param z: オーバーレイが追従する点のz座標
     :type z: float, optional
+    :param screen_coordinate: Trueにするとオーバーレイが画面の指定の位置に固定される。このときzは無視される
+    :type screen_coordinate: bool, optional
 
     Returns:
         UUID: オーバーレイに対応するID。後から操作する際に使う
@@ -258,6 +321,10 @@ def send_overlay_text(
     position.z = z
     overlay.position.CopyFrom(position)
     overlay.text = text
+    if screen_coordinate:
+        overlay.type = server_pb2.AddObject.Overlay.CoordinateType.SCREEN_COORDINATE
+    else:
+        overlay.type = server_pb2.AddObject.Overlay.CoordinateType.WORLD_COORDINATE
     add_obj = server_pb2.AddObject()
     add_obj.overlay.CopyFrom(overlay)
     obj = server_pb2.ServerCommand()
@@ -280,6 +347,7 @@ def send_overlay_image(
     x: float = 0,
     y: float = 0,
     z: float = 0,
+    screen_coordinate: bool = False,
 ) -> UUID:
     """特定の座標を左上として画像をオーバーレイさせる。
 
@@ -289,6 +357,7 @@ def send_overlay_image(
         x (float, optional): オーバーレイが追従する点のx座標
         y (float, optional): オーバーレイが追従する点のy座標
         z (float, optional): オーバーレイが追従する点のz座標
+        screen_coordinate (bool, optional) Trueにするとオーバーレイが画面の指定の位置に固定される。このときzは無視される
 
     Returns:
         UUID: オーバーレイに対応するID。後から操作する際に使う
@@ -305,6 +374,11 @@ def send_overlay_image(
     image.data = data
     image.width = width
     overlay.image.CopyFrom(image)
+
+    if screen_coordinate:
+        overlay.type = server_pb2.AddObject.Overlay.CoordinateType.SCREEN_COORDINATE
+    else:
+        overlay.type = server_pb2.AddObject.Overlay.CoordinateType.WORLD_COORDINATE
 
     add_obj = server_pb2.AddObject()
     add_obj.overlay.CopyFrom(overlay)

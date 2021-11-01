@@ -43,13 +43,14 @@ function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCl
     sendFailure(websocket, commandID, 'message has not position');
     return;
   }
+  const coordType = overlay.getType();
   const contentsCase = PB.AddObject.Overlay.ContentsCase;
   switch (overlay.getContentsCase()) {
     case contentsCase.TEXT:
-      addOverlayText(websocket, commandID, viewer, overlay.getText(), position);
+      addOverlayText(websocket, commandID, viewer, overlay.getText(), position, coordType);
       break;
     case contentsCase.IMAGE:
-      addOverlayImage(websocket, commandID, viewer, overlay.getImage(), position);
+      addOverlayImage(websocket, commandID, viewer, overlay.getImage(), position, coordType);
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any contents');
@@ -57,7 +58,7 @@ function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCl
   }
 }
 
-function addOverlayImage (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, image: PB.AddObject.Overlay.Image | undefined, position: PB.VecXYZf) {
+function addOverlayImage (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, image: PB.AddObject.Overlay.Image | undefined, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType) {
   if (image === undefined) {
     sendFailure(websocket, commandID, 'failed to get image');
     return;
@@ -76,23 +77,23 @@ function addOverlayImage (websocket: WebSocket, commandID: string, viewer: Point
   img.style.width = '100%';
   div.style.width = image.getWidth() + 'px';
   div.appendChild(img);
-  addOverlayHTML(viewer, div, position, commandID);
+  addOverlayHTML(viewer, div, position, coordType, commandID);
   sendSuccess(websocket, commandID, commandID);
 }
 
-function addOverlayText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, text: string, position: PB.VecXYZf) {
+function addOverlayText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, text: string, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType) {
   const div = document.createElement('div');
   div.innerText = text;
   div.style.color = 'white';
   div.style.mixBlendMode = 'difference';
-  addOverlayHTML(viewer, div, position, commandID);
+  addOverlayHTML(viewer, div, position, coordType, commandID);
   sendSuccess(websocket, commandID, commandID);
 }
 
-function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, commandID: string) {
+function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType, commandID: string) {
   viewer.overlayContainer.appendChild(element);
   const p = new THREE.Vector3(position.getX(), position.getY(), position.getZ());
-  const overlay = new Overlay(element, p, commandID);
+  const overlay = new Overlay(element, p, coordType, commandID);
   viewer.overlays.push(overlay);
 }
 
@@ -156,10 +157,27 @@ function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCl
     indices.push(fromIndex[i]);
     indices.push(toIndex[i]);
   }
+
   const geometry = new THREE.BufferGeometry();
+  const material = new THREE.LineBasicMaterial();
+
+  const PBcolors = lineset.getColorsList();
+  if (PBcolors.length !== 0) {
+    material.vertexColors = true;
+    const colors: number[] = [];
+    for (let i = 0; i < PBcolors.length; i++) {
+      colors.push(
+        Math.max(Math.min(1, PBcolors[i].getR())),
+        Math.max(Math.min(1, PBcolors[i].getG())),
+        Math.max(Math.min(1, PBcolors[i].getB()))
+      );
+    }
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  }
+
   geometry.setIndex(indices);
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  const material = new THREE.LineBasicMaterial();
+
   const linesegments = new THREE.LineSegments(geometry, material);
   viewer.scene.add(linesegments);
   sendSuccess(websocket, commandID, linesegments.uuid);
@@ -178,7 +196,15 @@ function handlePointCloud (
 
   const data = Uint8Array.from(atob(pbPointcloud.getPcdData_asB64()), c => c.charCodeAt(0)).buffer;
 
-  const pointcloud = new PCDLoader().parse(data, 'test');
+  let pointcloud: ReturnType<typeof PCDLoader.prototype.parse>;
+
+  try {
+    pointcloud = new PCDLoader().parse(data, 'test');
+  } catch (error) {
+    console.error(error);
+    sendFailure(websocket, commandID, `failed to parse pcd data: ${error}`);
+    return;
+  }
 
   if (pointcloud.material instanceof THREE.PointsMaterial) {
     pointcloud.material.size = 1;
