@@ -49,10 +49,16 @@ def main():
     ]).astype("uint8")
     viewer.send_lineset(points, lines, colors)
 
-    viewer.send_overlay_text("x", points[7][0], points[7][1], points[7][2])
-    viewer.send_overlay_text("y", points[8][0], points[8][1], points[8][2])
-    viewer.send_overlay_text("z", points[9][0], points[9][1], points[9][2])
-    viewer.send_overlay_text(args.pcd_filepath, 10, 10, screen_coordinate=True)
+    viewer.send_overlay_text(
+        "x", points[7][0], points[7][1], points[7][2], style="color: red"
+    )
+    viewer.send_overlay_text(
+        "y", points[8][0], points[8][1], points[8][2], style="color: green"
+    )
+    viewer.send_overlay_text(
+        "z", points[9][0], points[9][1], points[9][2], style="color: blue"
+    )
+    viewer.send_overlay_text(args.pcd_filepath, 10, 10, screen_coordinate=True, style="font-family: monospace")
 
     triangles = numpy.array([
         [0, 1, 2], [0, 2, 3], [3, 1, 0]

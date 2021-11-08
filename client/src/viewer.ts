@@ -166,7 +166,14 @@ export class PointCloudViewer {
         this.config.camera.usePerspective = perspective;
         this.gui.updateDisplay();
       }
-      this.controls = this.createControls(perspective ? this.perspectiveCamera : this.orthographicCamera);
+
+      const newCamera: THREE.Camera = perspective ? this.perspectiveCamera : this.orthographicCamera;
+      const oldCamera: THREE.Camera = !perspective ? this.perspectiveCamera : this.orthographicCamera;
+
+      newCamera.position.copy(oldCamera.position);
+      newCamera.rotation.copy(oldCamera.rotation);
+
+      this.controls = this.createControls(newCamera);
     }
 
     private createControls (camera: THREE.Camera): TrackballControls {
@@ -174,9 +181,9 @@ export class PointCloudViewer {
       controls.staticMoving = true;
       controls.rotateSpeed = this.config.controls.rotateSpeed;
       controls.zoomSpeed = this.config.controls.zoomSpeed;
-      console.log(this.config.controls.panSpeed, Math.pow(2, this.config.controls.panSpeed));
       controls.panSpeed = Math.pow(2, this.config.controls.panSpeed);
       controls.keys[2] = 16; // shift to pan
+      controls.update();
       return controls;
     }
 }

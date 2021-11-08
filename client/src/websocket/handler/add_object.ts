@@ -46,8 +46,8 @@ function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCl
   const coordType = overlay.getType();
   const contentsCase = PB.AddObject.Overlay.ContentsCase;
   switch (overlay.getContentsCase()) {
-    case contentsCase.TEXT:
-      addOverlayText(websocket, commandID, viewer, overlay.getText(), position, coordType);
+    case contentsCase.HTML:
+      addOverlayHTMLText(websocket, commandID, viewer, overlay.getHtml(), position, coordType);
       break;
     case contentsCase.IMAGE:
       addOverlayImage(websocket, commandID, viewer, overlay.getImage(), position, coordType);
@@ -81,11 +81,9 @@ function addOverlayImage (websocket: WebSocket, commandID: string, viewer: Point
   sendSuccess(websocket, commandID, commandID);
 }
 
-function addOverlayText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, text: string, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType) {
+function addOverlayHTMLText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, html: string, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType) {
   const div = document.createElement('div');
-  div.innerText = text;
-  div.style.color = 'white';
-  div.style.mixBlendMode = 'difference';
+  div.innerHTML = html;
   addOverlayHTML(viewer, div, position, coordType, commandID);
   sendSuccess(websocket, commandID, commandID);
 }

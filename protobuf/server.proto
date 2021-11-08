@@ -93,7 +93,7 @@ message AddObject {
     message Overlay {
         VecXYZf position = 1;
         oneof Contents {
-            string text = 2;
+            string html = 2;
             Image image = 3;
         }
         CoordinateType type = 4;
