@@ -10,6 +10,7 @@ from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
 from pointcloud_viewer._internal.protobuf import server_pb2
 from pointcloud_viewer._internal.down_sample import down_sample_pointcloud
 from typing import Optional
+import yattag
 
 DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS = 1_000_000
 
@@ -297,6 +298,7 @@ def send_overlay_text(
     y: float = 0,
     z: float = 0,
     screen_coordinate: bool = False,
+    style: str = "",
 ) -> UUID:
     """特定の座標を左上として文字列をオーバーレイさせる。
 
@@ -310,6 +312,8 @@ def send_overlay_text(
     :type z: float, optional
     :param screen_coordinate: Trueにするとオーバーレイが画面の指定の位置に固定される。このときzは無視される
     :type screen_coordinate: bool, optional
+    :param style: style属性に渡される文字列
+    :type style: str, optional
 
     Returns:
         UUID: オーバーレイに対応するID。後から操作する際に使う
@@ -320,7 +324,12 @@ def send_overlay_text(
     position.y = y
     position.z = z
     overlay.position.CopyFrom(position)
-    overlay.text = text
+
+    yatdoc, createTag, setText = yattag.Doc().tagtext()
+    with createTag("div", ("style", "color:white;mix-blend-mode: difference;"+style)):
+        setText(text)
+    overlay.html = yatdoc.getvalue()
+
     if screen_coordinate:
         overlay.type = server_pb2.AddObject.Overlay.CoordinateType.SCREEN_COORDINATE
     else:

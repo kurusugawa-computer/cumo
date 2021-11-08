@@ -354,10 +354,18 @@ category = "main"
 optional = false
 python-versions = ">=3.6.1"
 
+[[package]]
+name = "yattag"
+version = "1.14.0"
+description = "Generate HTML or XML in a pythonic way. Pure python alternative to web template engines.Can fill HTML forms with default values and error messages."
+category = "main"
+optional = false
+python-versions = "*"
+
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.9"
-content-hash = "cfdb46e04b3fa8ec1f948dfa41b897694205dd1a9776b55a368760e5ec2e6957"
+content-hash = "e77f5163f9197e228536c89c97aae34aff029623e73c4e6cfc1e6c77d01f38b9"
 
 [metadata.files]
 alabaster = [
@@ -597,4 +605,7 @@ websockets = [
     {file = "websockets-8.1-cp38-cp38-win32.whl", hash = "sha256:e898a0863421650f0bebac8ba40840fc02258ef4714cb7e1fd76b6a6354bda36"},
     {file = "websockets-8.1-cp38-cp38-win_amd64.whl", hash = "sha256:f8a7bff6e8664afc4e6c28b983845c5bc14965030e3fb98789734d416af77c4b"},
     {file = "websockets-8.1.tar.gz", hash = "sha256:5c65d2da8c6bce0fca2528f69f44b2f977e06954c8512a952222cea50dad430f"},
+]
+yattag = [
+    {file = "yattag-1.14.0.tar.gz", hash = "sha256:5731a31cb7452c0c6930dd1a284e0170b39eee959851a2aceb8d6af4134a5fa8"},
 ]
