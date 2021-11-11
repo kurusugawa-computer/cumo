@@ -6,6 +6,7 @@ from enum import Enum, auto
 class DownSampleStrategy(Enum):
     NONE = auto()
     RANDOM_SAMPLE = auto()
+    VOXEL_GRID = auto()
 
 class PointCloudViewer:
     """点群をブラウザで表示するためのサーバーを立ち上げるビューア。
