@@ -5,6 +5,7 @@ if TYPE_CHECKING:
 
 from uuid import UUID, uuid4
 import numpy
+import html
 from pypcd import pypcd
 from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
 from pointcloud_viewer._internal.protobuf import server_pb2
@@ -327,7 +328,7 @@ def send_overlay_text(
 
     yatdoc, createTag, setText = yattag.Doc().tagtext()
     with createTag("div", ("style", "color:white;mix-blend-mode: difference;"+style)):
-        setText(text)
+        yatdoc.asis(html.escape(text).replace("\n","<br />\n"))
     overlay.html = yatdoc.getvalue()
 
     if screen_coordinate:
