@@ -1,8 +1,11 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
 from typing import TYPE_CHECKING
+
+from google.protobuf import message
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
+import queue
 import base64
 from uuid import UUID
 from typing import Callable, Optional
@@ -14,27 +17,39 @@ from pointcloud_viewer._internal.protobuf import client_pb2
 from pointcloud_viewer.keyboard_event import KeyboardEvent
 
 
+def clean_defer_queue(self: PointCloudViewer, q: queue.Queue):
+    while not q.empty():
+        self._websocket_message_queue.put(q.get())
+
+
 def _wait_until(self: PointCloudViewer, uuid: UUID) -> client_pb2.ClientCommand:
+    defer_queue = queue.Queue()
     while True:
         data: bytes = self._websocket_message_queue.get()
         command: client_pb2.ClientCommand = client_pb2.ClientCommand()
         try:
             command.ParseFromString(data)
         except DecodeError:
+            clean_defer_queue(self, defer_queue)
             raise RuntimeError("failed to parsing message")
         if UUID(hex=command.UUID) == uuid:
+            clean_defer_queue(self, defer_queue)
             return command
         else:
-            self._handle_message(command)
+            for_me = self._handle_message(command)
+            if not for_me:
+                # 他の_wait_untilループで受け取るべきデータが来てしまったので退避させる
+                defer_queue.put(data)
 
 
-def _handle_message(self: PointCloudViewer, command: client_pb2.ClientCommand):
+def _handle_message(self: PointCloudViewer, command: client_pb2.ClientCommand) -> bool:
     if command.HasField("control_changed"):
         _handle_control_changed(self, command)
-        return
+        return True
     if command.HasField("key_event_occurred"):
         _handle_key_event_occurred(self, command)
-        return
+        return True
+    return False
 
 
 def _get_custom_handler(self: PointCloudViewer, uuid: UUID, name: str) -> Optional[Callable]:
@@ -68,7 +83,8 @@ def _handle_key_event_occurred(self: PointCloudViewer, command: client_pb2.Clien
     elif command.key_event_occurred.HasField("keypress"):
         handle_keypress(self, command.key_event_occurred.keypress)
 
-def protobuf_to_keyboardevent(ev_pb:client_pb2.KeyEventOccurred.KeyEvent) -> KeyboardEvent:
+
+def protobuf_to_keyboardevent(ev_pb: client_pb2.KeyEventOccurred.KeyEvent) -> KeyboardEvent:
     return KeyboardEvent(
         key=ev_pb.key,
         code=ev_pb.code,
@@ -78,6 +94,7 @@ def protobuf_to_keyboardevent(ev_pb:client_pb2.KeyEventOccurred.KeyEvent) -> Key
         metaKey=ev_pb.metaKey,
         repeat=ev_pb.repeat,
     )
+
 
 def handle_keyup(self: PointCloudViewer, ev_pb: client_pb2.KeyEventOccurred.KeyEvent):
     ev = protobuf_to_keyboardevent(ev_pb)
