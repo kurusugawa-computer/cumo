@@ -18,8 +18,8 @@ def down_sample_pointcloud(pc: numpy.ndarray, strategy: DownSampleStrategy, args
     if strategy == strategy.RANDOM_SAMPLE:
         return down_sample_random(pc, max_num_points)
     if strategy == strategy.VOXEL_GRID:
-        assert args is not None
-        return down_sample_voxel(pc, args[0])
+        assert args is not None # None のときは、自動で適当な voxel_size を採用したほうが良い？
+        return down_sample_voxel(pc, args[0], max_num_points)
 
     assert False, "strategy not implemented: {0}".format(strategy.name)
 
@@ -28,7 +28,7 @@ def down_sample_random(pc: numpy.ndarray, max_num_points: int) -> numpy.ndarray:
     indices = numpy.arange(pc.shape[0])
     return pc[numpy.random.choice(indices, max_num_points)]
 
-def down_sample_voxel(pc: numpy.ndarray, voxel_size: float) -> numpy.ndarray:
+def down_sample_voxel(pc: numpy.ndarray, voxel_size: float, max_num_points: int) -> numpy.ndarray:
     scale = 1.0 / voxel_size
     voxels = {}
     output = []
@@ -42,6 +42,8 @@ def down_sample_voxel(pc: numpy.ndarray, voxel_size: float) -> numpy.ndarray:
         output.append(acc / n)
 
     output = numpy.array(output).astype(numpy.float32)
-    # print("before", len(pc))
-    # print("after", len(output))
-    return output
+
+    if len(output) > max_num_points:
+        return down_sample_random(output, max_num_points)
+    else:
+        return output
