@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 import numpy
 import html
 from pypcd import pypcd
-from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
+from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy, DownSampleStrategyKind
 from pointcloud_viewer._internal.protobuf import server_pb2
 from pointcloud_viewer._internal.down_sample import down_sample_pointcloud
 from typing import Optional
@@ -19,8 +19,7 @@ DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS = 1_000_000
 def send_pointcloud_pcd(
     self: PointCloudViewer,
     pcd_bytes: bytes,
-    down_sample: DownSampleStrategy = DownSampleStrategy.RANDOM_SAMPLE,
-    down_sample_args: Optional[list] = None,
+    down_sample: DownSampleStrategy = DownSampleStrategy(DownSampleStrategyKind.RANDOM_SAMPLE),
     max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS
 ) -> UUID:
     """点群をブラウザに送信し、表示させる。
@@ -34,7 +33,7 @@ def send_pointcloud_pcd(
         UUID: 表示した点群に対応するID。後から操作する際に使う
     """
 
-    if down_sample == DownSampleStrategy.NONE:
+    if down_sample.kind == DownSampleStrategyKind.NONE:
         cloud = server_pb2.AddObject.PointCloud()
         cloud.pcd_data = pcd_bytes
 
@@ -67,7 +66,7 @@ def send_pointcloud_pcd(
         rgb = numpy.stack([r_u8, g_u8, b_u8], axis=1)
 
         self.send_pointcloud(
-            xyz=xyz, rgb=rgb, down_sample=down_sample, down_sample_args=down_sample_args, max_num_points=max_num_points)
+            xyz=xyz, rgb=rgb, down_sample=down_sample, max_num_points=max_num_points)
 
 
 def send_pointcloud(
@@ -75,8 +74,7 @@ def send_pointcloud(
     xyz: Optional[numpy.ndarray] = None,
     rgb: Optional[numpy.ndarray] = None,
     xyzrgb: Optional[numpy.ndarray] = None,
-    down_sample: Optional[DownSampleStrategy] = DownSampleStrategy.RANDOM_SAMPLE,
-    down_sample_args: Optional[list] = None,
+    down_sample: Optional[DownSampleStrategy] = DownSampleStrategy(DownSampleStrategyKind.RANDOM_SAMPLE),
     max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS
 ) -> UUID:
     """点群をブラウザに送信し、表示させる。
@@ -133,24 +131,23 @@ def send_pointcloud(
             ))
             pcd = pypcd.make_xyz_rgb_point_cloud(
                 down_sample_pointcloud(
-                    concatenated, down_sample, down_sample_args, max_num_points=max_num_points)
+                    concatenated, down_sample, max_num_points=max_num_points)
             )
         else:
             pcd = pypcd.make_xyz_point_cloud(
                 down_sample_pointcloud(
-                    xyz, down_sample, down_sample_args, max_num_points=max_num_points)
+                    xyz, down_sample, max_num_points=max_num_points)
             )
     else:
         assert xyzrgb is not None
         pcd = pypcd.make_xyz_rgb_point_cloud(
-            down_sample_pointcloud(xyzrgb, down_sample, down_sample_args,
-                                   max_num_points=max_num_points)
+            down_sample_pointcloud(xyzrgb, down_sample, max_num_points=max_num_points)
         )
 
     pcd_bytes = pcd.save_pcd_to_buffer()
 
     # 送信
-    return self.send_pointcloud_pcd(pcd_bytes, down_sample=DownSampleStrategy.NONE)
+    return self.send_pointcloud_pcd(pcd_bytes, down_sample=DownSampleStrategy(DownSampleStrategyKind.NONE))
 
 
 def send_lineset(
