@@ -32,11 +32,11 @@ def down_sample_voxel(pc: numpy.ndarray, voxel_size: float, max_num_points: int)
 
     for i, _ in enumerate(pc):
         [x, y, z] = numpy.round(pc[i][:3] * scale).astype(numpy.int32)
-        (p, n) = voxels.get((x, y, z), ((0.0, 0.0, 0.0, 0.0), 0))
-        voxels[(x, y, z)] = (pc[i] + p, n + 1)
+        (p, c, n) = voxels.get((x, y, z), ((0.0, 0.0, 0.0), pc[i][3], 0))
+        voxels[(x, y, z)] = (pc[i][:3] + p, c, n + 1)
 
-    for ((x, y, z), (acc, n)) in voxels.items():
-        output.append(acc / n)
+    for ((x, y, z), (acc, c, n)) in voxels.items():
+        output.append(numpy.hstack((acc / n, c)))
 
     output = numpy.array(output).astype(numpy.float32)
 
