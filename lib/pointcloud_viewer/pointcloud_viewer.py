@@ -2,10 +2,18 @@ __all__ = ["PointCloudViewer"]
 
 import multiprocessing
 from enum import Enum, auto
+from typing import Optional
 
 class DownSampleStrategy(Enum):
     NONE = auto()
     RANDOM_SAMPLE = auto()
+    VOXEL_GRID = auto()
+
+    voxel_size: Optional[float]
+
+    def set_voxel_size(self, voxel_size):
+        self.voxel_size = voxel_size
+        return self
 
 class PointCloudViewer:
     """点群をブラウザで表示するためのサーバーを立ち上げるビューア。

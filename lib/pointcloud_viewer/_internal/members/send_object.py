@@ -141,8 +141,7 @@ def send_pointcloud(
     else:
         assert xyzrgb is not None
         pcd = pypcd.make_xyz_rgb_point_cloud(
-            down_sample_pointcloud(xyzrgb, down_sample,
-                                   max_num_points=max_num_points)
+            down_sample_pointcloud(xyzrgb, down_sample, max_num_points=max_num_points)
         )
 
     pcd_bytes = pcd.save_pcd_to_buffer()
