@@ -32,6 +32,8 @@ function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: Point
   }
   viewer.overlays = [];
 
+  viewer.linesets = [];
+
   sendSuccess(websocket, commandID, 'success');
 }
 
@@ -48,6 +50,15 @@ function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: Po
     if (overlay.uuid === uuid.toUpperCase()) {
       overlay.dispose();
       viewer.overlays.splice(i, 1);
+      sendSuccess(websocket, commandID, 'success');
+      return;
+    }
+  }
+
+  for (let i = 0; i < viewer.linesets.length; i++) {
+    const lineset = viewer.linesets[i];
+    if (lineset.UUID === uuid.toUpperCase()) {
+      viewer.linesets.splice(i, 1);
       sendSuccess(websocket, commandID, 'success');
       return;
     }

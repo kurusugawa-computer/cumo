@@ -24,6 +24,7 @@
 		"eslint.lintTask.enable": true,
 		"eslint.packageManager": "yarn",
 		"typescript.tsdk": "/workspaces/kciguild-pointcloud-viewer/client/node_modules/typescript/lib",
+		"python.formatting.provider": "autopep8",
 	},
 	"extensions": [
 		"ms-python.vscode-pylance",
