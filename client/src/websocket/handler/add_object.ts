@@ -7,6 +7,7 @@ import * as imageType from 'image-type';
 import { Overlay } from '../../overlay';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
+import { Lineset } from '../../lineset';
 
 export function handleAddObject (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, addObject: PB.AddObject | undefined): void {
   if (addObject === undefined) {
@@ -142,43 +143,36 @@ function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCl
     sendFailure(websocket, commandID, 'failed to get lineset');
     return;
   }
-  const fromIndex = lineset.getFromIndexList();
-  const toIndex = lineset.getToIndexList();
   const points = lineset.getPointsList();
   const positions: number[] = [];
   for (let i = 0; i < points.length; i++) {
     const v = points[i];
     positions.push(v.getX(), v.getY(), v.getZ());
   }
+
+  const fromIndex = lineset.getFromIndexList();
+  const toIndex = lineset.getToIndexList();
   const indices: number[] = [];
   for (let i = 0; i < fromIndex.length; i++) {
     indices.push(fromIndex[i]);
     indices.push(toIndex[i]);
   }
 
-  const geometry = new THREE.BufferGeometry();
-  const material = new THREE.LineBasicMaterial();
-
   const PBcolors = lineset.getColorsList();
-  if (PBcolors.length !== 0) {
-    material.vertexColors = true;
-    const colors: number[] = [];
-    for (let i = 0; i < PBcolors.length; i++) {
-      colors.push(
-        Math.max(Math.min(1, PBcolors[i].getR())),
-        Math.max(Math.min(1, PBcolors[i].getG())),
-        Math.max(Math.min(1, PBcolors[i].getB()))
-      );
-    }
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+  const colors: number[] = [];
+  for (let i = 0; i < PBcolors.length; i++) {
+    colors.push(
+      Math.max(0, Math.min(255, PBcolors[i].getR())),
+      Math.max(0, Math.min(255, PBcolors[i].getG())),
+      Math.max(0, Math.min(255, PBcolors[i].getB()))
+    );
   }
 
-  geometry.setIndex(indices);
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  const widths = lineset.getWidthsList();
 
-  const linesegments = new THREE.LineSegments(geometry, material);
-  viewer.scene.add(linesegments);
-  sendSuccess(websocket, commandID, linesegments.uuid);
+  viewer.linesets.push(new Lineset(positions, indices, colors, widths, commandID));
+
+  sendSuccess(websocket, commandID, commandID);
 }
 
 function handlePointCloud (

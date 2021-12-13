@@ -141,7 +141,8 @@ def send_pointcloud(
     else:
         assert xyzrgb is not None
         pcd = pypcd.make_xyz_rgb_point_cloud(
-            down_sample_pointcloud(xyzrgb, down_sample, max_num_points=max_num_points)
+            down_sample_pointcloud(xyzrgb, down_sample,
+                                   max_num_points=max_num_points)
         )
 
     pcd_bytes = pcd.save_pcd_to_buffer()
@@ -155,6 +156,7 @@ def send_lineset(
     xyz: numpy.ndarray,
     from_to: numpy.ndarray,
     rgb: Optional[numpy.ndarray] = None,
+    width: numpy.ndarray = None
 ) -> UUID:
     """Linesetをブラウザに送信し、表示させる。
 
@@ -196,14 +198,15 @@ def send_lineset(
         pb_lineset.to_index.append(l[1])
 
     if rgb is not None:
-        rgb_f = rgb.astype('float32')
-        rgb_f /= 255
-        for l in rgb_f:
+        for l in rgb:
             c = server_pb2.VecRGBf()
             c.r = l[0]
             c.g = l[1]
             c.b = l[2]
             pb_lineset.colors.append(c)
+    if width is not None:
+        for w in width:
+            pb_lineset.widths.append(w)
     add_obj = server_pb2.AddObject()
     add_obj.line_set.CopyFrom(pb_lineset)
     obj = server_pb2.ServerCommand()

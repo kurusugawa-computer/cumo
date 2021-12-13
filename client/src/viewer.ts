@@ -4,6 +4,8 @@ import * as DAT from 'dat.gui';
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 import { OrthographicCamera, PerspectiveCamera } from 'three';
 import { Overlay } from './overlay';
+import { Canvas2D } from './canvas2d';
+import { Lineset } from './lineset';
 
 export class PointCloudViewer {
     renderer: THREE.WebGLRenderer;
@@ -11,6 +13,10 @@ export class PointCloudViewer {
 
     overlays: Overlay[] = [];
     overlayContainer: HTMLElement
+
+    canvas2d: Canvas2D
+
+    linesets: Lineset[] = [];
 
     perspectiveCamera: THREE.PerspectiveCamera;
     orthographicCamera: THREE.OrthographicCamera;
@@ -72,6 +78,7 @@ export class PointCloudViewer {
         preserveDrawingBuffer: true,
         logarithmicDepthBuffer: true
       });
+      this.canvas2d = new Canvas2D();
 
       let DPIChangeDetector = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
       const handleDPIChange = () => {
@@ -85,6 +92,8 @@ export class PointCloudViewer {
 
       this.renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(this.renderer.domElement);
+      this.canvas2d.domElement.style.pointerEvents = 'none';
+      container.appendChild(this.canvas2d.domElement);
 
       window.addEventListener('resize', () => {
         const aspect = window.innerWidth / window.innerHeight;
@@ -145,6 +154,10 @@ export class PointCloudViewer {
         );
         for (let i = 0; i < this.overlays.length; i++) {
           this.overlays[i].render(this.renderer.domElement, camera);
+        }
+        this.canvas2d.ctx.clearRect(0, 0, this.canvas2d.domElement.clientWidth, this.canvas2d.domElement.clientHeight);
+        for (let i = 0; i < this.linesets.length; i++) {
+          this.linesets[i].render(this.canvas2d, camera);
         }
       };
 
