@@ -66,7 +66,7 @@ def multiprocessing_worker(
                 data = websocket_broadcasting_queue.get()
                 await websocket_connection.send(data)
             else:
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.01)
 
     async def __websocket_handler(websocket: websockets.WebSocketServerProtocol, path: str):
         nonlocal websocket_connection
