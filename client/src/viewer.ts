@@ -155,7 +155,7 @@ export class PointCloudViewer {
         for (let i = 0; i < this.overlays.length; i++) {
           this.overlays[i].render(this.renderer.domElement, camera);
         }
-        this.canvas2d.ctx.clearRect(0, 0, this.canvas2d.domElement.clientWidth, this.canvas2d.domElement.clientHeight);
+        this.canvas2d.ctx.clearRect(0, 0, this.canvas2d.domElement.width, this.canvas2d.domElement.height);
         for (let i = 0; i < this.linesets.length; i++) {
           this.linesets[i].render(this.canvas2d, camera);
         }
