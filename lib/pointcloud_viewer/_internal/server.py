@@ -61,12 +61,13 @@ def multiprocessing_worker(
 
     async def __broadcast():
         nonlocal websocket_connection
-        while True:
-            if not websocket_broadcasting_queue.empty() and websocket_connection != None:
-                data = websocket_broadcasting_queue.get()
+        loop = asyncio.get_running_loop()
+        try:
+            while True:
+                data = await loop.run_in_executor(None, websocket_broadcasting_queue.get)
                 await websocket_connection.send(data)
-            else:
-                await asyncio.sleep(0.01)
+        except asyncio.CancelledError:
+            pass
 
     async def __websocket_handler(websocket: websockets.WebSocketServerProtocol, path: str):
         nonlocal websocket_connection
@@ -74,12 +75,15 @@ def multiprocessing_worker(
             await websocket.close()
             return
         websocket_connection = websocket
+        loop = asyncio.get_running_loop()
+        broadcast_task = loop.create_task(__broadcast())
         try:
             async for msg in websocket:
                 msg: bytes = msg
                 websocket_message_queue.put(msg)
         finally:
             websocket_connection = None
+            broadcast_task.cancel()
 
     loop = asyncio.get_event_loop()
     http_server = HTTPServer(
@@ -87,7 +91,6 @@ def multiprocessing_worker(
         _MakePointCloudViewerHTTPRequestHandler(websocket_port=websocket_port),
     )
 
-    loop.create_task(__broadcast())
     start_server = websockets.serve(__websocket_handler,
                                     host=host, port=websocket_port)
     loop.run_until_complete(start_server)
