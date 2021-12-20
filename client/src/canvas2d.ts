@@ -4,8 +4,10 @@ export class Canvas2D {
   constructor () {
     const canvas = document.createElement('canvas');
     canvas.style.position = 'absolute';
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.width = window.innerWidth * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
     this.domElement = canvas;
     const ctx = canvas.getContext('2d');
     if (ctx !== null) {
@@ -14,8 +16,8 @@ export class Canvas2D {
       throw Error('cannot initialize canvas context');
     }
     window.addEventListener('resize', () => {
-      this.domElement.width = window.innerWidth;
-      this.domElement.height = window.innerHeight;
+      this.domElement.width = window.innerWidth * window.devicePixelRatio;
+      this.domElement.height = window.innerHeight * window.devicePixelRatio;
     });
   }
 }

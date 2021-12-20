@@ -34,10 +34,10 @@ export class Lineset {
       p0.project(camera);
       p1.project(camera);
 
-      const sx0 = (canvas.domElement.width / 2) * (p0.x + 1.0) / window.devicePixelRatio;
-      const sy0 = (canvas.domElement.height / 2) * (-p0.y + 1.0) / window.devicePixelRatio;
-      const sx1 = (canvas.domElement.width / 2) * (p1.x + 1.0) / window.devicePixelRatio;
-      const sy1 = (canvas.domElement.height / 2) * (-p1.y + 1.0) / window.devicePixelRatio;
+      const sx0 = (canvas.domElement.width / 2) * (p0.x + 1.0);
+      const sy0 = (canvas.domElement.height / 2) * (-p0.y + 1.0);
+      const sx1 = (canvas.domElement.width / 2) * (p1.x + 1.0);
+      const sy1 = (canvas.domElement.height / 2) * (-p1.y + 1.0);
 
       canvas.ctx.save();
 
