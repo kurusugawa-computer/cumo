@@ -199,7 +199,7 @@ function handlePointCloud (
   }
 
   if (pointcloud.material instanceof THREE.PointsMaterial) {
-    pointcloud.material.size = 1;
+    pointcloud.material.size = pbPointcloud.getPointSize();
     pointcloud.material.sizeAttenuation = false;
     pointcloud.material.needsUpdate = true;
   }

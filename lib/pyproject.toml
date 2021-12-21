@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pointcloud_viewer"
-version = "0.8.0"
+version = "0.9.0"
 description = ""
 authors = ["Kurusugawa Computer"]
 include = [

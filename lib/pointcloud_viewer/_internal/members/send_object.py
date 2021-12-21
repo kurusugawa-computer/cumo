@@ -20,7 +20,8 @@ def send_pointcloud_pcd(
     self: PointCloudViewer,
     pcd_bytes: bytes,
     down_sample: DownSampleStrategy = DownSampleStrategy.RANDOM_SAMPLE,
-    max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS
+    max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS,
+    point_size: float = 1
 ) -> UUID:
     """点群をブラウザに送信し、表示させる。
 
@@ -29,6 +30,7 @@ def send_pointcloud_pcd(
         down_sample (DownSampleStrategy, optional): DownSampleStrategy.NONE以外を指定すると一定以上の大きさの点群をダウンサンプルする。
             DownSampleStrategy.NONEを指定すると渡されたデータをそのまま送信する。
         max_num_points (int, optional): ダウンサンプルを行う場合、点数をこの数字以下に削減する。
+        point_size (int, optional): 点のサイズ。
     Returns:
         UUID: 表示した点群に対応するID。後から操作する際に使う
     """
@@ -36,6 +38,7 @@ def send_pointcloud_pcd(
     if down_sample == DownSampleStrategy.NONE:
         cloud = server_pb2.AddObject.PointCloud()
         cloud.pcd_data = pcd_bytes
+        cloud.point_size = point_size
 
         add_obj = server_pb2.AddObject()
         add_obj.point_cloud.CopyFrom(cloud)
@@ -66,7 +69,7 @@ def send_pointcloud_pcd(
         rgb = numpy.stack([r_u8, g_u8, b_u8], axis=1)
 
         self.send_pointcloud(
-            xyz=xyz, rgb=rgb, down_sample=down_sample, max_num_points=max_num_points)
+            xyz=xyz, rgb=rgb, down_sample=down_sample, max_num_points=max_num_points, point_size=point_size)
 
 
 def send_pointcloud(
@@ -75,7 +78,8 @@ def send_pointcloud(
     rgb: Optional[numpy.ndarray] = None,
     xyzrgb: Optional[numpy.ndarray] = None,
     down_sample: Optional[DownSampleStrategy] = DownSampleStrategy.RANDOM_SAMPLE,
-    max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS
+    max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS,
+    point_size: float = 1
 ) -> UUID:
     """点群をブラウザに送信し、表示させる。
 
@@ -86,6 +90,7 @@ def send_pointcloud(
             各行が点のx,y,z座標とrgbを表す。rgbは24ビットのrgb値を r<<16 + g<<8 + b のように float32 にエンコードしたもの。
         down_sample (DownSampleStrategy, optional): DownSampleStrategy.NONE以外を指定すると一定以上の大きさの点群をダウンサンプルする。
         max_num_points (int, optional): ダウンサンプルを行う場合、点数をこの数字以下に削減する。
+        point_size (int, optional): 点のサイズ。
 
     Returns:
         UUID: 表示した点群に対応するID。後から操作する際に使う
@@ -148,7 +153,7 @@ def send_pointcloud(
     pcd_bytes = pcd.save_pcd_to_buffer()
 
     # 送信
-    return self.send_pointcloud_pcd(pcd_bytes, down_sample=DownSampleStrategy.NONE)
+    return self.send_pointcloud_pcd(pcd_bytes, down_sample=DownSampleStrategy.NONE, point_size=point_size)
 
 
 def send_lineset(

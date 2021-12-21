@@ -90,6 +90,7 @@ message AddObject {
     }
     message PointCloud {
         bytes pcd_data = 1;
+        float point_size = 2;
     }
     message Overlay {
         VecXYZf position = 1;
