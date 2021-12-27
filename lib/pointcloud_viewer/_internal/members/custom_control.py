@@ -274,3 +274,31 @@ def remove_custom_control(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+
+
+def add_custom_folder(
+    self: PointCloudViewer,
+    name: str = "folder",
+) -> UUID:
+    """カスタムフォルダーにフォルダーを追加する。
+
+    :param name: 表示名
+    :type name: str, optional
+
+    Returns:
+        UUID: コントロールに対応するID。後から操作する際に使う
+    """
+    folder = server_pb2.CustomControl.Folder()
+    folder.name = name
+    add_custom_control = server_pb2.CustomControl()
+    add_custom_control.folder.CopyFrom(folder)
+    obj = server_pb2.ServerCommand()
+    obj.add_custom_control.CopyFrom(add_custom_control)
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)

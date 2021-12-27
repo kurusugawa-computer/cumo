@@ -125,7 +125,21 @@ export function handleAddControl (
         }
       }
       break;
-
+    case PB.CustomControl.ControlCase.FOLDER:
+      {
+        const folder = control.getFolder();
+        if (folder) {
+          Object.defineProperty(
+            viewer.config.custom,
+            propertyName,
+            {
+              value: () => { sendControlChanged(websocket, commandID, true); }
+            }
+          );
+          viewer.guiCustom.add(viewer.config.custom, propertyName).name(folder.getName());
+        }
+      }
+      break;
     default:
       sendFailure(websocket, commandID, 'invalid command');
       return;

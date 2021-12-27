@@ -23,6 +23,7 @@ message CustomControl {
         SelectBox selectbox = 4;
         Button button = 5;
         ColorPicker color_picker = 6;
+        Folder folder = 7;
     }
     message Slider {
         string name = 1;
@@ -55,6 +56,10 @@ message CustomControl {
     message ColorPicker {
         string name = 1;
         string init_value = 2;
+    }
+
+    message Folder {
+        string name = 1;
     }
 }
 
