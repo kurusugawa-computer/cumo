@@ -186,7 +186,8 @@ function handlePointCloud (
     return;
   }
 
-  const data = Uint8Array.from(atob(pbPointcloud.getPcdData_asB64()), c => c.charCodeAt(0)).buffer;
+  const data_ = pbPointcloud.getPcdData_asU8();
+  const data = data_.buffer.slice(data_.byteOffset);
 
   let pointcloud: ReturnType<typeof PCDLoader.prototype.parse>;
 
