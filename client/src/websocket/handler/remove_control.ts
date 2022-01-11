@@ -29,18 +29,35 @@ function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: Point
   for (let i = viewer.guiCustom.__controllers.length - 1; i >= 0; i--) {
     viewer.guiCustom.__controllers[i].remove();
   }
+  for (const [, folder] of Object.entries(viewer.guiCustom.__folders)) {
+    viewer.guiCustom.removeFolder(folder);
+  }
 
   sendSuccess(websocket, commandID, 'success');
 }
 
 function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, uuid: string) {
+  const upperedUUID = uuid.toUpperCase();
   for (let i = 0; i < viewer.guiCustom.__controllers.length; i++) {
     const controller = viewer.guiCustom.__controllers[i];
-    if (controller.property === uuid.toUpperCase()) {
+    if (controller.property === upperedUUID) {
       controller.remove();
       sendSuccess(websocket, commandID, 'success');
       return;
     }
   }
-  sendFailure(websocket, commandID, 'control not found');
+
+  if (!(upperedUUID in viewer.folderUUIDmap)) {
+    sendFailure(websocket, commandID, 'control not found');
+    return;
+  }
+  const folderName = viewer.folderUUIDmap[upperedUUID];
+  if (!(folderName in viewer.guiCustom.__folders)) {
+    sendFailure(websocket, commandID, 'control not found');
+    return;
+  }
+  const folder = viewer.guiCustom.__folders[folderName];
+  viewer.guiCustom.removeFolder(folder);
+
+  sendSuccess(websocket, commandID, 'success');
 }

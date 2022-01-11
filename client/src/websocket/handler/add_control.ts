@@ -132,11 +132,10 @@ export function handleAddControl (
           Object.defineProperty(
             viewer.config.custom,
             propertyName,
-            {
-              value: () => { sendControlChanged(websocket, commandID, true); }
-            }
+            {}
           );
-          viewer.guiCustom.add(viewer.config.custom, propertyName).name(folder.getName());
+          viewer.folderUUIDmap[propertyName] = folder.getName();
+          viewer.guiCustom.addFolder(folder.getName());
         }
       }
       break;
