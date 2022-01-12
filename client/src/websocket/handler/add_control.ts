@@ -1,6 +1,9 @@
 import * as PB from '../../protobuf/server_pb.js';
 import { sendSuccess, sendFailure, sendControlChanged } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
+import { GUI } from 'dat.gui';
+
+const RootFolderUUID = '00000000-0000-0000-0000-000000000000';
 
 export function handleAddControl (
   websocket: WebSocket,
@@ -25,7 +28,13 @@ export function handleAddControl (
               value: () => { sendControlChanged(websocket, commandID, true); }
             }
           );
-          viewer.guiCustom.add(viewer.config.custom, propertyName).name(button.getName());
+          const parentFolder = findFolderByUUID(viewer, button.getParent().toUpperCase());
+          if (!parentFolder) {
+            sendFailure(websocket, commandID, 'failure to get parent folder');
+            return;
+          }
+          viewer.folderUUIDmap[propertyName] = button.getName();
+          parentFolder.add(viewer.config.custom, propertyName).name(button.getName());
         }
       }
       break;
@@ -41,7 +50,13 @@ export function handleAddControl (
               writable: true
             }
           );
-          viewer.guiCustom.add(viewer.config.custom, propertyName)
+          const parentFolder = findFolderByUUID(viewer, checkbox.getParent().toUpperCase());
+          if (!parentFolder) {
+            sendFailure(websocket, commandID, 'failure to get parent folder');
+            return;
+          }
+          viewer.folderUUIDmap[propertyName] = checkbox.getName();
+          parentFolder.add(viewer.config.custom, propertyName)
             .name(checkbox.getName())
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
@@ -59,7 +74,13 @@ export function handleAddControl (
               writable: true
             }
           );
-          viewer.guiCustom.addColor(viewer.config.custom, propertyName)
+          const parentFolder = findFolderByUUID(viewer, picker.getParent().toUpperCase());
+          if (!parentFolder) {
+            sendFailure(websocket, commandID, 'failure to get parent folder');
+            return;
+          }
+          viewer.folderUUIDmap[propertyName] = picker.getName();
+          parentFolder.addColor(viewer.config.custom, propertyName)
             .name(picker.getName())
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
@@ -77,7 +98,13 @@ export function handleAddControl (
               writable: true
             }
           );
-          viewer.guiCustom.add(viewer.config.custom, propertyName, selectbox.getItemsList())
+          const parentFolder = findFolderByUUID(viewer, selectbox.getParent().toUpperCase());
+          if (!parentFolder) {
+            sendFailure(websocket, commandID, 'failure to get parent folder');
+            return;
+          }
+          viewer.folderUUIDmap[propertyName] = selectbox.getName();
+          parentFolder.add(viewer.config.custom, propertyName, selectbox.getItemsList())
             .name(selectbox.getName())
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
@@ -95,7 +122,13 @@ export function handleAddControl (
               writable: true
             }
           );
-          viewer.guiCustom.add(
+          const parentFolder = findFolderByUUID(viewer, slider.getParent().toUpperCase());
+          if (!parentFolder) {
+            sendFailure(websocket, commandID, 'failure to get parent folder');
+            return;
+          }
+          viewer.folderUUIDmap[propertyName] = slider.getName();
+          parentFolder.add(
             viewer.config.custom,
             propertyName,
             slider.getMin(),
@@ -119,7 +152,13 @@ export function handleAddControl (
               writable: true
             }
           );
-          viewer.guiCustom.add(viewer.config.custom, propertyName)
+          const parentFolder = findFolderByUUID(viewer, textbox.getParent().toUpperCase());
+          if (!parentFolder) {
+            sendFailure(websocket, commandID, 'failure to get parent folder');
+            return;
+          }
+          viewer.folderUUIDmap[propertyName] = textbox.getName();
+          parentFolder.add(viewer.config.custom, propertyName)
             .name(textbox.getName())
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
@@ -134,8 +173,13 @@ export function handleAddControl (
             propertyName,
             {}
           );
+          const parentFolder = findFolderByUUID(viewer, folder.getParent().toUpperCase());
+          if (!parentFolder) {
+            sendFailure(websocket, commandID, 'failure to get parent folder');
+            return;
+          }
           viewer.folderUUIDmap[propertyName] = folder.getName();
-          viewer.guiCustom.addFolder(folder.getName());
+          parentFolder.addFolder(folder.getName());
         }
       }
       break;
@@ -144,4 +188,33 @@ export function handleAddControl (
       return;
   }
   sendSuccess(websocket, commandID, commandID);
+}
+
+function findFolderByUUID (viewer: PointCloudViewer, uuid: string): GUI | null {
+  if (uuid === RootFolderUUID) {
+    return viewer.guiCustom;
+  }
+  return findGUI(
+    viewer.guiCustom,
+    new Set(),
+    (gui) => viewer.folderUUIDmap[uuid] === gui.name);
+}
+
+function findGUI (currentGUI: GUI, visited: Set<string>, f: (gui: GUI) => boolean): GUI | null {
+  visited.add(currentGUI.name);
+  if (f(currentGUI)) {
+    return currentGUI;
+  }
+
+  for (const [, folder] of Object.entries(currentGUI.__folders)) {
+    if (visited.has(folder.name)) {
+      continue;
+    }
+    const result = findGUI(folder, visited, f);
+    if (result) {
+      return result;
+    }
+  }
+
+  return null;
 }
