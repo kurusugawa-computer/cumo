@@ -188,7 +188,7 @@ def add_custom_selectbox(
 def add_custom_button(
     self: PointCloudViewer,
     name: str = "button",
-    on_changed: Optional[Callable[[], None]] = None,
+    on_changed: Optional[Callable[[bool], None]] = None,
     parent: UUID = UUID(int=0),
 ) -> UUID:
     """カスタムフォルダーにボタンを追加する。
@@ -196,7 +196,7 @@ def add_custom_button(
     :param name: 表示名
     :type name: str, optional
     :param on_changed: ボタンが押されたときに呼ばれるコールバック関数。引数に ``True`` が渡される
-    :type on_changed: Optional[Callable[[], None]], optional
+    :type on_changed: Optional[Callable[[bool], None]], optional
     :param parent: 親フォルダーのUUID。Noneの場合はルートフォルダーになる。
     :type parent: UUID, optional
 
