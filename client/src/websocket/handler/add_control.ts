@@ -3,6 +3,7 @@ import { sendSuccess, sendFailure, sendControlChanged } from '../client_command'
 import { PointCloudViewer } from '../../viewer';
 import { GUI } from 'dat.gui';
 
+// ルートフォルダを示すUUID
 const RootFolderUUID = '00000000-0000-0000-0000-000000000000';
 
 export function handleAddControl (
@@ -197,9 +198,11 @@ function findFolderByUUID (viewer: PointCloudViewer, uuid: string): GUI | null {
   return findGUI(
     viewer.guiCustom,
     new Set(),
-    (gui) => viewer.folderUUIDmap[uuid] === gui.name);
+    (gui) => viewer.folderUUIDmap[uuid] === gui.name
+  );
 }
 
+// DFS で f(gui) を満たす GUI(folder) を探す
 function findGUI (currentGUI: GUI, visited: Set<string>, f: (gui: GUI) => boolean): GUI | null {
   visited.add(currentGUI.name);
   if (f(currentGUI)) {
