@@ -12,3 +12,7 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+.cr.function .property-name {
+    width: 100%;
+}
