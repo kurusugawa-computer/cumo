@@ -12,6 +12,7 @@ message ServerCommand {
         SetKeyEventHandler set_key_event_handler = 7;
         RemoveObject remove_object = 8;
         RemoveCustomControl remove_custom_control = 9;
+        CustomControl set_custom_control = 10;
     }
 }
 
