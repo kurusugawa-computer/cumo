@@ -32,7 +32,7 @@ def add_custom_slider(
     :type init_value: float, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にスライダーの設定値が渡される
     :type on_changed: Optional[Callable[[float], None]], optional
-    :param parent: 親フォルダーのUUID。Noneの場合はルートフォルダーになる。
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
     :type parent: UUID, optional
 
     Returns:
@@ -75,7 +75,7 @@ def add_custom_checkbox(
     :type init_value: bool, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にチェックボックスの設定値が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
-    :param parent: 親フォルダーのUUID。Noneの場合はルートフォルダーになる。
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
     :type parent: UUID, optional
 
 
@@ -116,7 +116,7 @@ def add_custom_textbox(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にテキストボックスの値が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
-    :param parent: 親フォルダーのUUID。Noneの場合はルートフォルダーになる。
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
     :type parent: UUID, optional
 
     Returns:
@@ -159,7 +159,7 @@ def add_custom_selectbox(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に選択された要素の文字列が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
-    :param parent: 親フォルダーのUUID。Noneの場合はルートフォルダーになる。
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
     :type parent: UUID, optional
 
     Returns:
@@ -197,7 +197,7 @@ def add_custom_button(
     :type name: str, optional
     :param on_changed: ボタンが押されたときに呼ばれるコールバック関数。引数に ``True`` が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
-    :param parent: 親フォルダーのUUID。Noneの場合はルートフォルダーになる。
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
     :type parent: UUID, optional
 
     Returns:
@@ -236,7 +236,7 @@ def add_custom_colorpicker(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に色を表す文字列が渡される
     :type on_changed: Optional[Callable[[], None]], optional
-    :param parent: 親フォルダーのUUID。Noneの場合はルートフォルダーになる。
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
     :type parent: UUID, optional
 
     Returns:
@@ -310,7 +310,7 @@ def add_custom_folder(
 
     :param name: 表示名
     :type name: str, optional
-    :param parent: 親フォルダーのUUID。Noneの場合はルートフォルダーになる。
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
     :type parent: UUID, optional
 
     Returns:
