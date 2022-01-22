@@ -146,13 +146,14 @@ message VecRGBf {
 }
 
 message SetCustomControl {
+    string target = 1;
     oneof Control {
-        Slider slider = 1;
-        CheckBox checkbox = 2;
-        TextBox textbox = 3;
-        SelectBox selectbox = 4;
-        Button button = 5;
-        ColorPicker color_picker = 6;
+        Slider slider = 2;
+        CheckBox checkbox = 3;
+        TextBox textbox = 4;
+        SelectBox selectbox = 5;
+        Button button = 6;
+        ColorPicker color_picker = 7;
     }
     message Slider {
         optional string name = 1;
@@ -179,7 +180,7 @@ message SetCustomControl {
     }
 
     message Button {
-        optional string name = 1;
+        optional string name = 1;   
     }
 
     message ColorPicker {

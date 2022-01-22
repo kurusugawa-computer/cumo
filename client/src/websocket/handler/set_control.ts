@@ -12,9 +12,9 @@ export function handleSetControl (
     sendFailure(websocket, commandID, 'failure to get control');
     return;
   }
-  const target = commandID;
+  const target = control.getTarget();
   switch (control.getControlCase()) {
-    case PB.CustomControl.ControlCase.BUTTON:
+    case PB.SetCustomControl.ControlCase.BUTTON:
       {
         const button = control.getButton();
         if (button) {
@@ -29,7 +29,7 @@ export function handleSetControl (
         }
       }
       break;
-    case PB.CustomControl.ControlCase.CHECKBOX:
+    case PB.SetCustomControl.ControlCase.CHECKBOX:
       {
         const checkbox = control.getCheckbox();
         if (checkbox) {
@@ -44,7 +44,7 @@ export function handleSetControl (
         }
       }
       break;
-    case PB.CustomControl.ControlCase.COLOR_PICKER:
+    case PB.SetCustomControl.ControlCase.COLOR_PICKER:
       {
         const picker = control.getColorPicker();
         if (picker) {
@@ -59,7 +59,7 @@ export function handleSetControl (
         }
       }
       break;
-    case PB.CustomControl.ControlCase.SELECTBOX:
+    case PB.SetCustomControl.ControlCase.SELECTBOX:
       {
         const selectbox = control.getSelectbox();
         if (selectbox) {
@@ -74,7 +74,7 @@ export function handleSetControl (
         }
       }
       break;
-    case PB.CustomControl.ControlCase.SLIDER:
+    case PB.SetCustomControl.ControlCase.SLIDER:
       {
         const slider = control.getSlider();
         if (slider) {
@@ -95,7 +95,7 @@ export function handleSetControl (
         }
       }
       break;
-    case PB.CustomControl.ControlCase.TEXTBOX:
+    case PB.SetCustomControl.ControlCase.TEXTBOX:
       {
         const textbox = control.getTextbox();
         if (textbox) {
