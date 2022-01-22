@@ -6,7 +6,7 @@ export function handleSetControl (
   websocket: WebSocket,
   commandID: string,
   viewer: PointCloudViewer,
-  control: PB.CustomControl | undefined
+  control: PB.SetCustomControl | undefined
 ) {
   if (!control) {
     sendFailure(websocket, commandID, 'failure to get control');
@@ -23,7 +23,8 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get buttonGUI');
             return;
           }
-          buttonGUI.name(button.getName());
+          const name = button.getName();
+          name && buttonGUI.name(name);
           buttonGUI.updateDisplay();
         }
       }
@@ -37,7 +38,8 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get checkboxGUI');
             return;
           }
-          checkboxGUI.name(checkbox.getName());
+          const name = checkbox.getName();
+          name && checkboxGUI.name(name);
           checkboxGUI.updateDisplay();
         }
       }
@@ -51,7 +53,8 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get pickerGUI');
             return;
           }
-          pickerGUI.name(picker.getName());
+          const name = picker.getName();
+          name && pickerGUI.name(name);
           pickerGUI.updateDisplay();
         }
       }
@@ -65,7 +68,8 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get selectboxGUI');
             return;
           }
-          selectboxGUI.name(selectbox.getName());
+          const name = selectbox.getName();
+          name && selectboxGUI.name(name);
           selectboxGUI.updateDisplay();
         }
       }
@@ -79,10 +83,14 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get sliderGUI');
             return;
           }
-          sliderGUI.name(slider.getName());
-          sliderGUI.min(slider.getMin());
-          sliderGUI.max(slider.getMax());
-          sliderGUI.step(slider.getStep());
+          const name = slider.getName();
+          const min = slider.getMin();
+          const max = slider.getMax();
+          const step = slider.getStep();
+          name && sliderGUI.name(name);
+          min && sliderGUI.min(min);
+          max && sliderGUI.max(max);
+          step && sliderGUI.step(step);
           sliderGUI.updateDisplay();
         }
       }
@@ -96,7 +104,8 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get textboxGUI');
             return;
           }
-          textboxGUI.name(textbox.getName());
+          const name = textbox.getName();
+          name && textboxGUI.name(name);
           textboxGUI.updateDisplay();
         }
       }

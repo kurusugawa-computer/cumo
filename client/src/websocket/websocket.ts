@@ -10,7 +10,7 @@ import { handleLogMessage } from './handler/log_message';
 import { handleRemoveControl } from './handler/remove_control';
 import { handleRemoveObject } from './handler/remove_object';
 import { handleSetCamera } from './handler/set_camera';
-import { handleSetControl } from './handler/set_control.js';
+import { handleSetControl } from './handler/set_control';
 import { handleSetKeyEvent } from './handler/set_key_event';
 
 export function connectWebSocket (viewer: PointCloudViewer, url: string) {
