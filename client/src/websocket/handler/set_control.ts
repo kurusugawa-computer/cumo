@@ -39,7 +39,9 @@ export function handleSetControl (
             return;
           }
           const name = checkbox.getName();
+          const value = checkbox.getValue();
           name && checkboxGUI.name(name);
+          value && checkboxGUI.setValue(value);
           checkboxGUI.updateDisplay();
         }
       }
@@ -54,7 +56,9 @@ export function handleSetControl (
             return;
           }
           const name = picker.getName();
+          const value = picker.getValue();
           name && pickerGUI.name(name);
+          value && pickerGUI.setValue(value);
           pickerGUI.updateDisplay();
         }
       }
@@ -69,7 +73,12 @@ export function handleSetControl (
             return;
           }
           const name = selectbox.getName();
+          const items = selectbox.getItemsList();
+          const value = selectbox.getValue();
+          console.log(name, items, value);
           name && selectboxGUI.name(name);
+          items.length !== 0 && selectboxGUI.options(items);
+          value && selectboxGUI.setValue(value);
           selectboxGUI.updateDisplay();
         }
       }
@@ -86,11 +95,13 @@ export function handleSetControl (
           const name = slider.getName();
           const min = slider.getMin();
           const max = slider.getMax();
+          const value = slider.getValue();
           const step = slider.getStep();
           name && sliderGUI.name(name);
           min && sliderGUI.min(min);
           max && sliderGUI.max(max);
           step && sliderGUI.step(step);
+          value && sliderGUI.setValue(value);
           sliderGUI.updateDisplay();
         }
       }
@@ -105,7 +116,9 @@ export function handleSetControl (
             return;
           }
           const name = textbox.getName();
+          const value = textbox.getValue();
           name && textboxGUI.name(name);
+          value && textboxGUI.setValue(value);
           textboxGUI.updateDisplay();
         }
       }
