@@ -26,6 +26,8 @@ export class PointCloudViewer {
     gui: DAT.GUI;
     guiCustom: DAT.GUI;
 
+    folderUUIDmap: { [uuid: string]: string };
+
     keyEventHandler = new class {
       onKeyUp: ((ev: KeyboardEvent) => any) | null = null
       onKeyDown: ((ev: KeyboardEvent) => any) | null = null
@@ -126,6 +128,9 @@ export class PointCloudViewer {
       guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); });
       guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); }); ;
       guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); });
+
+      // [UUID]: folderName な map を初期化
+      this.folderUUIDmap = {};
 
       // カメラコントロールのセットアップ
 
