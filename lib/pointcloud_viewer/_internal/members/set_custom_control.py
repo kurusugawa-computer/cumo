@@ -181,7 +181,7 @@ def set_custom_selectbox(
     return UUID(hex=ret.result.success)
 
 
-def add_custom_button(
+def set_custom_button(
     self: PointCloudViewer,
     target: UUID,
     name: Optional[str] = None,
@@ -217,7 +217,7 @@ def add_custom_button(
     return UUID(hex=ret.result.success)
 
 
-def add_custom_colorpicker(
+def set_custom_colorpicker(
     self: PointCloudViewer,
     target: UUID,
     name: Optional[str] = None,
