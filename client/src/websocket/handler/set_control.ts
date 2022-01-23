@@ -12,7 +12,7 @@ export function handleSetControl (
     sendFailure(websocket, commandID, 'failure to get control');
     return;
   }
-  const target = control.getTarget();
+  const target = control.getTarget().toUpperCase();
   switch (control.getControlCase()) {
     case PB.SetCustomControl.ControlCase.BUTTON:
       {
