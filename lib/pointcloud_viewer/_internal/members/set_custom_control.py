@@ -39,11 +39,11 @@ def set_custom_slider(
     """
     obj = server_pb2.ServerCommand()
     slider = server_pb2.SetCustomControl.Slider()
-    slider.name = name
-    slider.min = min
-    slider.max = max
-    slider.step = step
-    slider.value = value
+    slider.name = name if name is not None else slider.name
+    slider.min = min if min is not None else slider.min
+    slider.max = max if max is not None else slider.max
+    slider.step = step if step is not None else slider.step
+    slider.value = value if value is not None else slider.value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.slider.CopyFrom(slider)
     set_custom_control.target = str(target)
@@ -80,9 +80,9 @@ def set_custom_checkbox(
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
     """
-    checkbox = server_pb2.SetCustomControl.Checkbox()
-    checkbox.name = name
-    checkbox.value = value
+    checkbox = server_pb2.SetCustomControl.CheckBox()
+    checkbox.name = name if name is not None else checkbox.name
+    checkbox.value = value if value is not None else checkbox.value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.checkbox.CopyFrom(checkbox)
     set_custom_control.target = str(target)
@@ -120,9 +120,9 @@ def set_custom_textbox(
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
     """
-    textbox = server_pb2.SetCustomControl.Textbox()
-    textbox.name = name
-    textbox.value = value
+    textbox = server_pb2.SetCustomControl.TextBox()
+    textbox.name = name if name is not None else textbox.name
+    textbox.value = value if value is not None else textbox.value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.textbox.CopyFrom(textbox)
     set_custom_control.target = str(target)
@@ -142,7 +142,7 @@ def set_custom_textbox(
 def set_custom_selectbox(
     self: PointCloudViewer,
     target: UUID,
-    items: list = [],
+    items: Optional[list] = None,
     name: Optional[str] = None,
     value: Optional[int] = None,
     on_changed: Optional[Callable[[int], None]] = None,
@@ -152,7 +152,7 @@ def set_custom_selectbox(
     :param target: セレクトボックスの UUID
     :type target: UUID
     :param items: 要素の文字列のリスト
-    :type items: list, optional
+    :type items: Optional[list], optional
     :param name: 表示名
     :type name: Optional[str], optional
     :param value: 値
@@ -163,10 +163,11 @@ def set_custom_selectbox(
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
     """
-    selectbox = server_pb2.SetCustomControl.Selectbox()
-    selectbox.name = name
-    selectbox.items.extend(items)
-    selectbox.value = value
+    selectbox = server_pb2.SetCustomControl.SelectBox()
+    selectbox.name = name if name is not None else selectbox.name
+    if items is not None:
+        selectbox.items.extend(items)
+    selectbox.value = value if value is not None else selectbox.value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.selectbox.CopyFrom(selectbox)
     set_custom_control.target = str(target)
@@ -202,7 +203,7 @@ def set_custom_button(
         UUID: コントロールに対応するID。後から操作する際に使う
     """
     button = server_pb2.SetCustomControl.Button()
-    button.name = name
+    button.name = name if name is not None else button.name
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.button.CopyFrom(button)
     set_custom_control.target = str(target)
@@ -241,8 +242,8 @@ def set_custom_colorpicker(
         UUID: コントロールに対応するID。後から操作する際に使う
     """
     picker = server_pb2.SetCustomControl.Colorpicker()
-    picker.name = name
-    picker.value = value
+    picker.name = name if name is not None else picker.name
+    picker.value = value if value is not None else picker.value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.colorpicker.CopyFrom(picker)
     set_custom_control.target = str(target)
