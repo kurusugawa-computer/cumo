@@ -109,3 +109,54 @@ def set_camera_target(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+
+
+def get_camera_position(
+    self: PointCloudViewer,
+) -> server_pb2.VecXYZf:  # debug
+    """ カメラのpositionを取得する.．
+
+    """
+    obj = server_pb2.ServerCommand()
+    obj.camera_position = True
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if ret.HasField("camera_position"):
+        return ret.camera_position
+
+
+def get_camera_rotation(
+    self: PointCloudViewer,
+) -> server_pb2.VecXYZf:  # debug
+    """ カメラのrotationを取得する.．
+
+    """
+    obj = server_pb2.ServerCommand()
+    obj.camera_rotation = True
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if ret.HasField("camera_rotation"):
+        return ret.camera_rotation
+
+
+def get_camera_target(
+    self: PointCloudViewer,
+) -> server_pb2.VecXYZf:  # debug
+    """ カメラのtargetを取得する.．
+
+    """
+    obj = server_pb2.ServerCommand()
+    obj.camera_target = True
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if ret.HasField("camera_target"):
+        return ret.camera_target

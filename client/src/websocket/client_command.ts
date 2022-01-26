@@ -1,4 +1,6 @@
 import * as PB from '../protobuf/client_pb.js';
+import * as THREE from 'three';
+import { VecXYZf } from '../protobuf/server_pb.js';
 
 export function sendSuccess (websocket: WebSocket, commandID: string, message: string): void {
   const resultSuccess = new PB.Result();
@@ -103,4 +105,30 @@ export function sendKeyPress (websocket: WebSocket, commandID: string, event: Ke
   command.setKeyEventOccurred(keyEventOccurred);
   command.setUuid(commandID);
   websocket.send(command.serializeBinary());
+}
+export function sendCameraPosition (websocket: WebSocket, commandID: string, rawPosition:THREE.Vector3) {
+  const command = new PB.ClientCommand();
+  command.setCameraPosition(Vector3toVecXYZf(rawPosition));
+  command.setUuid(commandID);
+  websocket.send(command.serializeBinary());
+}
+export function sendCameraRotation (websocket: WebSocket, commandID: string, rawRotation:THREE.Vector3) {
+  const command = new PB.ClientCommand();
+  command.setCameraRotation(Vector3toVecXYZf(rawRotation));
+  command.setUuid(commandID);
+  websocket.send(command.serializeBinary());
+}
+
+export function sendCameraTarget (websocket: WebSocket, commandID: string, rawTarget:THREE.Vector3) {
+  const command = new PB.ClientCommand();
+  command.setCameraTarget(Vector3toVecXYZf(rawTarget));
+  command.setUuid(commandID);
+  websocket.send(command.serializeBinary());
+}
+function Vector3toVecXYZf (vector3: THREE.Vector3) {
+  const vecXYZf = new VecXYZf();
+  vecXYZf.setX(vector3.x);
+  vecXYZf.setY(vector3.y);
+  vecXYZf.setZ(vector3.z);
+  return vecXYZf;
 }

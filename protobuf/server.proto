@@ -12,6 +12,9 @@ message ServerCommand {
         SetKeyEventHandler set_key_event_handler = 7;
         RemoveObject remove_object = 8;
         RemoveCustomControl remove_custom_control = 9;
+        bool camera_position = 10;
+        bool camera_rotation = 11;
+        bool camera_target= 12;
     }
 }
 

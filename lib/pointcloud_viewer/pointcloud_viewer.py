@@ -4,6 +4,7 @@ import multiprocessing
 from enum import Enum, auto
 from typing import Optional
 
+
 class DownSampleStrategy(Enum):
     NONE = auto()
     RANDOM_SAMPLE = auto()
@@ -14,6 +15,7 @@ class DownSampleStrategy(Enum):
     def set_voxel_size(self, voxel_size):
         self.voxel_size = voxel_size
         return self
+
 
 class PointCloudViewer:
     """点群をブラウザで表示するためのサーバーを立ち上げるビューア。
@@ -36,7 +38,7 @@ class PointCloudViewer:
     _websocket_message_queue: multiprocessing.Queue
 
     from pointcloud_viewer._internal.members.capture_screen import capture_screen
-    from pointcloud_viewer._internal.members.camera import set_camera_position, set_camera_target, set_orthographic_camera, set_perspective_camera
+    from pointcloud_viewer._internal.members.camera import set_camera_position, set_camera_target, set_orthographic_camera, set_perspective_camera, get_camera_position, get_camera_rotation, get_camera_target
     from pointcloud_viewer._internal.members.custom_control import add_custom_button, add_custom_checkbox, add_custom_colorpicker, add_custom_selectbox, add_custom_slider, add_custom_textbox, add_custom_folder, remove_all_custom_controls, remove_custom_control
     from pointcloud_viewer._internal.members.internal_utils import __init__
     from pointcloud_viewer._internal.members.send_object import send_lineset, send_overlay_text, send_overlay_image, send_pointcloud,send_pointcloud_pcd, send_mesh
