@@ -76,7 +76,11 @@ export function handleSetControl (
           const items = selectbox.getItemsList();
           const name = selectbox.getName();
           const value = selectbox.getValue();
-          items.length !== 0 && selectboxGUI.options(items);
+          const selector = selectboxGUI.domElement.querySelector('div > select');
+          // items.length !== 0 && selectboxGUI.options(items); name と value が変更されない
+          if (items.length !== 0 && selector) {
+            selector.innerHTML = items.map((value) => `<option value="${value}">${value}</option>`).join('\n');
+          }
           value && selectboxGUI.setValue(value);
           name && selectboxGUI.name(name);
           selectboxGUI.updateDisplay();
