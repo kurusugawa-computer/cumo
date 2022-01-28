@@ -241,11 +241,11 @@ def set_custom_colorpicker(
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
     """
-    picker = server_pb2.SetCustomControl.Colorpicker()
+    picker = server_pb2.SetCustomControl.ColorPicker()
     picker.name = name if name is not None else picker.name
     picker.value = value if value is not None else picker.value
     set_custom_control = server_pb2.SetCustomControl()
-    set_custom_control.colorpicker.CopyFrom(picker)
+    set_custom_control.color_picker.CopyFrom(picker)
     set_custom_control.target = str(target)
     obj = server_pb2.ServerCommand()
     obj.set_custom_control.CopyFrom(set_custom_control)
