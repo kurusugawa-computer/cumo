@@ -16,6 +16,7 @@ def add_custom_slider(
     step: float = 1,
     init_value: float = 50,
     on_changed: Optional[Callable[[float], None]] = None,
+    parent: UUID = UUID(int=0),
 ) -> UUID:
     """カスタムフォルダにスライダーを追加する。
 
@@ -31,6 +32,8 @@ def add_custom_slider(
     :type init_value: float, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にスライダーの設定値が渡される
     :type on_changed: Optional[Callable[[float], None]], optional
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
+    :type parent: UUID, optional
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
@@ -42,6 +45,7 @@ def add_custom_slider(
     slider.max = max
     slider.step = step
     slider.init_value = init_value
+    slider.parent = str(parent)
     add_custom_control = server_pb2.CustomControl()
     add_custom_control.slider.CopyFrom(slider)
     obj.add_custom_control.CopyFrom(add_custom_control)
@@ -61,6 +65,7 @@ def add_custom_checkbox(
     name: str = "checkbox",
     init_value: bool = False,
     on_changed: Optional[Callable[[bool], None]] = None,
+    parent: UUID = UUID(int=0),
 ) -> UUID:
     """カスタムフォルダーにチェックボックスを追加する。
 
@@ -70,6 +75,9 @@ def add_custom_checkbox(
     :type init_value: bool, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にチェックボックスの設定値が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
+    :type parent: UUID, optional
+
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
@@ -77,6 +85,7 @@ def add_custom_checkbox(
     checkbox = server_pb2.CustomControl.CheckBox()
     checkbox.name = name
     checkbox.init_value = init_value
+    checkbox.parent = str(parent)
     add_custom_control = server_pb2.CustomControl()
     add_custom_control.checkbox.CopyFrom(checkbox)
     obj = server_pb2.ServerCommand()
@@ -97,6 +106,7 @@ def add_custom_textbox(
     name: str = "textbox",
     init_value: str = "",
     on_changed: Optional[Callable[[bool], None]] = None,
+    parent: UUID = UUID(int=0),
 ) -> UUID:
     """カスタムフォルダーにテキストボックスを追加する。
 
@@ -106,6 +116,8 @@ def add_custom_textbox(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にテキストボックスの値が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
+    :type parent: UUID, optional
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
@@ -113,6 +125,7 @@ def add_custom_textbox(
     textbox = server_pb2.CustomControl.TextBox()
     textbox.name = name
     textbox.init_value = init_value
+    textbox.parent = str(parent)
     add_custom_control = server_pb2.CustomControl()
     add_custom_control.textbox.CopyFrom(textbox)
     obj = server_pb2.ServerCommand()
@@ -134,6 +147,7 @@ def add_custom_selectbox(
     name: str = "selectbox",
     init_value: str = "",
     on_changed: Optional[Callable[[bool], None]] = None,
+    parent: UUID = UUID(int=0),
 ) -> UUID:
     """カスタムフォルダーにセレクトボックスを追加する。
 
@@ -145,6 +159,8 @@ def add_custom_selectbox(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に選択された要素の文字列が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
+    :type parent: UUID, optional
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
@@ -153,6 +169,7 @@ def add_custom_selectbox(
     selectbox.name = name
     selectbox.items.extend(items)
     selectbox.init_value = init_value
+    selectbox.parent = str(parent)
     add_custom_control = server_pb2.CustomControl()
     add_custom_control.selectbox.CopyFrom(selectbox)
     obj = server_pb2.ServerCommand()
@@ -172,6 +189,7 @@ def add_custom_button(
     self: PointCloudViewer,
     name: str = "button",
     on_changed: Optional[Callable[[bool], None]] = None,
+    parent: UUID = UUID(int=0),
 ) -> UUID:
     """カスタムフォルダーにボタンを追加する。
 
@@ -179,12 +197,15 @@ def add_custom_button(
     :type name: str, optional
     :param on_changed: ボタンが押されたときに呼ばれるコールバック関数。引数に ``True`` が渡される
     :type on_changed: Optional[Callable[[bool], None]], optional
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
+    :type parent: UUID, optional
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
     """
     button = server_pb2.CustomControl.Button()
     button.name = name
+    button.parent = str(parent)
     add_custom_control = server_pb2.CustomControl()
     add_custom_control.button.CopyFrom(button)
     obj = server_pb2.ServerCommand()
@@ -205,6 +226,7 @@ def add_custom_colorpicker(
     name: str = "color",
     init_value: str = "#000",
     on_changed: Optional[Callable[[], None]] = None,
+    parent: UUID = UUID(int=0),
 ) -> UUID:
     """カスタムフォルダーにカラーピッカーを追加する。
 
@@ -214,6 +236,8 @@ def add_custom_colorpicker(
     :type init_value: str, optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数に色を表す文字列が渡される
     :type on_changed: Optional[Callable[[], None]], optional
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
+    :type parent: UUID, optional
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
@@ -221,6 +245,7 @@ def add_custom_colorpicker(
     picker = server_pb2.CustomControl.ColorPicker()
     picker.name = name
     picker.init_value = init_value
+    picker.parent = str(parent)
     add_custom_control = server_pb2.CustomControl()
     add_custom_control.color_picker.CopyFrom(picker)
     obj = server_pb2.ServerCommand()
@@ -274,3 +299,35 @@ def remove_custom_control(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+
+
+def add_custom_folder(
+    self: PointCloudViewer,
+    name: str = "folder",
+    parent: UUID = UUID(int=0),
+) -> UUID:
+    """カスタムフォルダーにフォルダーを追加する。
+
+    :param name: 表示名
+    :type name: str, optional
+    :param parent: 親フォルダーのUUID。特に指定しない場合はルートフォルダーになる。
+    :type parent: UUID, optional
+
+    Returns:
+        UUID: コントロールに対応するID。後から操作する際に使う
+    """
+    folder = server_pb2.CustomControl.Folder()
+    folder.name = name
+    folder.parent = str(parent)
+    add_custom_control = server_pb2.CustomControl()
+    add_custom_control.folder.CopyFrom(folder)
+    obj = server_pb2.ServerCommand()
+    obj.add_custom_control.CopyFrom(add_custom_control)
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)

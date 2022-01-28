@@ -47,11 +47,11 @@ $ poetry run python
 Python 3.8.7 (default, Mar 16 2021, 19:11:33)
 [GCC 10.2.0] on linux
 Type "help", "copyright", "credits" or "license" for more information.
->>> import pointcloud_viewer
+>>> from pointcloud_viewer import pointcloud_viewer
 >>> viewer = pointcloud_viewer.PointCloudViewer()
 >>> viewer.start()
 >>> # open localhost:8082 on your browser
->>> import open3d
->>> pc = open3d.io.read_point_cloud("pcl_logo.pcd")
->>> viewer.send_pointcloud_from_open3d(pc)
+>>> with open(filename, "rb") as f:
+>>>     b = f.read()
+>>>     viewer.send_pointcloud_pcd(b)
 ```

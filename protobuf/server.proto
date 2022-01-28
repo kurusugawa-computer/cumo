@@ -24,6 +24,7 @@ message CustomControl {
         SelectBox selectbox = 4;
         Button button = 5;
         ColorPicker color_picker = 6;
+        Folder folder = 7;
     }
     message Slider {
         string name = 1;
@@ -31,31 +32,42 @@ message CustomControl {
         float max = 3;
         float step = 4;
         float init_value = 5;
+        string parent = 6;
     }
 
     message CheckBox {
         string name = 1;
         bool init_value = 2;
+        string parent = 3;
     }
 
     message TextBox {
         string name = 1;
         string init_value = 2;
+        string parent = 3;
     }
 
     message SelectBox {
         string name = 1;
         repeated string items = 2;
         string init_value = 3;
+        string parent = 4;
     }
 
     message Button {
         string name = 1;
+        string parent = 2;
     }
 
     message ColorPicker {
         string name = 1;
         string init_value = 2;
+        string parent = 3;
+    }
+
+    message Folder {
+        string name = 1;
+        string parent = 2;
     }
 }
 
