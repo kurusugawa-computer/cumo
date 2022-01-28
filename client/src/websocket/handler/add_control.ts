@@ -1,10 +1,7 @@
 import * as PB from '../../protobuf/server_pb.js';
 import { sendSuccess, sendFailure, sendControlChanged } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
-import { GUI } from 'dat.gui';
-
-// ルートフォルダを示すUUID
-const RootFolderUUID = '00000000-0000-0000-0000-000000000000';
+import { findFolderByUUID } from './util';
 
 export function handleAddControl (
   websocket: WebSocket,
@@ -189,35 +186,4 @@ export function handleAddControl (
       return;
   }
   sendSuccess(websocket, commandID, commandID);
-}
-
-function findFolderByUUID (viewer: PointCloudViewer, uuid: string): GUI | null {
-  if (uuid === RootFolderUUID) {
-    return viewer.guiCustom;
-  }
-  return findGUI(
-    viewer.guiCustom,
-    new Set(),
-    (gui) => viewer.folderUUIDmap[uuid] === gui.name
-  );
-}
-
-// DFS で f(gui) を満たす GUI(folder) を探す
-function findGUI (currentGUI: GUI, visited: Set<string>, f: (gui: GUI) => boolean): GUI | null {
-  visited.add(currentGUI.name);
-  if (f(currentGUI)) {
-    return currentGUI;
-  }
-
-  for (const [, folder] of Object.entries(currentGUI.__folders)) {
-    if (visited.has(folder.name)) {
-      continue;
-    }
-    const result = findGUI(folder, visited, f);
-    if (result) {
-      return result;
-    }
-  }
-
-  return null;
 }
