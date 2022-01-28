@@ -1,6 +1,7 @@
 import * as PB from '../../protobuf/server_pb.js';
 import { PointCloudViewer } from '../../viewer';
 import { sendFailure, sendSuccess } from '../client_command';
+import { findControllerByUUID } from './util';
 
 export function handleSetControl (
   websocket: WebSocket,
@@ -18,7 +19,7 @@ export function handleSetControl (
       {
         const button = control.getButton();
         if (button) {
-          const buttonGUI = viewer.guiCustom.__controllers.find((x) => x.property === target);
+          const buttonGUI = findControllerByUUID(viewer, target);
           if (!buttonGUI) {
             sendFailure(websocket, commandID, 'failure to get buttonGUI');
             return;
@@ -33,7 +34,7 @@ export function handleSetControl (
       {
         const checkbox = control.getCheckbox();
         if (checkbox) {
-          const checkboxGUI = viewer.guiCustom.__controllers.find((x) => x.property === target);
+          const checkboxGUI = findControllerByUUID(viewer, target);
           if (!checkboxGUI) {
             sendFailure(websocket, commandID, 'failure to get checkboxGUI');
             return;
@@ -50,7 +51,7 @@ export function handleSetControl (
       {
         const picker = control.getColorPicker();
         if (picker) {
-          const pickerGUI = viewer.guiCustom.__controllers.find((x) => x.property === target);
+          const pickerGUI = findControllerByUUID(viewer, target);
           if (!pickerGUI) {
             sendFailure(websocket, commandID, 'failure to get pickerGUI');
             return;
@@ -67,18 +68,17 @@ export function handleSetControl (
       {
         const selectbox = control.getSelectbox();
         if (selectbox) {
-          const selectboxGUI = viewer.guiCustom.__controllers.find((x) => x.property === target);
+          const selectboxGUI = findControllerByUUID(viewer, target);
           if (!selectboxGUI) {
             sendFailure(websocket, commandID, 'failure to get selectboxGUI');
             return;
           }
-          const name = selectbox.getName();
           const items = selectbox.getItemsList();
+          const name = selectbox.getName();
           const value = selectbox.getValue();
-          console.log(name, items, value);
-          name && selectboxGUI.name(name);
           items.length !== 0 && selectboxGUI.options(items);
           value && selectboxGUI.setValue(value);
+          name && selectboxGUI.name(name);
           selectboxGUI.updateDisplay();
         }
       }
@@ -87,7 +87,7 @@ export function handleSetControl (
       {
         const slider = control.getSlider();
         if (slider) {
-          const sliderGUI = viewer.guiCustom.__controllers.find((x) => x.property === target);
+          const sliderGUI = findControllerByUUID(viewer, target);
           if (!sliderGUI) {
             sendFailure(websocket, commandID, 'failure to get sliderGUI');
             return;
@@ -110,7 +110,7 @@ export function handleSetControl (
       {
         const textbox = control.getTextbox();
         if (textbox) {
-          const textboxGUI = viewer.guiCustom.__controllers.find((x) => x.property === target);
+          const textboxGUI = findControllerByUUID(viewer, target);
           if (!textboxGUI) {
             sendFailure(websocket, commandID, 'failure to get textboxGUI');
             return;
