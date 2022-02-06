@@ -104,7 +104,7 @@ def set_custom_textbox(
     target: UUID,
     name: Optional[str] = None,
     value: Optional[str] = None,
-    on_changed: Optional[Callable[[str], None]] = None,
+    on_changed: Optional[Callable[[bool], None]] = None,
 ) -> UUID:
     """指定されたテキストボックスの値を変更する。
 
@@ -115,7 +115,7 @@ def set_custom_textbox(
     :param value: 値
     :type value: Optional[str], optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にテキストボックスの設定値が渡される
-    :type on_changed: Optional[Callable[[str], None]], optional
+    :type on_changed: Optional[Callable[[bool], None]], optional
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
@@ -188,7 +188,7 @@ def set_custom_button(
     self: PointCloudViewer,
     target: UUID,
     name: Optional[str] = None,
-    on_click: Optional[Callable[[], None]] = None,
+    on_changed: Optional[Callable[[bool], None]] = None,
 ) -> UUID:
     """指定されたボタンの値を変更する。
 
@@ -196,8 +196,8 @@ def set_custom_button(
     :type target: UUID
     :param name: 表示名
     :type name: Optional[str], optional
-    :param on_click: ボタンがクリックされたときに呼ばれるコールバック関数
-    :type on_click: Optional[Callable[[], None]], optional
+    :param on_changed: ボタンがクリックされたときに呼ばれるコールバック関数
+    :type on_changed: Optional[Callable[[bool], None]], optional
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う
@@ -210,7 +210,7 @@ def set_custom_button(
     obj = server_pb2.ServerCommand()
     obj.set_custom_control.CopyFrom(set_custom_control)
     uuid = uuid4()
-    self._set_custom_handler(uuid, "clicked", on_click)
+    self._set_custom_handler(uuid, "changed", on_changed)
     self._send_data(obj, uuid)
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
