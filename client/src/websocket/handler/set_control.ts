@@ -24,8 +24,9 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get buttonGUI');
             return;
           }
-          if (button.hasName()) {
-            buttonGUI.name(button.getName());
+          const name = button.getName();
+          if (button.hasName() && name) {
+            buttonGUI.name(name);
           }
           buttonGUI.updateDisplay();
         }
@@ -40,11 +41,13 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get checkboxGUI');
             return;
           }
-          if (checkbox.hasName()) {
-            checkboxGUI.name(checkbox.getName());
+          const name = checkbox.getName();
+          if (checkbox.hasName() && name) {
+            checkboxGUI.name(name);
           }
-          if (checkbox.hasValue()) {
-            checkboxGUI.setValue(checkbox.getValue());
+          const value = checkbox.getValue();
+          if (checkbox.hasValue() && value) {
+            checkboxGUI.setValue(value);
           }
           checkboxGUI.updateDisplay();
         }
@@ -59,11 +62,13 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get pickerGUI');
             return;
           }
-          if (picker.hasName()) {
-            pickerGUI.name(picker.getName());
+          const name = picker.getName();
+          if (picker.hasName() && name) {
+            pickerGUI.name(name);
           }
-          if (picker.hasValue()) {
-            pickerGUI.setValue(picker.getValue());
+          const value = picker.getValue();
+          if (picker.hasValue() && value) {
+            pickerGUI.setValue(value);
           }
           pickerGUI.updateDisplay();
         }
@@ -78,18 +83,16 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get selectboxGUI');
             return;
           }
-          if (selectbox.hasName()) {
-            selectboxGUI.name(selectbox.getName());
+          const name = selectbox.getName();
+          if (selectbox.hasName() && name) {
+            selectboxGUI.name(name);
           }
-          if (selectbox.hasValue()) {
-            selectboxGUI.setValue(selectbox.getValue());
+          const value = selectbox.getValue();
+          if (selectbox.hasValue() && value) {
+            selectboxGUI.setValue(value);
           }
           const items = selectbox.getItemsList();
-          const selector = selectboxGUI.domElement.querySelector('div > select');
-          // items.length !== 0 && selectboxGUI.options(items); name と value が変更されない
-          if (items.length !== 0 && selector) {
-            selector.innerHTML = items.map((value) => `<option value="${value}">${value}</option>`).join('\n');
-          }
+          items.length !== 0 && selectboxGUI.options(items); // name と value が変更されない
           selectboxGUI.updateDisplay();
         }
       }
@@ -103,20 +106,25 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get sliderGUI');
             return;
           }
-          if (slider.hasName()) {
-            sliderGUI.name(slider.getName());
+          const name = slider.getName();
+          if (slider.hasName() && name) {
+            sliderGUI.name(name);
           }
-          if (slider.hasMin()) {
-            sliderGUI.min(slider.getMin());
+          const min = slider.getMin();
+          if (slider.hasMin() && min) {
+            sliderGUI.min(min);
           }
-          if (slider.hasMax()) {
-            sliderGUI.max(slider.getMax());
+          const max = slider.getMax();
+          if (slider.hasMax() && max) {
+            sliderGUI.max(max);
           }
-          if (slider.hasValue()) {
-            sliderGUI.setValue(slider.getValue());
+          const value = slider.getValue();
+          if (slider.hasValue() && value) {
+            sliderGUI.setValue(value);
           }
-          if (slider.hasStep()) {
-            sliderGUI.step(slider.getStep());
+          const step = slider.getStep();
+          if (slider.hasStep() && step) {
+            sliderGUI.step(step);
           }
           sliderGUI.updateDisplay();
         }
@@ -131,11 +139,13 @@ export function handleSetControl (
             sendFailure(websocket, commandID, 'failure to get textboxGUI');
             return;
           }
-          if (textbox.hasName()) {
-            textboxGUI.name(textbox.getName());
+          const name = textbox.getName();
+          if (textbox.hasName() && name) {
+            textboxGUI.name(name);
           }
-          if (textbox.hasValue()) {
-            textboxGUI.setValue(textbox.getValue());
+          const value = textbox.getValue();
+          if (textbox.hasValue() && value) {
+            textboxGUI.setValue(value);
           }
           textboxGUI.updateDisplay();
         }
