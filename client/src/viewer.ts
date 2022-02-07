@@ -34,6 +34,20 @@ export class PointCloudViewer {
       onKeyPress: ((ev: KeyboardEvent) => any) | null = null
     }();
 
+    cameraEvent = new class {
+      onCameraMoved = new class {
+        intervalId: number = -1;
+        delaySecond: number = 0.2;
+        oldPosition: THREE.Vector3;
+      }();
+
+      onCameraRotated = new class {
+        intervalId: number = -1;
+        delaySecond: number = 0.2;
+        oldRotation: THREE.Euler;
+      }();
+    }();
+
     config = new class {
       controls = new class {
         rotateSpeed: number = 2.0
@@ -167,9 +181,11 @@ export class PointCloudViewer {
       };
 
       const animate = () => {
+        this.prepareCameraEvent();
         requestAnimationFrame(animate);
         this.controls.update();
         render();
+        this.fireCameraEvent();
       };
       animate();
     }
@@ -203,5 +219,35 @@ export class PointCloudViewer {
       controls.keys[2] = 16; // shift to pan
       controls.update();
       return controls;
+    }
+
+    private onCameraPositionChanged () {
+      console.log('onCameraPositionChanged called');
+    }
+
+    private onCameraRotationChanged () {
+      console.log('onCameraRotationChanged called');
+    }
+
+    private prepareCameraEvent () {
+      const camera = this.config.camera.usePerspective ? this.perspectiveCamera : this.orthographicCamera;
+      this.cameraEvent.onCameraMoved.oldPosition = camera.position.clone();
+      this.cameraEvent.onCameraRotated.oldRotation = camera.rotation.clone();
+    }
+
+    private fireCameraEvent () {
+      const camera = this.config.camera.usePerspective ? this.perspectiveCamera : this.orthographicCamera;
+      if (!camera.position.equals(this.cameraEvent.onCameraMoved.oldPosition)) {
+        if (this.cameraEvent.onCameraMoved.intervalId >= 0) {
+          clearTimeout(this.cameraEvent.onCameraMoved.intervalId);
+        }
+        this.cameraEvent.onCameraMoved.intervalId = setTimeout(this.onCameraPositionChanged, this.cameraEvent.onCameraMoved.delaySecond * 1000);
+      }
+      if (!camera.rotation.equals(this.cameraEvent.onCameraRotated.oldRotation)) {
+        if (this.cameraEvent.onCameraRotated.intervalId >= 0) {
+          clearTimeout(this.cameraEvent.onCameraRotated.intervalId);
+        }
+        this.cameraEvent.onCameraRotated.intervalId = setTimeout(this.onCameraRotationChanged, this.cameraEvent.onCameraRotated.delaySecond * 1000);
+      }
     }
 }
