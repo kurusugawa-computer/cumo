@@ -38,13 +38,13 @@ export class PointCloudViewer {
       onCameraMoved = new class {
         intervalId: number = -1;
         delaySecond: number = 0.2;
-        oldPosition: THREE.Vector3;
+        oldPosition: THREE.Vector3 = new THREE.Vector3();
       }();
 
       onCameraRotated = new class {
         intervalId: number = -1;
         delaySecond: number = 0.2;
-        oldRotation: THREE.Euler;
+        oldRotation: THREE.Euler = new THREE.Euler();
       }();
     }();
 
@@ -241,13 +241,13 @@ export class PointCloudViewer {
         if (this.cameraEvent.onCameraMoved.intervalId >= 0) {
           clearTimeout(this.cameraEvent.onCameraMoved.intervalId);
         }
-        this.cameraEvent.onCameraMoved.intervalId = setTimeout(this.onCameraPositionChanged, this.cameraEvent.onCameraMoved.delaySecond * 1000);
+        this.cameraEvent.onCameraMoved.intervalId = window.setTimeout(this.onCameraPositionChanged, this.cameraEvent.onCameraMoved.delaySecond * 1000);
       }
       if (!camera.rotation.equals(this.cameraEvent.onCameraRotated.oldRotation)) {
         if (this.cameraEvent.onCameraRotated.intervalId >= 0) {
           clearTimeout(this.cameraEvent.onCameraRotated.intervalId);
         }
-        this.cameraEvent.onCameraRotated.intervalId = setTimeout(this.onCameraRotationChanged, this.cameraEvent.onCameraRotated.delaySecond * 1000);
+        this.cameraEvent.onCameraRotated.intervalId = window.setTimeout(this.onCameraRotationChanged, this.cameraEvent.onCameraRotated.delaySecond * 1000);
       }
     }
 }
