@@ -39,11 +39,16 @@ def set_custom_slider(
     """
     obj = server_pb2.ServerCommand()
     slider = server_pb2.SetCustomControl.Slider()
-    slider.name = name if name is not None else slider.name
-    slider.min = min if min is not None else slider.min
-    slider.max = max if max is not None else slider.max
-    slider.step = step if step is not None else slider.step
-    slider.value = value if value is not None else slider.value
+    if name is not None:
+        slider.name = name
+    if min is not None:
+        slider.min = min
+    if max is not None:
+        slider.max = max
+    if step is not None:
+        slider.step = step
+    if value is not None:
+        slider.value = value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.slider.CopyFrom(slider)
     set_custom_control.target = str(target)
@@ -81,8 +86,10 @@ def set_custom_checkbox(
         UUID: コントロールに対応するID。後から操作する際に使う
     """
     checkbox = server_pb2.SetCustomControl.CheckBox()
-    checkbox.name = name if name is not None else checkbox.name
-    checkbox.value = value if value is not None else checkbox.value
+    if name is not None:
+        checkbox.name = name
+    if value is not None:
+        checkbox.value = value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.checkbox.CopyFrom(checkbox)
     set_custom_control.target = str(target)
@@ -121,8 +128,10 @@ def set_custom_textbox(
         UUID: コントロールに対応するID。後から操作する際に使う
     """
     textbox = server_pb2.SetCustomControl.TextBox()
-    textbox.name = name if name is not None else textbox.name
-    textbox.value = value if value is not None else textbox.value
+    if name is not None:
+        textbox.name = name
+    if value is not None:
+        textbox.value = value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.textbox.CopyFrom(textbox)
     set_custom_control.target = str(target)
@@ -164,10 +173,12 @@ def set_custom_selectbox(
         UUID: コントロールに対応するID。後から操作する際に使う
     """
     selectbox = server_pb2.SetCustomControl.SelectBox()
-    selectbox.name = name if name is not None else selectbox.name
+    if name is not None:
+        selectbox.name = name
+    if value is not None:
+        selectbox.value = value
     if items is not None:
         selectbox.items.extend(items)
-    selectbox.value = value if value is not None else selectbox.value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.selectbox.CopyFrom(selectbox)
     set_custom_control.target = str(target)
@@ -203,7 +214,8 @@ def set_custom_button(
         UUID: コントロールに対応するID。後から操作する際に使う
     """
     button = server_pb2.SetCustomControl.Button()
-    button.name = name if name is not None else button.name
+    if name is not None:
+        button.name = name
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.button.CopyFrom(button)
     set_custom_control.target = str(target)
@@ -242,8 +254,10 @@ def set_custom_colorpicker(
         UUID: コントロールに対応するID。後から操作する際に使う
     """
     picker = server_pb2.SetCustomControl.ColorPicker()
-    picker.name = name if name is not None else picker.name
-    picker.value = value if value is not None else picker.value
+    if name is not None:
+        picker.name = name
+    if value is not None:
+        picker.value = value
     set_custom_control = server_pb2.SetCustomControl()
     set_custom_control.color_picker.CopyFrom(picker)
     set_custom_control.target = str(target)
