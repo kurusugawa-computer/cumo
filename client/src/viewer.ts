@@ -199,7 +199,9 @@ export class PointCloudViewer {
       controls.staticMoving = true;
       controls.rotateSpeed = this.config.controls.rotateSpeed;
       controls.zoomSpeed = this.config.controls.zoomSpeed;
-      controls.panSpeed = Math.pow(2, this.config.controls.panSpeed);
+      controls.panSpeed = this.config.camera.usePerspective ?
+                            this.config.controls.panSpeed :
+                            Math.pow(2, this.config.controls.panSpeed);
       controls.keys[2] = 16; // shift to pan
       controls.update();
       return controls;
