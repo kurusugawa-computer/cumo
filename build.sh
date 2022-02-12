@@ -15,6 +15,7 @@ protoc \
     --js_out=import_style=commonjs,binary:./client/src \
     -I. \
     --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+    --experimental_allow_proto3_optional \
     protobuf/server.proto
 protoc \
   --python_out=./lib/pointcloud_viewer/ \
@@ -22,6 +23,7 @@ protoc \
   --js_out=import_style=commonjs,binary:./client/src \
   -I. \
   --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+  --experimental_allow_proto3_optional \
   protobuf/client.proto
 rm -rf ./lib/pointcloud_viewer/_internal/protobuf
 mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
