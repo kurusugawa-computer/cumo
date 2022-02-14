@@ -12,6 +12,7 @@ import { handleRemoveObject } from './handler/remove_object';
 import { handleSetCamera } from './handler/set_camera';
 import { handleSetControl } from './handler/set_control';
 import { handleSetKeyEvent } from './handler/set_key_event';
+import { handleCameraPosition, handleCameraRotation, handleCameraTarget } from './handler/get_camera_status';
 
 export function connectWebSocket (viewer: PointCloudViewer, url: string) {
   const websocket = new WebSocket(url);
@@ -55,6 +56,15 @@ function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message
         break;
       case commandCase.REMOVE_CUSTOM_CONTROL:
         handleRemoveControl(websocket, commandID, viewer, message.getRemoveCustomControl());
+        break;
+      case commandCase.CAMERA_POSITION:
+        handleCameraPosition(websocket, commandID, viewer);
+        break;
+      case commandCase.CAMERA_ROTATION:
+        handleCameraRotation(websocket, commandID, viewer);
+        break;
+      case commandCase.CAMERA_TARGET:
+        handleCameraTarget(websocket, commandID, viewer);
         break;
       case commandCase.SET_CUSTOM_CONTROL:
         handleSetControl(websocket, commandID, viewer, message.getSetCustomControl());
