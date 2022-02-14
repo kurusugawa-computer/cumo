@@ -10,6 +10,7 @@ import { handleLogMessage } from './handler/log_message';
 import { handleRemoveControl } from './handler/remove_control';
 import { handleRemoveObject } from './handler/remove_object';
 import { handleSetCamera } from './handler/set_camera';
+import { handleSetControl } from './handler/set_control';
 import { handleSetKeyEvent } from './handler/set_key_event';
 import { handleCameraPosition, handleCameraRotation, handleCameraTarget } from './handler/get_camera_status';
 
@@ -64,6 +65,9 @@ function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message
         break;
       case commandCase.CAMERA_TARGET:
         handleCameraTarget(websocket, commandID, viewer);
+        break;
+      case commandCase.SET_CUSTOM_CONTROL:
+        handleSetControl(websocket, commandID, viewer, message.getSetCustomControl());
         break;
       default:
         sendFailure(websocket, commandID, 'message has not any command');

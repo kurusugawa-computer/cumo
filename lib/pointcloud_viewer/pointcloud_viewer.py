@@ -46,3 +46,4 @@ class PointCloudViewer:
     from pointcloud_viewer._internal.members.event_handler import _get_custom_handler, _handle_message, _send_data, _set_custom_handler, _wait_until
     from pointcloud_viewer._internal.members.keyboard_event_handler import add_keyup_handler, remove_keyup_handler, add_keydown_handler, remove_keydown_handler, add_keypress_handler, remove_keypress_handler
     from pointcloud_viewer._internal.members.remove_object import remove_all_objects, remove_object
+    from pointcloud_viewer._internal.members.set_custom_control import set_custom_slider, set_custom_selectbox, set_custom_colorpicker, set_custom_textbox, set_custom_checkbox, set_custom_button

@@ -12,9 +12,10 @@ message ServerCommand {
         SetKeyEventHandler set_key_event_handler = 7;
         RemoveObject remove_object = 8;
         RemoveCustomControl remove_custom_control = 9;
-        bool camera_position = 10;
-        bool camera_rotation = 11;
-        bool camera_target= 12;
+        SetCustomControl set_custom_control = 10;
+        bool camera_position = 11;
+        bool camera_rotation = 12;
+        bool camera_target= 13;
     }
 }
 
@@ -157,4 +158,48 @@ message VecRGBf {
     float r = 1;
     float g = 2;
     float b = 3;
+}
+
+message SetCustomControl {
+    string target = 1;
+    oneof Control {
+        Slider slider = 2;
+        CheckBox checkbox = 3;
+        TextBox textbox = 4;
+        SelectBox selectbox = 5;
+        Button button = 6;
+        ColorPicker color_picker = 7;
+    }
+    message Slider {
+        optional string name = 1;
+        optional float min = 2;
+        optional float max = 3;
+        optional float step = 4;
+        optional float value = 5;
+    }
+
+    message CheckBox {
+        optional string name = 1;
+        optional bool value = 2;
+    }
+
+    message TextBox {
+        optional string name = 1;
+        optional string value = 2;
+    }
+
+    message SelectBox {
+        optional string name = 1;
+        repeated string items = 2;
+        optional string value = 3;
+    }
+
+    message Button {
+        optional string name = 1;   
+    }
+
+    message ColorPicker {
+        optional string name = 1;
+        optional string value = 2;
+    }
 }
