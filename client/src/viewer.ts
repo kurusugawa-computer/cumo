@@ -204,6 +204,7 @@ export class PointCloudViewer {
       controls.update();
       return controls;
     }
+
     getCameraPosition (): THREE.Vector3 {
       const perspective: boolean = this.config.camera.usePerspective;
       return perspective ? this.perspectiveCamera.position : this.orthographicCamera.position;
