@@ -22,6 +22,8 @@ jobs:
         - rm -rf ./lib/pointcloud_viewer/_internal/protobuf
         - mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
         - touch ./lib/pointcloud_viewer/_internal/protobuf/__init__.py
+        - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+        - export PATH "$PATH:$HOME/.poetry/bin"
         - cd lib
       install:
         - poetry install
