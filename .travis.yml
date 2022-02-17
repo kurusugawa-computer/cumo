@@ -6,7 +6,7 @@ jobs:
       python: 3.8
       before_install:
         - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
-        - unzip protoc-3.15.6-linux-x86_64.zip && cp ./bin/protoc /usr/local/bin/. && chmod +x /usr/local/bin/protoc
+        - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
         - protoc \
             --python_out=./lib/pointcloud_viewer/ \
             -I. \
@@ -33,7 +33,7 @@ jobs:
         - PLUGIN_TS=./client/node_modules/.bin/protoc-gen-ts
       before_install:
         - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
-        - unzip protoc-3.15.6-linux-x86_64.zip && cp ./bin/protoc /usr/local/bin/. && chmod +x /usr/local/bin/protoc
+        - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
         - protoc \
             --ts_out=import_style=commonjs,binary:./client/src \
             --js_out=import_style=commonjs,binary:./client/src \
