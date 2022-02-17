@@ -1,0 +1,56 @@
+dist: focal
+
+jobs:
+  include:
+    - language: python
+      python: 3.8
+      before_install:
+        - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
+        - unzip protoc-3.15.6-linux-x86_64.zip && cp ./bin/protoc /usr/local/bin/. && chmod +x /usr/local/bin/protoc
+        - protoc \
+            --python_out=./lib/pointcloud_viewer/ \
+            -I. \
+            --experimental_allow_proto3_optional \
+            protobuf/server.proto
+        - protoc \
+            --python_out=./lib/pointcloud_viewer/ \
+            -I. \
+            --experimental_allow_proto3_optional \
+            protobuf/client.proto
+        - rm -rf ./lib/pointcloud_viewer/_internal/protobuf
+        - mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
+        - touch ./lib/pointcloud_viewer/_internal/protobuf/__init__.py
+        - cd lib
+      install:
+        - poetry install
+      script:
+        - poetry run autopep8 --diff --recursive --exit-code .  # format
+        - poetry build                                          # build
+    
+    - language: node_js
+      node_js: node      # stable
+      env:
+        - PLUGIN_TS=./client/node_modules/.bin/protoc-gen-ts
+      before_install:
+        - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
+        - unzip protoc-3.15.6-linux-x86_64.zip && cp ./bin/protoc /usr/local/bin/. && chmod +x /usr/local/bin/protoc
+        - protoc \
+            --ts_out=import_style=commonjs,binary:./client/src \
+            --js_out=import_style=commonjs,binary:./client/src \
+            -I. \
+            --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+            --experimental_allow_proto3_optional \
+            protobuf/server.proto
+        - protoc \
+            --ts_out=import_style=commonjs,binary:./client/src \
+            --js_out=import_style=commonjs,binary:./client/src \
+            -I. \
+            --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+            --experimental_allow_proto3_optional \
+            protobuf/client.proto
+        - cd client
+      install:
+        - yarn install
+      script:
+        - yarn build                        # build
+        - npx eslint --quiet src --ext .ts  # lint
