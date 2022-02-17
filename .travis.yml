@@ -28,8 +28,8 @@ jobs:
         - cd lib
         - poetry install
       script:
-        - poetry run autopep8 --diff --recursive --exit-code --exclude="*/protobuf/*" .  # format
-        - poetry build                                                                   # build
+        - poetry run autopep8 --diff --recursive --exit-code .  # format
+        - poetry build                                          # build
     
     - language: node_js
       node_js: 16
