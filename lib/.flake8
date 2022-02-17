@@ -1,0 +1,5 @@
+[flake8]
+max-line-length = 120
+exclude = dist,protobuf
+extend-ignore =
+    E741  # 1文字変数の許容
