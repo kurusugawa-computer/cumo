@@ -9,7 +9,6 @@ jobs:
         - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
         - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
         - export PATH="$PATH:$HOME/.poetry/bin"
-        - cd lib
       install:
         - |-
           protoc \
@@ -26,6 +25,7 @@ jobs:
         - rm -rf ./lib/pointcloud_viewer/_internal/protobuf
         - mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
         - touch ./lib/pointcloud_viewer/_internal/protobuf/__init__.py
+        - cd lib
         - poetry install
       script:
         - poetry run autopep8 --diff --recursive --exit-code .  # format
