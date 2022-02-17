@@ -32,6 +32,7 @@ def console_log(
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
 
+
 def start(self: PointCloudViewer) -> None:
     """
     サーバープロセスを起動する。

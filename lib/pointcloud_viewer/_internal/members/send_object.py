@@ -335,7 +335,7 @@ def send_overlay_text(
 
     yatdoc, createTag, setText = yattag.Doc().tagtext()
     with createTag("div", ("style", "color:white;mix-blend-mode: difference;"+style)):
-        yatdoc.asis(html.escape(text).replace("\n","<br />\n"))
+        yatdoc.asis(html.escape(text).replace("\n", "<br />\n"))
     overlay.html = yatdoc.getvalue()
 
     if screen_coordinate:

@@ -7,11 +7,12 @@ from uuid import UUID, uuid4
 from typing import Callable, Optional
 from pointcloud_viewer._internal.protobuf import server_pb2
 
+
 def set_custom_slider(
     self: PointCloudViewer,
     target: UUID,
     name: Optional[str] = None,
-    min: Optional[float]= None,
+    min: Optional[float] = None,
     max: Optional[float] = None,
     step: Optional[float] = None,
     value: Optional[float] = None,
@@ -104,7 +105,7 @@ def set_custom_checkbox(
     if not ret.result.HasField("success"):
         raise RuntimeError("unexpected response")
     return UUID(hex=ret.result.success)
-    
+
 
 def set_custom_textbox(
     self: PointCloudViewer,

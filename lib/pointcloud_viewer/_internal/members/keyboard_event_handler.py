@@ -63,6 +63,7 @@ def remove_keyup_handler(
         if ret.result.HasField("failure"):
             raise RuntimeError(ret.result.failure)
 
+
 def add_keydown_handler(
     self: PointCloudViewer,
     handler: Callable[[KeyboardEvent, UUID], None]
@@ -115,6 +116,7 @@ def remove_keydown_handler(
         ret = self._wait_until(uuid)
         if ret.result.HasField("failure"):
             raise RuntimeError(ret.result.failure)
+
 
 def add_keypress_handler(
     self: PointCloudViewer,

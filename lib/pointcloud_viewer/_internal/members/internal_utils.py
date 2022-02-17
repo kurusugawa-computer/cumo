@@ -1,10 +1,11 @@
-from __future__ import annotations # Postponed Evaluation of Annotations
+from __future__ import annotations  # Postponed Evaluation of Annotations
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
 import multiprocessing
 from pointcloud_viewer._internal.server import multiprocessing_worker
+
 
 def __init__(
     self: PointCloudViewer,
