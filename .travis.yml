@@ -7,12 +7,14 @@ jobs:
       before_install:
         - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
         - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
-        - protoc \
+        - |-
+          protoc \
             --python_out=./lib/pointcloud_viewer/ \
             -I. \
             --experimental_allow_proto3_optional \
             protobuf/server.proto
-        - protoc \
+        - |-
+          protoc \
             --python_out=./lib/pointcloud_viewer/ \
             -I. \
             --experimental_allow_proto3_optional \
@@ -34,20 +36,22 @@ jobs:
       before_install:
         - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
         - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
-        - protoc \
-            --ts_out=import_style=commonjs,binary:./client/src \
-            --js_out=import_style=commonjs,binary:./client/src \
-            -I. \
-            --plugin=protoc-gen-ts="${PLUGIN_TS}" \
-            --experimental_allow_proto3_optional \
-            protobuf/server.proto
-        - protoc \
-            --ts_out=import_style=commonjs,binary:./client/src \
-            --js_out=import_style=commonjs,binary:./client/src \
-            -I. \
-            --plugin=protoc-gen-ts="${PLUGIN_TS}" \
-            --experimental_allow_proto3_optional \
-            protobuf/client.proto
+        - |-
+          protoc \
+          --ts_out=import_style=commonjs,binary:./client/src \
+          --js_out=import_style=commonjs,binary:./client/src \
+          -I. \
+          --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+          --experimental_allow_proto3_optional \
+          protobuf/server.proto
+        - |-
+          protoc \
+          --ts_out=import_style=commonjs,binary:./client/src \
+          --js_out=import_style=commonjs,binary:./client/src \
+          -I. \
+          --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+          --experimental_allow_proto3_optional \
+          protobuf/client.proto
         - cd client
       install:
         - yarn install
