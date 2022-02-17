@@ -38,9 +38,8 @@ jobs:
       before_install: 
         - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
         - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
-        - cd client
       install:
-        - yarn install
+        - cd client && yarn install && cd ..
         - |-
           protoc \
           --ts_out=import_style=commonjs,binary:./client/src \
