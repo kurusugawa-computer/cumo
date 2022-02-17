@@ -7,6 +7,10 @@ jobs:
       before_install:
         - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
         - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
+        - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+        - export PATH="$PATH:$HOME/.poetry/bin"
+        - cd lib
+      install:
         - |-
           protoc \
             --python_out=./lib/pointcloud_viewer/ \
@@ -22,10 +26,6 @@ jobs:
         - rm -rf ./lib/pointcloud_viewer/_internal/protobuf
         - mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
         - touch ./lib/pointcloud_viewer/_internal/protobuf/__init__.py
-        - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-        - export PATH="$PATH:$HOME/.poetry/bin"
-        - cd lib
-      install:
         - poetry install
       script:
         - poetry run autopep8 --diff --recursive --exit-code .  # format
@@ -35,9 +35,12 @@ jobs:
       node_js: node      # stable
       env:
         - PLUGIN_TS=./client/node_modules/.bin/protoc-gen-ts
-      before_install:
+      before_install: 
         - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
         - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
+        - cd client
+      install:
+        - yarn install
         - |-
           protoc \
           --ts_out=import_style=commonjs,binary:./client/src \
@@ -54,9 +57,6 @@ jobs:
           --plugin=protoc-gen-ts="${PLUGIN_TS}" \
           --experimental_allow_proto3_optional \
           protobuf/client.proto
-        - cd client
-      install:
-        - yarn install
       script:
         - yarn build                        # build
         - npx eslint --quiet src --ext .ts  # lint
