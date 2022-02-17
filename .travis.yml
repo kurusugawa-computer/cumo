@@ -32,7 +32,7 @@ jobs:
         - poetry build                                                              # build
     
     - language: node_js
-      node_js: node      # stable
+      node_js: 16
       env:
         - PLUGIN_TS=./client/node_modules/.bin/protoc-gen-ts
       before_install: 
