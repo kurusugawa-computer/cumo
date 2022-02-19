@@ -36,7 +36,7 @@ jobs:
         - cd lib
         - poetry install
       script:
-        - poetry run autopep8 --diff --recursive --exit-code .  # format
+        - poetry run autopep8 --diff --recursive --exit-code --exclude=protobuf .  # format
         - poetry build                                          # build
         - poetry run flake8 pointcloud_viewer                   # lint(flake8)
         - poetry run pylint --jobs=0 pointcloud_viewer          # lint(pylint)
