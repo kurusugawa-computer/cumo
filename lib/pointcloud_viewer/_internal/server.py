@@ -19,9 +19,7 @@ def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int):
                 self.send_response(200)
                 self.end_headers()
                 self.wfile.write(
-                    "ws://{}:{}".format(
-                        self.server.server_address[0], websocket_port
-                    ).encode("utf-8")
+                    f"ws://{self.server.server_address[0]}:{websocket_port}".encode("utf-8")
                 )
             else:
                 path = join("/public/", "./"+self.path)
@@ -30,13 +28,14 @@ def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int):
                     data = pkgutil.get_data("pointcloud_viewer", path)
                 except FileNotFoundError:
                     self.send_error(404)
-                if data != None:
+                if data is not None:
                     self.send_response(200)
                     self.end_headers()
                     self.wfile.write(data)
                 else:
                     self.send_error(404)
 
+        # pylint: disable=W0622
         def log_message(self, format: str, *args) -> None:
             pass
 
@@ -69,9 +68,9 @@ def multiprocessing_worker(
         except asyncio.CancelledError:
             pass
 
-    async def __websocket_handler(websocket: websockets.WebSocketServerProtocol, path: str):
+    async def __websocket_handler(websocket: websockets.WebSocketServerProtocol, _path: str):
         nonlocal websocket_connection
-        if websocket_connection != None:
+        if websocket_connection is not None:
             await websocket.close()
             return
         websocket_connection = websocket
@@ -99,10 +98,10 @@ def multiprocessing_worker(
 
     threads = [
         threading.Thread(
-            target=lambda: loop.run_forever()
+            target=loop.run_forever
         ),
         threading.Thread(
-            target=lambda: http_server.serve_forever()
+            target=http_server.serve_forever
         )
     ]
     for thread in threads:
