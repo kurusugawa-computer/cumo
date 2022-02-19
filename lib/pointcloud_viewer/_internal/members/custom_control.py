@@ -1,11 +1,12 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
+from uuid import UUID, uuid4
+from pointcloud_viewer._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
-from uuid import UUID, uuid4
-from typing import Callable, Optional
-from pointcloud_viewer._internal.protobuf import server_pb2
+
+# pylint: disable=no-member, redefined-builtin
 
 
 def add_custom_slider(
@@ -266,11 +267,11 @@ def remove_all_custom_controls(
 ) -> None:
     """すべてのカスタムコントロールを削除する。
     """
-    remove_custom_control = server_pb2.RemoveCustomControl()
-    remove_custom_control.all = True
+    remove_custom_control_cmd = server_pb2.RemoveCustomControl()
+    remove_custom_control_cmd.all = True
 
     obj = server_pb2.ServerCommand()
-    obj.remove_custom_control.CopyFrom(remove_custom_control)
+    obj.remove_custom_control.CopyFrom(remove_custom_control_cmd)
 
     uuid = uuid4()
     self._send_data(obj, uuid)
@@ -288,11 +289,11 @@ def remove_custom_control(
     Args:
         uuid (UUID): 削除するコントロールに対応するID
     """
-    remove_custom_control = server_pb2.RemoveCustomControl()
-    remove_custom_control.by_uuid = str(uuid)
+    remove_custom_control_cmd = server_pb2.RemoveCustomControl()
+    remove_custom_control_cmd.by_uuid = str(uuid)
 
     obj = server_pb2.ServerCommand()
-    obj.remove_custom_control.CopyFrom(remove_custom_control)
+    obj.remove_custom_control.CopyFrom(remove_custom_control_cmd)
 
     uuid = uuid4()
     self._send_data(obj, uuid)

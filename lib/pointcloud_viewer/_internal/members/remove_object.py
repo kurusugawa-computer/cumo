@@ -1,22 +1,23 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
 from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
+from pointcloud_viewer._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
-from uuid import UUID, uuid4
-from pointcloud_viewer._internal.protobuf import server_pb2
 
+# pylint: disable=no-member
 
 def remove_all_objects(
     self: PointCloudViewer
 ) -> None:
     """すべてのオブジェクトとオーバーレイを削除する。
     """
-    remove_object = server_pb2.RemoveObject()
-    remove_object.all = True
+    remove_object_cmd = server_pb2.RemoveObject()
+    remove_object_cmd.all = True
 
     obj = server_pb2.ServerCommand()
-    obj.remove_object.CopyFrom(remove_object)
+    obj.remove_object.CopyFrom(remove_object_cmd)
 
     uuid = uuid4()
     self._send_data(obj, uuid)
@@ -34,11 +35,11 @@ def remove_object(
     Args:
         uuid (UUID): オブジェクトやオーバーレイのUUID
     """
-    remove_object = server_pb2.RemoveObject()
-    remove_object.by_uuid = str(uuid)
+    remove_object_cmd = server_pb2.RemoveObject()
+    remove_object_cmd.by_uuid = str(uuid)
 
     obj = server_pb2.ServerCommand()
-    obj.remove_object.CopyFrom(remove_object)
+    obj.remove_object.CopyFrom(remove_object_cmd)
 
     uuid = uuid4()
     self._send_data(obj, uuid)

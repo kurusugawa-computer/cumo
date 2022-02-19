@@ -1,12 +1,12 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
+from uuid import UUID, uuid4
+from pointcloud_viewer._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
-from uuid import UUID, uuid4
-from typing import Callable, Optional
-from pointcloud_viewer._internal.protobuf import server_pb2
 
+# pylint: disable=no-member,redefined-builtin
 
 def set_custom_slider(
     self: PointCloudViewer,

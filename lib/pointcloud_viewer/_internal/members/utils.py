@@ -1,10 +1,9 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
-
 from uuid import uuid4
 from pointcloud_viewer._internal.protobuf import server_pb2
+if TYPE_CHECKING:
+    from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
 
 def wait_forever(self: PointCloudViewer) -> None:

@@ -1,10 +1,11 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
+from uuid import uuid4
 from typing import TYPE_CHECKING
+from pointcloud_viewer._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
-from uuid import uuid4
-from pointcloud_viewer._internal.protobuf import server_pb2
+# pylint: disable=no-member
 
 
 def set_orthographic_camera(
