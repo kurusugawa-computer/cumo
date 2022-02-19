@@ -72,5 +72,5 @@ jobs:
           protobuf/client.proto
         - cd client
       script:
-        - yarn build                        # build
-        - npx eslint --quiet src --ext .ts  # lint
+        - yarn build        # build
+        - yarn lint:eslint  # lint
