@@ -4,6 +4,7 @@ import multiprocessing
 from enum import Enum, auto
 from typing import Optional
 
+# pylint: disable=import-outside-toplevel
 
 class DownSampleStrategy(Enum):
     NONE = auto()
