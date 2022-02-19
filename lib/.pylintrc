@@ -14,8 +14,9 @@ disable=
   too-few-public-methods,       # public method の数に下限を設けない
   too-many-public-methods,      # public method の数に上限を設けない
   too-many-instance-attributes, # コンストラクタの引数の数に上限を設けない
+  duplicate-code,               # コードの重複を許容する
 
   # Warning
   protected-access,
 
-ignore=dist,protobuf
+ignore=dist,pointcloud_viewer/_internal/protobuf
