@@ -1,19 +1,20 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
-
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
-import numpy
 import html
+import yattag
+import numpy
 from pypcd import pypcd
 from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
 from pointcloud_viewer._internal.protobuf import server_pb2
 from pointcloud_viewer._internal.down_sample import down_sample_pointcloud
-from typing import Optional
-import yattag
+
+if TYPE_CHECKING:
+    from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
 DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS = 1_000_000
+
+# pylint: disable=no-member
 
 
 def send_pointcloud_pcd(
@@ -54,22 +55,22 @@ def send_pointcloud_pcd(
         if not ret.result.HasField("success"):
             raise RuntimeError("unexpected response")
         return UUID(hex=ret.result.success)
-    else:
-        pypcd_pc = pypcd.point_cloud_from_buffer(pcd_bytes)
-        pc_data: numpy.ndarray = pypcd_pc.pc_data
 
-        xyz = numpy.stack([pc_data["x"], pc_data["y"], pc_data["z"]], axis=1)
+    pypcd_pc = pypcd.point_cloud_from_buffer(pcd_bytes)
+    pc_data: numpy.ndarray = pypcd_pc.pc_data
 
-        rgb_u32: numpy.ndarray = pc_data["rgb"]
-        rgb_u32.dtype = "uint32"
-        r_u8: numpy.ndarray = ((rgb_u32 & 0xff0000) >> 16).astype("uint8")
-        g_u8: numpy.ndarray = ((rgb_u32 & 0x00ff00) >> 8).astype("uint8")
-        b_u8: numpy.ndarray = (rgb_u32 & 0x0000ff).astype("uint8")
+    xyz = numpy.stack([pc_data["x"], pc_data["y"], pc_data["z"]], axis=1)
 
-        rgb = numpy.stack([r_u8, g_u8, b_u8], axis=1)
+    rgb_u32: numpy.ndarray = pc_data["rgb"]
+    rgb_u32.dtype = "uint32"
+    r_u8: numpy.ndarray = ((rgb_u32 & 0xff0000) >> 16).astype("uint8")
+    g_u8: numpy.ndarray = ((rgb_u32 & 0x00ff00) >> 8).astype("uint8")
+    b_u8: numpy.ndarray = (rgb_u32 & 0x0000ff).astype("uint8")
 
-        self.send_pointcloud(
-            xyz=xyz, rgb=rgb, down_sample=down_sample, max_num_points=max_num_points, point_size=point_size)
+    rgb = numpy.stack([r_u8, g_u8, b_u8], axis=1)
+
+    return self.send_pointcloud(
+        xyz=xyz, rgb=rgb, down_sample=down_sample, max_num_points=max_num_points, point_size=point_size)
 
 
 def send_pointcloud(
@@ -156,6 +157,7 @@ def send_pointcloud(
     return self.send_pointcloud_pcd(pcd_bytes, down_sample=DownSampleStrategy.NONE, point_size=point_size)
 
 
+# pylint: disable=too-many-branches
 def send_lineset(
     self: PointCloudViewer,
     xyz: numpy.ndarray,
@@ -333,7 +335,7 @@ def send_overlay_text(
     position.z = z
     overlay.position.CopyFrom(position)
 
-    yatdoc, createTag, setText = yattag.Doc().tagtext()
+    yatdoc, createTag, _ = yattag.Doc().tagtext()
     with createTag("div", ("style", "color:white;mix-blend-mode: difference;"+style)):
         yatdoc.asis(html.escape(text).replace("\n", "<br />\n"))
     overlay.html = yatdoc.getvalue()
