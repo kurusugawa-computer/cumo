@@ -12,8 +12,8 @@ if TYPE_CHECKING:
 def add_custom_slider(
     self: PointCloudViewer,
     name: str = "slider",
-    min: float = 0,
-    max: float = 100,
+    min_value: float = 0,
+    max_value: float = 100,
     step: float = 1,
     init_value: float = 50,
     on_changed: Optional[Callable[[float], None]] = None,
@@ -23,10 +23,10 @@ def add_custom_slider(
 
     :param name: 表示名
     :type name: str, optional
-    :param min: 最小値
-    :type min: float, optional
-    :param max: 最大値
-    :type max: float, optional
+    :param min_value: 最小値
+    :type min_value: float, optional
+    :param max_value: 最大値
+    :type max_value: float, optional
     :param step: 最小の変化量
     :type step: float, optional
     :param init_value: 初期値
@@ -42,8 +42,8 @@ def add_custom_slider(
     obj = server_pb2.ServerCommand()
     slider = server_pb2.CustomControl.Slider()
     slider.name = name
-    slider.min = min
-    slider.max = max
+    slider.min = min_value
+    slider.max = max_value
     slider.step = step
     slider.init_value = init_value
     slider.parent = str(parent)
