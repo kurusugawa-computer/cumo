@@ -35,7 +35,7 @@ class PointCloudViewer:
     _websocket_broadcasting_queue: multiprocessing.Queue
     _websocket_message_queue: multiprocessing.Queue
 
-    from pointcloud_viewer._internal.members.capture_screen import capture_screen
+    from pointcloud_viewer._internal.members.capture_screen import capture_screen, capture_screen_as_ndarray
     from pointcloud_viewer._internal.members.camera import set_camera_position, set_camera_target, set_orthographic_camera, set_perspective_camera
     from pointcloud_viewer._internal.members.custom_control import add_custom_button, add_custom_checkbox, add_custom_colorpicker, add_custom_selectbox, add_custom_slider, add_custom_textbox, add_custom_folder, remove_all_custom_controls, remove_custom_control
     from pointcloud_viewer._internal.members.internal_utils import __init__
