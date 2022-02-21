@@ -1,9 +1,8 @@
+import sys
 from uuid import UUID
-import numpy
-from pypcd import pypcd
-
 from argparse import ArgumentParser
-
+from pypcd import pypcd
+import numpy
 from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 from pointcloud_viewer.keyboard_event import KeyboardEvent
 
@@ -20,7 +19,7 @@ def main():
     viewer = PointCloudViewer(
         host=host, websocket_port=websocket_port, http_port=http_port, autostart=True
     )
-    print("open: http://{}:{}".format(host, http_port))
+    print(f"open: http://{host}:{http_port}")
     print("setup...")
 
     viewer.remove_all_objects()
@@ -70,10 +69,10 @@ def main():
     viewer.set_orthographic_camera(frustum_height=radius*2)
 
     def save_png(name: str, data: bytes) -> None:
-        f = open(name, "bw")
-        f.write(data)
-        f.close()
-        print("saved: "+name)
+        with open(name, "bw") as f:
+            f.write(data)
+            f.close()
+            print("saved: "+name)
 
     def take_screenshots():
         viewer.set_camera_position(0, 0, 1)
@@ -86,17 +85,17 @@ def main():
             save_png(p[3], data)
 
     def on_keyup(ev: KeyboardEvent, handler_id: UUID):
-        if (ev.code == "KeyA"):
+        if ev.code == "KeyA":
             take_screenshots()
             viewer.remove_keyup_handler(handler_id)
-            exit(0)
+            sys.exit(0)
 
     keyup_handler_id = viewer.add_keyup_handler(on_keyup)
 
     def on_start_button_pushed():
         take_screenshots()
         viewer.remove_keyup_handler(keyup_handler_id)
-        exit(0)
+        sys.exit(0)
 
     viewer.add_custom_button(
         name="start", on_changed=lambda dummy: on_start_button_pushed()

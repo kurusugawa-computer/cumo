@@ -1,20 +1,16 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
-from typing import TYPE_CHECKING
-
-from google.protobuf import message
-if TYPE_CHECKING:
-    from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
-
 import queue
 import base64
+from typing import TYPE_CHECKING, Callable, Optional
 from uuid import UUID
-from typing import Callable, Optional
-
 from google.protobuf.message import DecodeError
-
 from pointcloud_viewer._internal.protobuf import server_pb2
 from pointcloud_viewer._internal.protobuf import client_pb2
 from pointcloud_viewer.keyboard_event import KeyboardEvent
+if TYPE_CHECKING:
+    from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
+
+# pylint: disable=no-member
 
 
 def clean_defer_queue(self: PointCloudViewer, q: queue.Queue):
@@ -29,17 +25,16 @@ def _wait_until(self: PointCloudViewer, uuid: UUID) -> client_pb2.ClientCommand:
         command: client_pb2.ClientCommand = client_pb2.ClientCommand()
         try:
             command.ParseFromString(data)
-        except DecodeError:
+        except DecodeError as decode_error:
             clean_defer_queue(self, defer_queue)
-            raise RuntimeError("failed to parsing message")
+            raise RuntimeError("failed to parsing message") from decode_error
         if UUID(hex=command.UUID) == uuid:
             clean_defer_queue(self, defer_queue)
             return command
-        else:
-            for_me = self._handle_message(command)
-            if not for_me:
-                # 他の_wait_untilループで受け取るべきデータが来てしまったので退避させる
-                defer_queue.put(data)
+        for_me = self._handle_message(command)
+        if not for_me:
+            # 他の_wait_untilループで受け取るべきデータが来てしまったので退避させる
+            defer_queue.put(data)
 
 
 def _handle_message(self: PointCloudViewer, command: client_pb2.ClientCommand) -> bool:
@@ -66,7 +61,7 @@ def _set_custom_handler(self: PointCloudViewer, uuid: UUID, name: str, func: Cal
 def _handle_control_changed(self: PointCloudViewer, command: client_pb2.ClientCommand):
     uuid = UUID(hex=command.UUID)
     on_changed = self._get_custom_handler(uuid, "changed")
-    if on_changed != None:
+    if on_changed is not None:
         if command.control_changed.HasField("number"):
             on_changed(command.control_changed.number)
         elif command.control_changed.HasField("text"):

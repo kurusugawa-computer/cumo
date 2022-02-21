@@ -4,6 +4,7 @@ import numpy.random
 
 from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
 
+
 def down_sample_pointcloud(pc: numpy.ndarray, strategy: DownSampleStrategy, max_num_points: int) -> numpy.ndarray:
     assert pc.shape[1] == 3 or pc.shape[1] == 4
 
@@ -18,12 +19,13 @@ def down_sample_pointcloud(pc: numpy.ndarray, strategy: DownSampleStrategy, max_
         assert strategy.voxel_size is not None
         return down_sample_voxel(pc, strategy.voxel_size, max_num_points)
 
-    assert False, "strategy not implemented: {0}".format(strategy.name)
+    assert False, f"strategy not implemented: {strategy.name}"
 
 
 def down_sample_random(pc: numpy.ndarray, max_num_points: int) -> numpy.ndarray:
     indices = numpy.arange(pc.shape[0])
     return pc[numpy.random.choice(indices, max_num_points)]
+
 
 def down_sample_voxel(pc: numpy.ndarray, voxel_size: float, max_num_points: int) -> numpy.ndarray:
     scale = 1.0 / voxel_size
@@ -42,5 +44,4 @@ def down_sample_voxel(pc: numpy.ndarray, voxel_size: float, max_num_points: int)
 
     if len(output) > max_num_points:
         return down_sample_random(output, max_num_points)
-    else:
-        return output
+    return output

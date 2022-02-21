@@ -1,10 +1,12 @@
-from __future__ import annotations # Postponed Evaluation of Annotations
+from __future__ import annotations  # Postponed Evaluation of Annotations
 from typing import TYPE_CHECKING
+import multiprocessing
+from pointcloud_viewer._internal.server import multiprocessing_worker
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
-import multiprocessing
-from pointcloud_viewer._internal.server import multiprocessing_worker
+
+# pylint: disable=no-member
 
 def __init__(
     self: PointCloudViewer,
@@ -13,8 +15,8 @@ def __init__(
     http_port: int = 8082,
     autostart: bool = False
 ) -> None:
-    self._custom_handlers = dict()
-    self._key_event_handlers = dict()
+    self._custom_handlers = {}
+    self._key_event_handlers = {}
     self._websocket_broadcasting_queue = multiprocessing.Queue()
     self._websocket_message_queue = multiprocessing.Queue()
     self._server_process = multiprocessing.Process(

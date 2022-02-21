@@ -1,0 +1,22 @@
+[pylint]
+disable=
+  # https://github.com/kurusugawa-computer/annofab-cli/blob/main/pylintrc を参考にしました
+  # Convension
+  line-too-long,              # flake8 でチェックするので無視
+  invalid-name,               # 1文字変数を許容
+  missing-module-docstring,   # モジュールのコメント省略を許容
+  missing-function-docstring, # 関数のコメント省略を許容
+  missing-class-docstring,    # クラスのコメント省略を許容
+
+  # Refactor
+  too-many-locals,              # ローカル変数の数に上限を設けない
+  too-many-arguments,           # 引数の数に上限を設けない
+  too-few-public-methods,       # public method の数に下限を設けない
+  too-many-public-methods,      # public method の数に上限を設けない
+  too-many-instance-attributes, # コンストラクタの引数の数に上限を設けない
+  duplicate-code,               # コードの重複を許容する
+
+  # Warning
+  protected-access,
+
+ignore=dist,pointcloud_viewer/_internal/protobuf
