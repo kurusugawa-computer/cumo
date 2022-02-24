@@ -65,6 +65,7 @@ class PointCloudViewer:
         send_lineset,
         send_overlay_text,
         send_overlay_image,
+        send_overlay_image_from_ndarray,
         send_pointcloud,
         send_pointcloud_pcd,
         send_mesh,
