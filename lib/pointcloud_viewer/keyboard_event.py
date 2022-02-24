@@ -26,12 +26,18 @@ class KeyboardEvent:
         self.repeat = repeat
 
     def __str__(self) -> str:
-        return "KeyboardEvent(key: \"%s\", code: \"%s\", shiftKey: %s, altKey: %s, ctrlKey: %s, metaKey: %s, repeat: %s)" % (
-            self.key,
-            self.code,
-            self.shiftKey,
-            self.altKey,
-            self.ctrlKey,
-            self.metaKey,
+        return f"""KeyboardEvent(key: \"{
+            self.key
+        }\", code: \"{
+            self.code
+        }\", shiftKey: {
+            self.shiftKey
+        }, altKey: {
+            self.altKey
+        }, ctrlKey: {
+            self.ctrlKey
+        }, metaKey: {
+            self.metaKey
+        }, repeat: {
             self.repeat
-        )
+        })"""

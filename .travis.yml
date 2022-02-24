@@ -1,0 +1,76 @@
+dist: focal
+
+branches:
+  only:
+    - master
+
+jobs:
+  include:
+    - language: python
+      python: 3.8
+      cache:
+        pip: true
+        directories:
+          - $HOME/.cache/pypoetry
+      before_install:
+        - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
+        - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
+        - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+        - export PATH="$PATH:$HOME/.poetry/bin"
+      install:
+        - |-
+          protoc \
+            --python_out=./lib/pointcloud_viewer/ \
+            -I. \
+            --experimental_allow_proto3_optional \
+            protobuf/server.proto
+        - |-
+          protoc \
+            --python_out=./lib/pointcloud_viewer/ \
+            -I. \
+            --experimental_allow_proto3_optional \
+            protobuf/client.proto
+        - rm -rf ./lib/pointcloud_viewer/_internal/protobuf
+        - mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
+        - touch ./lib/pointcloud_viewer/_internal/protobuf/__init__.py
+        - cd lib
+        - poetry install
+      script:
+        - poetry run autopep8 --diff --recursive --exit-code --exclude=protobuf .  # format
+        - poetry build                                          # build
+        - poetry run flake8 pointcloud_viewer                   # lint(flake8)
+        - poetry run pylint --jobs=0 pointcloud_viewer          # lint(pylint)
+    
+    - language: node_js
+      node_js: 16
+      cache:
+        yarn: true
+        directories:
+          - ./client/node_modules
+      env:
+        - PLUGIN_TS=./client/node_modules/.bin/protoc-gen-ts
+      before_install: 
+        - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
+        - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
+      install:
+        - cd client && yarn install && cd ..
+        - |-
+          protoc \
+          --ts_out=import_style=commonjs,binary:./client/src \
+          --js_out=import_style=commonjs,binary:./client/src \
+          -I. \
+          --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+          --experimental_allow_proto3_optional \
+          protobuf/server.proto
+        - |-
+          protoc \
+          --ts_out=import_style=commonjs,binary:./client/src \
+          --js_out=import_style=commonjs,binary:./client/src \
+          -I. \
+          --plugin=protoc-gen-ts="${PLUGIN_TS}" \
+          --experimental_allow_proto3_optional \
+          protobuf/client.proto
+        - cd client
+      script:
+        - yarn build        # build
+        - yarn lint:eslint  # lint

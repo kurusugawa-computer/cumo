@@ -1,18 +1,19 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Optional
+from uuid import UUID, uuid4
+from pointcloud_viewer._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 
-from uuid import UUID, uuid4
-from typing import Callable, Optional
-from pointcloud_viewer._internal.protobuf import server_pb2
+
+# pylint: disable=no-member,redefined-builtin
 
 def set_custom_slider(
     self: PointCloudViewer,
     target: UUID,
     name: Optional[str] = None,
-    min: Optional[float]= None,
-    max: Optional[float] = None,
+    min_value: Optional[float] = None,
+    max_value: Optional[float] = None,
     step: Optional[float] = None,
     value: Optional[float] = None,
     on_changed: Optional[Callable[[float], None]] = None,
@@ -23,10 +24,10 @@ def set_custom_slider(
     :type target: UUID
     :param name: 表示名
     :type name: Optional[str], optional
-    :param min: 最小値
-    :type min: Optional[float], optional
-    :param max: 最大値
-    :type max: Optional[float], optional
+    :param min_value: 最小値
+    :type min_value: Optional[float], optional
+    :param max_value: 最大値
+    :type max_value: Optional[float], optional
     :param step: 最小の変化量
     :type step: Optional[float], optional
     :param value: 値
@@ -41,10 +42,10 @@ def set_custom_slider(
     slider = server_pb2.SetCustomControl.Slider()
     if name is not None:
         slider.name = name
-    if min is not None:
-        slider.min = min
-    if max is not None:
-        slider.max = max
+    if min_value is not None:
+        slider.min = min_value
+    if max_value is not None:
+        slider.max = max_value
     if step is not None:
         slider.step = step
     if value is not None:
@@ -104,7 +105,7 @@ def set_custom_checkbox(
     if not ret.result.HasField("success"):
         raise RuntimeError("unexpected response")
     return UUID(hex=ret.result.success)
-    
+
 
 def set_custom_textbox(
     self: PointCloudViewer,
