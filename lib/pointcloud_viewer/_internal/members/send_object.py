@@ -1,5 +1,5 @@
-from __future__ import annotations
-import io  # Postponed Evaluation of Annotations
+from __future__ import annotations  # Postponed Evaluation of Annotations
+import io
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 import html
