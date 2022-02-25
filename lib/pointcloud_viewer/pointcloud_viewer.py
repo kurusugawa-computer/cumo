@@ -39,7 +39,10 @@ class PointCloudViewer:
     _websocket_broadcasting_queue: multiprocessing.Queue
     _websocket_message_queue: multiprocessing.Queue
 
-    from pointcloud_viewer._internal.members.capture_screen import capture_screen
+    from pointcloud_viewer._internal.members.capture_screen import (
+        capture_screen,
+        capture_screen_as_ndarray,
+    )
     from pointcloud_viewer._internal.members.camera import (
         set_camera_position,
         set_camera_target,
@@ -62,6 +65,7 @@ class PointCloudViewer:
         send_lineset,
         send_overlay_text,
         send_overlay_image,
+        send_overlay_image_from_ndarray,
         send_pointcloud,
         send_pointcloud_pcd,
         send_mesh,

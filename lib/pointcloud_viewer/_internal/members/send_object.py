@@ -1,9 +1,12 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
+import io
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 import html
 import yattag
 import numpy
+from PIL import Image
+from numpy import ndarray
 from pypcd import pypcd
 from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
 from pointcloud_viewer._internal.protobuf import server_pb2
@@ -357,6 +360,43 @@ def send_overlay_text(
     if not ret.result.HasField("success"):
         raise RuntimeError("unexpected response")
     return UUID(hex=ret.result.success)
+
+
+def send_overlay_image_from_ndarray(
+    self: PointCloudViewer,
+    ndarray_data: ndarray,
+    width: int,
+    x: float = 0,
+    y: float = 0,
+    z: float = 0,
+    screen_coordinate: bool = False,
+) -> UUID:
+    """特定の座標を左上として画像をオーバーレイさせる。
+
+    Args:
+        ndarray_data (ndarray): shape が (height,width,3) で dtype が uint8 の ndarray。非圧縮の画像データ。
+        width (int): オーバーレイの幅をピクセルで指定
+        x (float, optional): オーバーレイが追従する点のx座標
+        y (float, optional): オーバーレイが追従する点のy座標
+        z (float, optional): オーバーレイが追従する点のz座標
+        screen_coordinate (bool, optional) Trueにするとオーバーレイが画面の指定の位置に固定される。このときzは無視される
+
+    Returns:
+        UUID: オーバーレイに対応するID。後から操作する際に使う
+    """
+    if not(len(ndarray_data.shape) == 3 and ndarray_data.shape[2] == 3 and ndarray_data.dtype == "uint8"):
+        raise ValueError("ndarray_data must be uint8 array of shape (height, width, 3)")
+    img = Image.fromarray(ndarray_data)
+    img_bytes = io.BytesIO()
+    img.save(img_bytes, format="PNG")
+    return self.send_overlay_image(
+        img_bytes.getvalue(),
+        width,
+        x,
+        y,
+        z,
+        screen_coordinate
+    )
 
 
 def send_overlay_image(

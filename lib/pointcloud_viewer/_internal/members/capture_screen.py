@@ -1,6 +1,10 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
+from io import BytesIO
 from typing import TYPE_CHECKING
 from uuid import uuid4
+from numpy import ndarray
+import numpy as np
+from PIL import Image
 from pointcloud_viewer._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
@@ -24,3 +28,13 @@ def capture_screen(
     if ret.HasField("image"):
         return ret.image.data
     raise RuntimeError("Unreachable")
+
+
+def capture_screen_as_ndarray(
+    self: PointCloudViewer,
+) -> ndarray:
+    """ブラウザのcanvasに表示されている画像を、shape が (height,width,3) で dtype が uint8 の ndarray で返す。
+    """
+    data = self.capture_screen()
+    img = Image.open(BytesIO(data)).convert("RGB")
+    return np.array(img)
