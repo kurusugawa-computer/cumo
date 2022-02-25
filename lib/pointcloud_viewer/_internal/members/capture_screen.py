@@ -33,8 +33,7 @@ def capture_screen(
 def capture_screen_as_ndarray(
     self: PointCloudViewer,
 ) -> ndarray:
-    """ブラウザのcanvasに表示されている画像をndarrayで返す\\
-    形式は shape = (Height x Width x 3), dtype = uint8
+    """ブラウザのcanvasに表示されている画像を、shape が (height,width,3) で dtype が uint8 の ndarray で返す。
     """
     data = self.capture_screen()
     img = Image.open(BytesIO(data)).convert("RGB")

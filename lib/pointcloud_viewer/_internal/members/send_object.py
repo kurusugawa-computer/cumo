@@ -374,7 +374,7 @@ def send_overlay_image_from_ndarray(
     """特定の座標を左上として画像をオーバーレイさせる。
 
     Args:
-        ndarray_data (ndarray): 非圧縮の画像データ。形式は shape = (Height x Width x 3), dtype = uint8
+        ndarray_data (ndarray): shape が (height,width,3) で dtype が uint8 の ndarray。非圧縮の画像データ。
         width (int): オーバーレイの幅をピクセルで指定
         x (float, optional): オーバーレイが追従する点のx座標
         y (float, optional): オーバーレイが追従する点のy座標
@@ -384,6 +384,8 @@ def send_overlay_image_from_ndarray(
     Returns:
         UUID: オーバーレイに対応するID。後から操作する際に使う
     """
+    if not(len(ndarray_data.shape) == 3 and ndarray_data.shape[2] == 3 and ndarray_data.dtype == "uint8"):
+        raise ValueError("ndarray_data must be uint8 array of shape (height, width, 3)")
     img = Image.fromarray(ndarray_data)
     img_bytes = io.BytesIO()
     img.save(img_bytes, format="PNG")
