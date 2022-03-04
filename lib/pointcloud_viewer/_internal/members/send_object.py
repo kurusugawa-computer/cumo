@@ -3,7 +3,6 @@ import io
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 import html
-import yattag
 import numpy
 from PIL import Image
 from numpy import ndarray
@@ -338,10 +337,9 @@ def send_overlay_text(
     position.z = z
     overlay.position.CopyFrom(position)
 
-    yatdoc, createTag, _ = yattag.Doc().tagtext()
-    with createTag("div", ("style", "color:white;mix-blend-mode: difference;"+style)):
-        yatdoc.asis(html.escape(text).replace("\n", "<br />\n"))
-    overlay.html = yatdoc.getvalue()
+    inner_html = html.escape(text).replace("\n", "<br />\n")
+    attributes = f"style=\"color:white;mix-blend-mode:difference;{style}\""
+    overlay.html = f"<div {attributes}>{inner_html}</div>"
 
     if screen_coordinate:
         overlay.type = server_pb2.AddObject.Overlay.CoordinateType.SCREEN_COORDINATE
