@@ -165,14 +165,15 @@ def send_lineset(
     xyz: numpy.ndarray,
     from_to: numpy.ndarray,
     rgb: Optional[numpy.ndarray] = None,
-    width: numpy.ndarray = None
+    width: Optional[numpy.ndarray] = None
 ) -> UUID:
     """Linesetをブラウザに送信し、表示させる。
 
     Args:
         xyz (numpy.ndarray): shape が (num_points,3) で dtype が float32 の ndarray 。各行が線分の端点のx,y,z座標を表す。
         from_to (numpy.ndarray): shape が (num_lines,2) で dtype が uint32 の ndarray 。各行が線分の端点のインデックスによって1本の線分を表す。
-        rgb (Optional[numpy.ndarray], optional): shape が (num_points,3) で dtype が uint8 の ndarray 。各行が頂点のr,g,bを表す。
+        rgb (Optional[numpy.ndarray], optional): shape が (num_lines,3) で dtype が uint8 の ndarray 。各行が線分のr,g,bを表す。
+        width (Optional[numpy.ndarray], optional): shape が (num_lines,) で dtypeが float32 の ndarray 。各要素が線分の太さを表す。
     Returns:
         UUID: 表示したLinesetに対応するID。後から操作する際に使う
     """
@@ -187,7 +188,17 @@ def send_lineset(
 
         if not (shape_is_valid and type_is_valid):
             raise ValueError(
-                "rgb must be uint8 array of shape (num_triangles, 3)"
+                "rgb must be uint8 array of shape (num_lines, 3)"
+            )
+    if width is not None:
+        shape_is_valid = len(width.shape) == 1
+        if rgb is not None:
+            shape_is_valid = shape_is_valid and rgb.shape[0] == width.shape[0]
+        type_is_valid = width.dtype == "float32"
+
+        if not (shape_is_valid and type_is_valid):
+            raise ValueError(
+                "whidth must be float32 array of shape (num_lines,)"
             )
 
     num_points = xyz.shape[0]

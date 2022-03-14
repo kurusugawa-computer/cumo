@@ -43,7 +43,7 @@ def main():
     colors = numpy.array([
         [255, 0, 0], [0, 255, 0], [0, 0, 255],
     ]).astype("uint8")
-    widths = numpy.ones((3,))*5.0
+    widths = (numpy.ones((3,))*5.0).astype("float32")
     viewer.send_lineset(points, lines, colors, widths)
 
     viewer.send_overlay_text(
