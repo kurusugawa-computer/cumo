@@ -1,4 +1,4 @@
-# kciguild-pointcloud-viewer
+# pointcloud-viewer
 
 ## ビルド
 
