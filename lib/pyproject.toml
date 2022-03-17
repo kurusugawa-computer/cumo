@@ -1,8 +1,22 @@
 [tool.poetry]
 name = "pointcloud_viewer"
 version = "0.17.0"
-description = ""
+description = "Webブラウザ上に点群を描画する python ライブラリ"
 authors = ["Kurusugawa Computer"]
+license = "BSD"
+keywords = ["point-cloud", "pcd"]
+repository = "https://github.com/kurusugawa-computer/pointcloud-viewer"
+classifiers = [
+	"Development Status :: 3 - Alpha",
+	"Intended Audience :: Developers",
+	"License :: OSI Approved :: BSD License",
+	"Programming Language :: Python",
+	"Programming Language :: Python :: 3 :: Only",
+	"Programming Language :: Python :: 3.7",
+	"Programming Language :: Python :: 3.8",
+	"Topic :: Utilities",
+	"Operating System :: OS Independent",
+]
 include = [
     "pointcloud_viewer/public/*",
     "pointcloud_viewer/_internal/protobuf/*",
