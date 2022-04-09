@@ -6,7 +6,8 @@ import html
 import numpy
 from PIL import Image
 from numpy import ndarray
-from pypcd import pypcd
+from pointcloud_viewer._vendor.pypcd import pypcd
+# from pypcd import pypcd
 from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
 from pointcloud_viewer._internal.protobuf import server_pb2
 from pointcloud_viewer._internal.down_sample import down_sample_pointcloud
