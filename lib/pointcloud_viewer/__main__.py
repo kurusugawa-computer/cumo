@@ -110,5 +110,6 @@ def send_pointcloud_pcd(viewer: PointCloudViewer, filename: str) -> float:
         viewer.send_pointcloud_pcd(b)
     return 1
 
+
 if __name__ == "__main__":
     main()
