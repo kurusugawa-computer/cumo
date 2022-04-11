@@ -1,7 +1,6 @@
 import sys
 from uuid import UUID
 from argparse import ArgumentParser
-from pypcd import pypcd
 import numpy
 from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
 from pointcloud_viewer.keyboard_event import KeyboardEvent
@@ -25,7 +24,6 @@ def main():
     viewer.remove_all_objects()
     viewer.remove_all_custom_controls()
 
-    # radius = send_pointcloud_numpy(viewer, args.pcd_filepath)
     radius = send_pointcloud_pcd(viewer, args.pcd_filepath)
 
     points = numpy.array([
@@ -111,30 +109,6 @@ def send_pointcloud_pcd(viewer: PointCloudViewer, filename: str) -> float:
         b = f.read()
         viewer.send_pointcloud_pcd(b)
     return 1
-
-
-def send_pointcloud_numpy(viewer: PointCloudViewer, filename: str) -> float:
-    pypcd_pc = pypcd.point_cloud_from_path(filename)
-
-    pc_data: numpy.ndarray = pypcd_pc.pc_data
-
-    xyz = numpy.stack([pc_data["x"], pc_data["y"], pc_data["z"]], axis=1)
-
-    xyz[:, 0] -= xyz[:, 0].mean()
-    xyz[:, 1] -= xyz[:, 1].mean()
-    xyz[:, 2] -= xyz[:, 2].mean()
-    radius = numpy.amax(xyz[:, 0]**2 + xyz[:, 1]**2 + xyz[:, 2]**2)**0.5
-
-    rgb_u32: numpy.ndarray = pc_data["rgb"]
-    rgb_u32.dtype = "uint32"
-    r_u8: numpy.ndarray = ((rgb_u32 & 0xff0000) >> 16).astype("uint8")
-    g_u8: numpy.ndarray = ((rgb_u32 & 0x00ff00) >> 8).astype("uint8")
-    b_u8: numpy.ndarray = (rgb_u32 & 0x0000ff).astype("uint8")
-
-    rgb = numpy.stack([r_u8, g_u8, b_u8], axis=1)
-
-    viewer.send_pointcloud(xyz=xyz, rgb=rgb)
-    return radius
 
 
 if __name__ == "__main__":
