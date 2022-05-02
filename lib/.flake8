@@ -2,6 +2,6 @@
 max-line-length = 120
 exclude = 
     dist,
-    pointcloud_viewer/_internal/protobuf/*
+    kci/_internal/protobuf/*
 extend-ignore =
     E741  # 1文字変数の許容

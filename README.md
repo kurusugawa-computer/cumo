@@ -28,10 +28,10 @@ $ poetry run sphinx-apidoc --append-syspath -F -o ./docs .
 
 ## 使用例
 
-`lib/pointcloud_viewer/__main__.py`は3面図を撮る例です。
+`lib/kci/pointcloudviewer/__main__.py`は3面図を撮る例です。
 
 ```console
-$ poetry run python -m pointcloud_viewer pcl_logo.pcd
+$ poetry run python -m kci.pointcloudviewer pcl_logo.pcd
 open: http://127.0.0.1:8082
 setup...
 resize window and press custom control button "start"
@@ -44,11 +44,11 @@ REPLでの使用も可能です。
 
 ```console
 $ poetry run python
-Python 3.8.7 (default, Mar 16 2021, 19:11:33)
-[GCC 10.2.0] on linux
+Python 3.8.7 (default, Apr  9 2022, 21:34:33)
+[GCC 9.4.0] on linux
 Type "help", "copyright", "credits" or "license" for more information.
->>> from pointcloud_viewer import pointcloud_viewer
->>> viewer = pointcloud_viewer.PointCloudViewer()
+>>> from kci.pointcloudviewer import PointCloudViewer
+>>> viewer = PointCloudViewer()
 >>> viewer.start()
 >>> # open localhost:8082 on your browser
 >>> with open(filename, "rb") as f:

@@ -6,14 +6,14 @@ import html
 import numpy
 from PIL import Image
 from numpy import ndarray
-from pointcloud_viewer._vendor.pypcd import pypcd
+from kci.pointcloudviewer._vendor.pypcd import pypcd
 # from pypcd import pypcd
-from pointcloud_viewer.pointcloud_viewer import DownSampleStrategy
-from pointcloud_viewer._internal.protobuf import server_pb2
-from pointcloud_viewer._internal.down_sample import down_sample_pointcloud
+from kci.pointcloudviewer.pointcloudviewer import DownSampleStrategy
+from kci.pointcloudviewer._internal.protobuf import server_pb2
+from kci.pointcloudviewer._internal.down_sample import down_sample_pointcloud
 
 if TYPE_CHECKING:
-    from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
+    from kci.pointcloudviewer import PointCloudViewer
 
 DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS = 1_000_000
 
