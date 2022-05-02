@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pointcloud_viewer"
-version = "0.17.0"
+version = "0.18.0"
 description = "Webブラウザ上に点群を描画する python ライブラリ"
 authors = ["Kurusugawa Computer"]
 license = "BSD"
