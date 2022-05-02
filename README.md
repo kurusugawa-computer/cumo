@@ -13,7 +13,7 @@ $ ./build.sh
 ## インストール
 
 ```console
-$ pip install lib/dist/pointcloud_viewer-0.1.0.tar.gz
+$ pip install pointcloud-viewer
 ```
 
 ## ドキュメント
