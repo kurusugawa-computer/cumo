@@ -4,11 +4,11 @@ import base64
 from typing import TYPE_CHECKING, Callable, Optional
 from uuid import UUID
 from google.protobuf.message import DecodeError
-from pointcloud_viewer._internal.protobuf import server_pb2
-from pointcloud_viewer._internal.protobuf import client_pb2
-from pointcloud_viewer.keyboard_event import KeyboardEvent
+from kci.pointcloudviewer._internal.protobuf import server_pb2
+from kci.pointcloudviewer._internal.protobuf import client_pb2
+from kci.pointcloudviewer.keyboard_event import KeyboardEvent
 if TYPE_CHECKING:
-    from pointcloud_viewer.pointcloud_viewer import PointCloudViewer
+    from kci.pointcloudviewer import PointCloudViewer
 
 # pylint: disable=no-member
 

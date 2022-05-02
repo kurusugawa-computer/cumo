@@ -20,26 +20,26 @@ jobs:
       install:
         - |-
           protoc \
-            --python_out=./lib/pointcloud_viewer/ \
+            --python_out=./lib/kci/pointcloudviewer/ \
             -I. \
             --experimental_allow_proto3_optional \
             protobuf/server.proto
         - |-
           protoc \
-            --python_out=./lib/pointcloud_viewer/ \
+            --python_out=./lib/kci/pointcloudviewer/ \
             -I. \
             --experimental_allow_proto3_optional \
             protobuf/client.proto
-        - rm -rf ./lib/pointcloud_viewer/_internal/protobuf
-        - mv ./lib/pointcloud_viewer/protobuf ./lib/pointcloud_viewer/_internal/
-        - touch ./lib/pointcloud_viewer/_internal/protobuf/__init__.py
+        - rm -rf ./lib/kci/pointcloudviewer/_internal/protobuf
+        - mv ./lib/kci/pointcloudviewer/protobuf ./lib/kci/pointcloudviewer/_internal/
+        - touch ./lib/kci/pointcloudviewer/_internal/protobuf/__init__.py
         - cd lib
         - poetry install
       script:
         - poetry run autopep8 --diff --recursive --exit-code --exclude=protobuf,pypcd . # format
         - poetry build # build
-        - poetry run flake8 --exclude pointcloud_viewer/_vendor,pointcloud_viewer/_internal/protobuf pointcloud_viewer # lint(flake8)
-        - poetry run pylint --jobs=0 pointcloud_viewer # lint(pylint)
+        - poetry run flake8 --exclude kci/pointcloudviewer/_vendor,kci/pointcloudviewer/_internal/protobuf,kci/pointcloudviewer/__init__.py kci # lint(flake8)
+        - poetry run pylint --jobs=0 kci # lint(pylint)
 
     - language: node_js
       node_js: 16

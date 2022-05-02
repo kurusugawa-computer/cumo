@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pointcloud_viewer"
+name = "kci.pointcloudviewer"
 version = "0.18.0"
 description = "Webブラウザ上に点群を描画する python ライブラリ"
 authors = ["Kurusugawa Computer"]
@@ -18,8 +18,11 @@ classifiers = [
 	"Operating System :: OS Independent",
 ]
 include = [
-    "pointcloud_viewer/public/*",
-    "pointcloud_viewer/_internal/protobuf/*",
+    "kci/pointcloudviewer/public/*",
+    "kci/pointcloudviewer/_internal/protobuf/*",
+]
+packages = [
+	{ include = "kci" }
 ]
 
 [tool.poetry.dependencies]
