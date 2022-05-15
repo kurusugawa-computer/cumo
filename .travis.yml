@@ -33,6 +33,7 @@ jobs:
         - rm -rf ./lib/kci/pointcloudviewer/_internal/protobuf
         - mv ./lib/kci/pointcloudviewer/protobuf ./lib/kci/pointcloudviewer/_internal/
         - touch ./lib/kci/pointcloudviewer/_internal/protobuf/__init__.py
+        - cp README.md lib/
         - cd lib
         - poetry install
       script:

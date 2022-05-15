@@ -35,6 +35,7 @@ yarn build
 cd ${WORKDIR}
 rm -rf ./lib/kci/pointcloudviewer/public
 cp -R client/public lib/kci/pointcloudviewer/
+cp README.md lib/
 
 cd ${WORKDIR}/lib
 poetry install
