@@ -1,7 +1,7 @@
 [tool.poetry]
 readme = "README.md"
 name = "kci.pointcloudviewer"
-version = "0.19.0"
+version = "0.19.1"
 description = "Webブラウザ上に点群を描画する python ライブラリ"
 authors = ["Kurusugawa Computer"]
 license = "BSD"
