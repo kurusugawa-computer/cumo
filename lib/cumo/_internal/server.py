@@ -25,7 +25,7 @@ def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int):
                 path = join("/public/", "./"+self.path)
                 data: Union[bytes, None] = None
                 try:
-                    data = pkgutil.get_data("kci.pointcloudviewer", path)
+                    data = pkgutil.get_data("cumo", path)
                 except FileNotFoundError:
                     self.send_error(404)
                 if data is not None:

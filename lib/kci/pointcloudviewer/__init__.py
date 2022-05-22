@@ -1,2 +1,0 @@
-from kci.pointcloudviewer.pointcloudviewer import PointCloudViewer, DownSampleStrategy
-from kci.pointcloudviewer.keyboard_event import KeyboardEvent

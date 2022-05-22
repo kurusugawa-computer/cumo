@@ -1,9 +1,9 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
 from uuid import uuid4
 from typing import TYPE_CHECKING
-from kci.pointcloudviewer._internal.protobuf import server_pb2
+from cumo._internal.protobuf import server_pb2
 if TYPE_CHECKING:
-    from kci.pointcloudviewer import PointCloudViewer
+    from cumo import PointCloudViewer
 
 # pylint: disable=no-member
 

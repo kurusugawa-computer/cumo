@@ -19,4 +19,4 @@ disable=
   # Warning
   protected-access,
 
-ignore=dist,kci/pointcloudviewer/_internal/protobuf
+ignore=dist,cumo/_internal/protobuf

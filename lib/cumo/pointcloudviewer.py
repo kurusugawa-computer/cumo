@@ -39,17 +39,17 @@ class PointCloudViewer:
     _websocket_broadcasting_queue: multiprocessing.Queue
     _websocket_message_queue: multiprocessing.Queue
 
-    from kci.pointcloudviewer._internal.members.capture_screen import (
+    from cumo._internal.members.capture_screen import (
         capture_screen,
         capture_screen_as_ndarray,
     )
-    from kci.pointcloudviewer._internal.members.camera import (
+    from cumo._internal.members.camera import (
         set_camera_position,
         set_camera_target,
         set_orthographic_camera,
         set_perspective_camera,
     )
-    from kci.pointcloudviewer._internal.members.custom_control import (
+    from cumo._internal.members.custom_control import (
         add_custom_button,
         add_custom_checkbox,
         add_custom_colorpicker,
@@ -60,8 +60,8 @@ class PointCloudViewer:
         remove_all_custom_controls,
         remove_custom_control,
     )
-    from kci.pointcloudviewer._internal.members.internal_utils import __init__
-    from kci.pointcloudviewer._internal.members.send_object import (
+    from cumo._internal.members.internal_utils import __init__
+    from cumo._internal.members.send_object import (
         send_lineset,
         send_overlay_text,
         send_overlay_image,
@@ -70,19 +70,19 @@ class PointCloudViewer:
         send_pointcloud_pcd,
         send_mesh,
     )
-    from kci.pointcloudviewer._internal.members.utils import (
+    from cumo._internal.members.utils import (
         wait_forever,
         console_log,
         start,
     )
-    from kci.pointcloudviewer._internal.members.event_handler import (
+    from cumo._internal.members.event_handler import (
         _get_custom_handler,
         _handle_message,
         _send_data,
         _set_custom_handler,
         _wait_until,
     )
-    from kci.pointcloudviewer._internal.members.keyboard_event_handler import (
+    from cumo._internal.members.keyboard_event_handler import (
         add_keyup_handler,
         remove_keyup_handler,
         add_keydown_handler,
@@ -90,11 +90,11 @@ class PointCloudViewer:
         add_keypress_handler,
         remove_keypress_handler,
     )
-    from kci.pointcloudviewer._internal.members.remove_object import (
+    from cumo._internal.members.remove_object import (
         remove_all_objects,
         remove_object,
     )
-    from kci.pointcloudviewer._internal.members.set_custom_control import (
+    from cumo._internal.members.set_custom_control import (
         set_custom_slider,
         set_custom_selectbox,
         set_custom_colorpicker,
