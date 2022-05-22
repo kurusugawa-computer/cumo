@@ -1,9 +1,9 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
 from typing import TYPE_CHECKING
 import multiprocessing
-from kci.pointcloudviewer._internal.server import multiprocessing_worker
+from cumo._internal.server import multiprocessing_worker
 if TYPE_CHECKING:
-    from kci.pointcloudviewer import PointCloudViewer
+    from cumo import PointCloudViewer
 
 
 # pylint: disable=no-member

@@ -2,8 +2,8 @@ import sys
 from uuid import UUID
 from argparse import ArgumentParser
 import numpy
-from kci.pointcloudviewer import PointCloudViewer
-from kci.pointcloudviewer.keyboard_event import KeyboardEvent
+from cumo import PointCloudViewer
+from cumo.keyboard_event import KeyboardEvent
 
 
 def main():

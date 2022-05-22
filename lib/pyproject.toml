@@ -1,12 +1,12 @@
 [tool.poetry]
 readme = "README.md"
-name = "kci.pointcloudviewer"
+name = "cumo"
 version = "0.19.1"
 description = "Webブラウザ上に点群を描画する python ライブラリ"
 authors = ["Kurusugawa Computer"]
 license = "BSD"
 keywords = ["point-cloud", "pcd"]
-repository = "https://github.com/kurusugawa-computer/pointcloud-viewer"
+repository = "https://github.com/kurusugawa-computer/cumo"
 classifiers = [
 	"Development Status :: 3 - Alpha",
 	"Intended Audience :: Developers",
@@ -19,11 +19,8 @@ classifiers = [
 	"Operating System :: OS Independent",
 ]
 include = [
-    "kci/pointcloudviewer/public/*",
-    "kci/pointcloudviewer/_internal/protobuf/*",
-]
-packages = [
-	{ include = "kci" }
+    "cumo/public/*",
+    "cumo/_internal/protobuf/*",
 ]
 
 [tool.poetry.dependencies]

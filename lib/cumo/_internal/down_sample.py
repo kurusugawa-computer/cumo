@@ -2,7 +2,7 @@ import numpy
 
 import numpy.random
 
-from kci.pointcloudviewer.pointcloudviewer import DownSampleStrategy
+from cumo.pointcloudviewer import DownSampleStrategy
 
 
 def down_sample_pointcloud(pc: numpy.ndarray, strategy: DownSampleStrategy, max_num_points: int) -> numpy.ndarray:

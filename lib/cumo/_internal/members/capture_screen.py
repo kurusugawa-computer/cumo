@@ -5,9 +5,9 @@ from uuid import uuid4
 from numpy import ndarray
 import numpy as np
 from PIL import Image
-from kci.pointcloudviewer._internal.protobuf import server_pb2
+from cumo._internal.protobuf import server_pb2
 if TYPE_CHECKING:
-    from kci.pointcloudviewer import PointCloudViewer
+    from cumo import PointCloudViewer
 
 
 # pylint: disable=no-member
