@@ -54,7 +54,8 @@ def set_custom_slider(
     set_custom_control.slider.CopyFrom(slider)
     set_custom_control.target = str(target)
     obj.set_custom_control.CopyFrom(set_custom_control)
-    self._set_custom_handler(target, "changed", on_changed)
+    if on_changed is not None:
+        self._set_custom_handler(target, "changed", on_changed)
     uuid = uuid4()
     self._send_data(obj, uuid)
     ret = self._wait_until(uuid)
@@ -96,7 +97,8 @@ def set_custom_checkbox(
     set_custom_control.target = str(target)
     obj = server_pb2.ServerCommand()
     obj.set_custom_control.CopyFrom(set_custom_control)
-    self._set_custom_handler(target, "changed", on_changed)
+    if on_changed is not None:
+        self._set_custom_handler(target, "changed", on_changed)
     uuid = uuid4()
     self._send_data(obj, uuid)
     ret = self._wait_until(uuid)
@@ -138,7 +140,8 @@ def set_custom_textbox(
     set_custom_control.target = str(target)
     obj = server_pb2.ServerCommand()
     obj.set_custom_control.CopyFrom(set_custom_control)
-    self._set_custom_handler(target, "changed", on_changed)
+    if on_changed is not None:
+        self._set_custom_handler(target, "changed", on_changed)
     uuid = uuid4()
     self._send_data(obj, uuid)
     ret = self._wait_until(uuid)
@@ -185,7 +188,8 @@ def set_custom_selectbox(
     set_custom_control.target = str(target)
     obj = server_pb2.ServerCommand()
     obj.set_custom_control.CopyFrom(set_custom_control)
-    self._set_custom_handler(target, "changed", on_changed)
+    if on_changed is not None:
+        self._set_custom_handler(target, "changed", on_changed)
     uuid = uuid4()
     self._send_data(obj, uuid)
     ret = self._wait_until(uuid)
@@ -222,7 +226,8 @@ def set_custom_button(
     set_custom_control.target = str(target)
     obj = server_pb2.ServerCommand()
     obj.set_custom_control.CopyFrom(set_custom_control)
-    self._set_custom_handler(target, "changed", on_changed)
+    if on_changed is not None:
+        self._set_custom_handler(target, "changed", on_changed)
     uuid = uuid4()
     self._send_data(obj, uuid)
     ret = self._wait_until(uuid)
@@ -264,7 +269,8 @@ def set_custom_colorpicker(
     set_custom_control.target = str(target)
     obj = server_pb2.ServerCommand()
     obj.set_custom_control.CopyFrom(set_custom_control)
-    self._set_custom_handler(target, "changed", on_changed)
+    if on_changed is not None:
+        self._set_custom_handler(target, "changed", on_changed)
     uuid = uuid4()
     self._send_data(obj, uuid)
     ret = self._wait_until(uuid)
