@@ -46,8 +46,8 @@ RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv \
 
 ENV PATH "$PATH:/home/vscode/local/python-3.8.7/bin"
 
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
-ENV PATH "$PATH:/home/vscode/.poetry/bin"
+ENV PATH "$PATH:/home/vscode/.local/bin"
 
 RUN poetry config virtualenvs.in-project true
