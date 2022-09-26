@@ -1,11 +1,11 @@
 
 import * as THREE from 'three';
 import * as DAT from 'dat.gui';
-import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 import { OrthographicCamera, PerspectiveCamera } from 'three';
 import { Overlay } from './overlay';
 import { Canvas2D } from './canvas2d';
 import { Lineset } from './lineset';
+import { CustomCameraControls } from './camera_control';
 
 export class PointCloudViewer {
     renderer: THREE.WebGLRenderer;
@@ -21,7 +21,7 @@ export class PointCloudViewer {
     perspectiveCamera: THREE.PerspectiveCamera;
     orthographicCamera: THREE.OrthographicCamera;
 
-    controls: TrackballControls;
+    controls: CustomCameraControls;
 
     gui: DAT.GUI;
     guiCustom: DAT.GUI;
@@ -194,13 +194,12 @@ export class PointCloudViewer {
       this.controls = this.createControls(newCamera);
     }
 
-    private createControls (camera: THREE.Camera): TrackballControls {
-      const controls = new TrackballControls(camera, this.renderer.domElement);
-      controls.staticMoving = true;
+    private createControls (camera: THREE.Camera): CustomCameraControls {
+      const controls = new CustomCameraControls(camera, this.renderer.domElement);
       controls.rotateSpeed = this.config.controls.rotateSpeed;
       controls.zoomSpeed = this.config.controls.zoomSpeed;
       controls.panSpeed = Math.pow(2, this.config.controls.panSpeed);
-      controls.keys[2] = 16; // shift to pan
+      controls.keys[2] = 'Shift'; // shift to pan
       controls.update();
       return controls;
     }
