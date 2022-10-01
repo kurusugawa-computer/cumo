@@ -4,7 +4,8 @@ const STATE = {
   NONE: -1,
   ROTATE: 0,
   ZOOM: 1,
-  PAN: 2
+  PAN: 2,
+  ROLL: 3
 } as const;
 type State = typeof STATE[keyof typeof STATE];
 
@@ -24,17 +25,19 @@ export class CustomCameraControls extends THREE.EventDispatcher {
   rotateSpeed:number = 1.0;
   zoomSpeed: number = 1.2;
   panSpeed: number = 0.3;
+  rollSpeed: number = 1.0;
 
   noRotate: boolean = false;
-  noZoom: boolean= false;
-  noPan: boolean= false;
+  noZoom: boolean = false;
+  noPan: boolean = false;
+  noRoll: boolean = false;
 
   readonly staticMoving = true;
 
   minDistance: number = 0;
   maxDistance: number = Infinity
 
-  keys: string[] = ['A', 'S', 'D'];
+  keys: string[] = ['A', 'S', 'Shift', 'Control'];
 
   mouseButtons = {
     LEFT: THREE.MOUSE.ROTATE,
@@ -56,6 +59,8 @@ export class CustomCameraControls extends THREE.EventDispatcher {
   zoomEnd: THREE.Vector2 = new THREE.Vector2();
   panStart: THREE.Vector2 = new THREE.Vector2();
   panEnd: THREE.Vector2 = new THREE.Vector2();
+  rollStart: THREE.Vector2 = new THREE.Vector2();
+  rollEnd: THREE.Vector2 = new THREE.Vector2();
 
   constructor (object: THREE.Camera, domElement: HTMLCanvasElement) {
     super();
@@ -186,6 +191,26 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
   }
 
+  rollCamera = () => {
+    const quaternion = new THREE.Quaternion();
+    const angle0 = Math.atan2(this.rollStart.y, this.rollStart.x);
+    const angle1 = Math.atan2(this.rollEnd.y, this.rollEnd.x);
+
+    const delta = angle0 - angle1;
+    if (delta) {
+      const angle = delta * this.rollSpeed;
+      const eyeDirection = new THREE.Vector3();
+      eyeDirection.copy(this.eye).normalize();
+
+      quaternion.setFromAxisAngle(eyeDirection, angle);
+
+      this.eye.applyQuaternion(quaternion);
+      this.object.up.applyQuaternion(quaternion);
+    }
+
+    this.rollStart.copy(this.rollEnd);
+  }
+
   checkDistances = () => {
     if (this.noZoom && this.noPan) return;
 
@@ -210,6 +235,9 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
     if (!this.noPan) {
       this.panCamera();
+    }
+    if (!this.noRoll) {
+      this.rollCamera();
     }
 
     this.object.position.addVectors(this.target, this.eye);
@@ -284,6 +312,8 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       this.keyState = STATE.ZOOM;
     } else if (event.key === this.keys[STATE.PAN] && !this.noPan) {
       this.keyState = STATE.PAN;
+    } else if (event.key === this.keys[STATE.ROLL] && !this.noRoll) {
+      this.keyState = STATE.ROLL;
     }
   }
 
@@ -326,6 +356,9 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     } else if (state === STATE.PAN && !this.noPan) {
       this.getMouseOnScreen(event.pageX, event.pageY, this.panStart);
       this.panEnd.copy(this.panStart);
+    } else if (state === STATE.ROLL && !this.noRoll) {
+      this.getMouseOnCircle(event.pageX, event.pageY, this.rollStart);
+      this.rollEnd.copy(this.rollStart);
     }
 
     this.domElement.ownerDocument.addEventListener('pointermove', this.onPointerMove);
@@ -349,6 +382,8 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       this.getMouseOnScreen(event.pageX, event.pageY, this.zoomEnd);
     } else if (state === STATE.PAN && !this.noPan) {
       this.getMouseOnScreen(event.pageX, event.pageY, this.panEnd);
+    } else if (state === STATE.ROLL && !this.noRoll) {
+      this.getMouseOnCircle(event.pageX, event.pageY, this.rollEnd);
     }
   }
 

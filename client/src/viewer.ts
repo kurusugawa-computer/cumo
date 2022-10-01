@@ -193,7 +193,6 @@ export class PointCloudViewer {
       controls.rotateSpeed = this.config.controls.rotateSpeed;
       controls.zoomSpeed = this.config.controls.zoomSpeed;
       controls.panSpeed = Math.pow(2, this.config.controls.panSpeed);
-      controls.keys[2] = 'Shift'; // shift to pan
       controls.update();
       return controls;
     }
