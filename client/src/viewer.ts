@@ -1,11 +1,11 @@
 
 import * as THREE from 'three';
 import * as DAT from 'dat.gui';
-import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 import { OrthographicCamera, PerspectiveCamera } from 'three';
 import { Overlay } from './overlay';
 import { Canvas2D } from './canvas2d';
 import { Lineset } from './lineset';
+import { CustomCameraControls } from './camera_control';
 
 export class PointCloudViewer {
     renderer: THREE.WebGLRenderer;
@@ -21,7 +21,7 @@ export class PointCloudViewer {
     perspectiveCamera: THREE.PerspectiveCamera;
     orthographicCamera: THREE.OrthographicCamera;
 
-    controls: TrackballControls;
+    controls: CustomCameraControls;
 
     gui: DAT.GUI;
     guiCustom: DAT.GUI;
@@ -125,9 +125,9 @@ export class PointCloudViewer {
         .name('perspective camera')
         .onChange((perspective: boolean) => this.switchCamera(perspective));
 
-      guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); });
-      guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); }); ;
-      guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.switchCamera(this.config.camera.usePerspective); });
+      guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.controls.rotateSpeed = this.config.controls.rotateSpeed; });
+      guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.controls.zoomSpeed = this.config.controls.zoomSpeed; }); ;
+      guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.controls.panSpeed = this.config.controls.panSpeed; });
 
       // [UUID]: folderName な map を初期化
       this.folderUUIDmap = {};
@@ -179,28 +179,20 @@ export class PointCloudViewer {
     }
 
     switchCamera (perspective: boolean): void {
-      this.controls.dispose();
+      const newCamera: THREE.Camera = perspective ? this.perspectiveCamera : this.orthographicCamera;
+      this.controls.switchCamera(newCamera);
       if (perspective !== this.config.camera.usePerspective) {
         this.config.camera.usePerspective = perspective;
         this.gui.updateDisplay();
       }
-
-      const newCamera: THREE.Camera = perspective ? this.perspectiveCamera : this.orthographicCamera;
-      const oldCamera: THREE.Camera = !perspective ? this.perspectiveCamera : this.orthographicCamera;
-
-      newCamera.position.copy(oldCamera.position);
-      newCamera.rotation.copy(oldCamera.rotation);
-
-      this.controls = this.createControls(newCamera);
+      this.controls.update();
     }
 
-    private createControls (camera: THREE.Camera): TrackballControls {
-      const controls = new TrackballControls(camera, this.renderer.domElement);
-      controls.staticMoving = true;
+    private createControls (camera: THREE.Camera): CustomCameraControls {
+      const controls = new CustomCameraControls(camera, this.renderer.domElement);
       controls.rotateSpeed = this.config.controls.rotateSpeed;
       controls.zoomSpeed = this.config.controls.zoomSpeed;
       controls.panSpeed = Math.pow(2, this.config.controls.panSpeed);
-      controls.keys[2] = 16; // shift to pan
       controls.update();
       return controls;
     }
