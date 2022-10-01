@@ -83,6 +83,18 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     this.screen.height = box.height;
   }
 
+  switchCamera = (camera: THREE.Camera) => {
+    const oldCamera = this.object;
+    this.object = camera;
+
+    this.object.up.copy(oldCamera.up);
+    this.object.position.copy(oldCamera.position);
+
+    if (isPerspectiveCamera(this.object) && isPerspectiveCamera(oldCamera)) {
+      this.object.zoom = oldCamera.zoom;
+    }
+  }
+
   getMouseOnScreen = (pageX: number, pageY: number, dst: THREE.Vector2) => {
     dst.set(
       (pageX - this.screen.left) / this.screen.width,
