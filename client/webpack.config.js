@@ -9,7 +9,7 @@ module.exports = {
   devtool: 'source-map',
   entry: './src/index.ts',
   output: {
-    filename: 'bundle.js',
+    filename: 'bundle-[hash].js',
     path: `${outputpath}`,
     clean: true
   },
@@ -42,7 +42,9 @@ module.exports = {
     watchContentBase: true
   },
   plugins: [
-    new HtmlWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      title: 'cumo'
+    }),
     new MiniCssExtractPlugin()
   ]
 };
