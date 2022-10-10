@@ -9,7 +9,7 @@ module.exports = {
   devtool: 'source-map',
   entry: './src/index.ts',
   output: {
-    filename: 'bundle-[hash].js',
+    filename: 'bundle-[contenthash].js',
     path: `${outputpath}`,
     clean: true
   },
