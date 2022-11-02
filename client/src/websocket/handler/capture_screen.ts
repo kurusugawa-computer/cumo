@@ -5,6 +5,9 @@ import { PointCloudViewer } from '../../viewer';
 export function handleScreenCapture (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
   const divcanvas = viewer.getdiv;
 
+  viewer.controls.update();
+  viewer.render();
+
   html2canvas(divcanvas).then((canvas) => {
     canvas.toBlob(
       function (blob: Blob | null): void {

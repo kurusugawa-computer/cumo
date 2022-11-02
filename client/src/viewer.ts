@@ -150,32 +150,31 @@ export class PointCloudViewer {
       container.appendChild(this.overlayContainer);
 
       // レンダリングループ
-
-      const render = () => {
-        const camera = this.config.camera.usePerspective ? this.perspectiveCamera : this.orthographicCamera;
-        this.renderer.render(
-          this.scene,
-          camera
-        );
-        for (let i = 0; i < this.overlays.length; i++) {
-          this.overlays[i].render(this.renderer.domElement, camera);
-        }
-        this.canvas2d.ctx.clearRect(0, 0, this.canvas2d.domElement.width, this.canvas2d.domElement.height);
-        for (let i = 0; i < this.linesets.length; i++) {
-          this.linesets[i].render(this.canvas2d, camera);
-        }
-      };
-
       const animate = () => {
         requestAnimationFrame(animate);
         this.controls.update();
-        render();
+        this.render();
       };
       animate();
     }
 
     get getdiv () {
       return this.container;
+    }
+
+    render (): void {
+      const camera = this.config.camera.usePerspective ? this.perspectiveCamera : this.orthographicCamera;
+      this.renderer.render(
+        this.scene,
+        camera
+      );
+      for (let i = 0; i < this.overlays.length; i++) {
+        this.overlays[i].render(this.renderer.domElement, camera);
+      }
+      this.canvas2d.ctx.clearRect(0, 0, this.canvas2d.domElement.width, this.canvas2d.domElement.height);
+      for (let i = 0; i < this.linesets.length; i++) {
+        this.linesets[i].render(this.canvas2d, camera);
+      }
     }
 
     switchCamera (perspective: boolean): void {
