@@ -28,6 +28,9 @@ export function handleAddObject (websocket: WebSocket, commandID: string, viewer
     case objectCase.MESH:
       handleMesh(websocket, commandID, viewer, addObject.getMesh());
       break;
+    case objectCase.IMAGE:
+      handleImage(websocket, commandID, viewer, addObject.getImage());
+      break;
     default:
       sendFailure(websocket, commandID, 'message has not any object');
       break;
@@ -199,6 +202,8 @@ function handlePointCloud (
     return;
   }
 
+  pointcloud.renderOrder = 10;
+
   if (pointcloud.material instanceof THREE.PointsMaterial) {
     pointcloud.material.size = pbPointcloud.getPointSize();
     pointcloud.material.sizeAttenuation = false;
@@ -206,4 +211,69 @@ function handlePointCloud (
   }
   viewer.scene.add(pointcloud);
   sendSuccess(websocket, commandID, pointcloud.uuid);
+}
+
+function handleImage (
+  websocket: WebSocket,
+  commandID: string,
+  viewer: PointCloudViewer,
+  pbImage: PB.AddObject.Image | undefined
+) {
+  if (pbImage === undefined) {
+    sendFailure(websocket, commandID, 'failed to get image');
+    return;
+  }
+
+  const data = pbImage.getData_asU8();
+  const type = imageType.default(data);
+  if (type === null) {
+    sendFailure(websocket, commandID, 'unknown data type');
+    return;
+  }
+
+  new THREE.TextureLoader().loadAsync('data:' + type.mime + ';base64,' + pbImage.getData_asB64()).then((texture: THREE.Texture) => {
+    const material = new THREE.MeshBasicMaterial({
+      map: texture,
+      side: (pbImage.getDoubleSide() ? THREE.DoubleSide : THREE.FrontSide)
+    });
+
+    const ul = pbImage.getUpperLeft();
+    const ll = pbImage.getLowerLeft();
+    const lr = pbImage.getLowerRight();
+    if (ul === undefined || ll === undefined || lr === undefined) {
+      sendFailure(websocket, commandID, 'failed to get position');
+      return;
+    }
+
+    const vertices: number[] = [
+      ll.getX(), ll.getY(), ll.getZ(),
+      lr.getX(), lr.getY(), lr.getZ(),
+      ul.getX(), ul.getY(), ul.getZ(),
+      ul.getX() + (lr.getX() - ll.getX()), ul.getY() + (lr.getY() - ll.getY()), ul.getZ() + (lr.getZ() - ll.getZ())
+    ];
+
+    const indices: number[] = [
+      0, 2, 1,
+      2, 3, 1
+    ];
+
+    const uvs: number[] = [
+      0, 1,
+      1, 1,
+      0, 0,
+      1, 0
+    ];
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setIndex(indices);
+
+    const mesh = new THREE.Mesh(geometry, material);
+    viewer.scene.add(mesh);
+
+    sendSuccess(websocket, commandID, mesh.uuid);
+  }).catch(() => {
+    sendFailure(websocket, commandID, 'failed to load texture');
+  });
 }
