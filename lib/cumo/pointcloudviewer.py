@@ -69,6 +69,7 @@ class PointCloudViewer:
         send_pointcloud,
         send_pointcloud_pcd,
         send_mesh,
+        send_image,
     )
     from cumo._internal.members.utils import (
         wait_forever,

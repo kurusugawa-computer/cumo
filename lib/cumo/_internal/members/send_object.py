@@ -1,6 +1,6 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
 import io
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Tuple
 from uuid import UUID, uuid4
 import html
 import numpy
@@ -451,6 +451,81 @@ def send_overlay_image(
 
     add_obj = server_pb2.AddObject()
     add_obj.overlay.CopyFrom(overlay)
+    obj = server_pb2.ServerCommand()
+    obj.add_object.CopyFrom(add_obj)
+
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    if not ret.result.HasField("success"):
+        raise RuntimeError("unexpected response")
+    return UUID(hex=ret.result.success)
+
+
+def send_image(
+    self: PointCloudViewer,
+    data: bytes,
+    upper_left: Tuple[float, float, float],
+    lower_left: Tuple[float, float, float],
+    lower_right: Tuple[float, float, float],
+    double_side: bool = False,
+) -> UUID:
+    """画像を平面に貼り付けたものをブラウザに送信し、表示する。
+
+    Args:
+        data (bytes): 画像データ。jpg,pngに対応
+        upper_left (Tuple[float, float, float]): 画像の左上の座標
+        lower_left (Tuple[float, float, float]): 画像の左下の座標
+        lower_right (Tuple[float, float, float]): 画像の右下の座標
+        double_side (bool, optional): Trueにすると裏から見たときに描画される
+
+    Returns:
+        UUID: UUID: 画像に対応するID。後から操作する際に使う
+    """
+    if not (
+        isinstance(upper_left, tuple)
+        and len(upper_left) == 3
+        and all(isinstance(m, (int, float)) for m in upper_left)
+    ):
+        raise ValueError("upper_left must be tuple of type (x: float, y: float, z: float)")
+    if not (
+            isinstance(lower_left, tuple)
+            and len(lower_left) == 3
+            and all(isinstance(m, (int, float)) for m in lower_left)
+    ):
+        raise ValueError("lower_left must be tuple of type (x: float, y: float, z: float)")
+    if not (
+        isinstance(lower_right, tuple)
+        and len(lower_right) == 3
+        and all(isinstance(m, (int, float)) for m in lower_right)
+    ):
+        raise ValueError("lower_right must be tuple of type (x: float, y: float, z: float)")
+    if not isinstance(double_side, bool):
+        raise ValueError("double_side must be bool")
+
+    image = server_pb2.AddObject.Image()
+    image.data = data
+
+    pos = server_pb2.VecXYZf()
+    pos.x = upper_left[0]
+    pos.y = upper_left[1]
+    pos.z = upper_left[2]
+    image.upper_left.CopyFrom(pos)
+    pos.x = lower_left[0]
+    pos.y = lower_left[1]
+    pos.z = lower_left[2]
+    image.lower_left.CopyFrom(pos)
+    if lower_right is not None:
+        pos.x = lower_right[0]
+        pos.y = lower_right[1]
+        pos.z = lower_right[2]
+        image.lower_right.CopyFrom(pos)
+    image.double_side = double_side
+
+    add_obj = server_pb2.AddObject()
+    add_obj.image.CopyFrom(image)
     obj = server_pb2.ServerCommand()
     obj.add_object.CopyFrom(add_obj)
 
