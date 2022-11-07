@@ -1,6 +1,7 @@
 import * as PB from '../../protobuf/server_pb.js';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
+import * as THREE from 'three';
 
 export function handleSetCamera (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, camera: PB.SetCamera | undefined): void {
   if (camera === undefined) {
@@ -20,6 +21,9 @@ export function handleSetCamera (websocket: WebSocket, commandID: string, viewer
       break;
     case cameraCase.TARGET:
       setCameraTarget(websocket, commandID, viewer, camera.getTarget());
+      break;
+    case cameraCase.ROLL:
+      setCameraRoll(websocket, commandID, viewer, camera.getRoll());
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any camera parameters');
@@ -74,6 +78,29 @@ function setCameraTarget (websocket: WebSocket, commandID: string, viewer: Point
   viewer.controls.target.set(target.getX(), target.getY(), target.getZ());
   viewer.orthographicCamera.lookAt(target.getX(), target.getY(), target.getZ());
   viewer.perspectiveCamera.lookAt(target.getX(), target.getY(), target.getZ());
+  viewer.controls.update();
+  sendSuccess(websocket, commandID, 'success');
+}
+
+function setCameraRoll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, roll: PB.SetCamera.Roll | undefined) {
+  if (roll === undefined) {
+    sendFailure(websocket, commandID, 'failed to get roll');
+    return;
+  }
+  const angle = roll.getAngle();
+  if (isNaN(angle)) {
+    sendFailure(websocket, commandID, 'angle is NaN');
+    return;
+  }
+  const PBup = roll.getUp();
+  const up = new THREE.Vector3();
+  if (PBup === undefined) {
+    up.copy(THREE.Object3D.DefaultUp);
+  } else {
+    up.set(PBup.getX(), PBup.getY(), PBup.getZ());
+  }
+
+  viewer.controls.setRoll(angle, up);
   viewer.controls.update();
   sendSuccess(websocket, commandID, 'success');
 }

@@ -1,10 +1,10 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
 from uuid import uuid4
+from math import sqrt
 from typing import TYPE_CHECKING
 from cumo._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from cumo import PointCloudViewer
-
 # pylint: disable=no-member
 
 
@@ -102,6 +102,49 @@ def set_camera_target(
 
     camera = server_pb2.SetCamera()
     camera.target.CopyFrom(target)
+
+    obj = server_pb2.ServerCommand()
+    obj.set_camera.CopyFrom(camera)
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+
+
+def set_camera_roll(
+    self: PointCloudViewer,
+    angle_rad: float,
+    up_x: float = 0,
+    up_y: float = 1,
+    up_z: float = 0,
+) -> None:
+    """カメラのロール(視線を軸とした回転角度)を設定する。
+
+    Args:
+        roll_rad (float): 回転角度。ラジアンで指定する
+        up_x (float): 回転角度の基準となるベクトルのx成分。この方向が画面の上を指す状態が0度になる
+        up_y (float): 回転角度の基準となるベクトルのy成分。この方向が画面の上を指す状態が0度になる
+        up_z (float): 回転角度の基準となるベクトルのz成分。この方向が画面の上を指す状態が0度になる
+    """
+
+    norm_sq = up_x*up_x + up_y*up_y + up_z*up_z
+    if norm_sq == 0:
+        raise ValueError("up must not be zero")
+
+    norm = sqrt(norm_sq)
+
+    up = server_pb2.VecXYZf()
+    up.x = up_x / norm
+    up.y = up_y / norm
+    up.z = up_z / norm
+
+    roll = server_pb2.SetCamera.Roll()
+    roll.angle = angle_rad
+    roll.up.CopyFrom(up)
+
+    camera = server_pb2.SetCamera()
+    camera.roll.CopyFrom(roll)
 
     obj = server_pb2.ServerCommand()
     obj.set_camera.CopyFrom(camera)

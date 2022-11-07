@@ -73,12 +73,10 @@ def main():
             print("saved: "+name)
 
     def take_screenshots():
-        viewer.set_camera_position(0, 0, 1)
-        overlay_data = viewer.capture_screen()
-        viewer.send_overlay_image(overlay_data, 300, radius, 0, 0)
 
         for p in [(1, 0, 0, "screenshot_x.png"), (0, 1, 0, "screenshot_y.png"), (0, 0, 1, "screenshot_z.png")]:
             viewer.set_camera_position(p[0], p[1], p[2])
+            viewer.set_camera_roll(0, p[1], p[2], p[0])
             data = viewer.capture_screen()
             save_png(p[3], data)
 
