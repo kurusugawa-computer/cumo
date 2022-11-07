@@ -100,6 +100,22 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
   }
 
+  setRoll = (rad: number, up: THREE.Vector3) => {
+    this.object.up.copy(up);
+    this.object.lookAt(this.target);
+
+    this.eye.subVectors(this.object.position, this.target);
+
+    const eyeDirection = new THREE.Vector3();
+    eyeDirection.copy(this.eye).normalize();
+
+    const quaternion = new THREE.Quaternion();
+    quaternion.setFromAxisAngle(eyeDirection, rad);
+
+    this.eye.applyQuaternion(quaternion);
+    this.object.up.applyQuaternion(quaternion);
+  }
+
   getMouseOnScreen = (pageX: number, pageY: number, dst: THREE.Vector2) => {
     dst.set(
       (pageX - this.screen.left) / this.screen.width,

@@ -84,6 +84,11 @@ message SetCamera {
         float orthographic_frustum_height = 2;
         VecXYZf position = 3;
         VecXYZf target = 4;
+        Roll roll = 5;
+    }
+    message Roll {
+        float angle = 1;
+        VecXYZf up = 2;
     }
 }
 
