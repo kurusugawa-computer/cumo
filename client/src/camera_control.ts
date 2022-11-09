@@ -159,7 +159,10 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       quaternion.setFromAxisAngle(axis, angle);
 
       this.eye.applyQuaternion(quaternion);
-      this.object.up.applyQuaternion(quaternion);
+
+      if (!this.noRoll) {
+        this.object.up.applyQuaternion(quaternion);
+      }
 
       this.movePrev.copy(this.moveCurr);
     }

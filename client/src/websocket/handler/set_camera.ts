@@ -25,6 +25,9 @@ export function handleSetCamera (websocket: WebSocket, commandID: string, viewer
     case cameraCase.ROLL:
       setCameraRoll(websocket, commandID, viewer, camera.getRoll());
       break;
+    case cameraCase.ROLL_LOCK:
+      setCameraRollLock(websocket, commandID, viewer, camera.getRollLock());
+      break;
     default:
       sendFailure(websocket, commandID, 'message has not any camera parameters');
       break;
@@ -102,5 +105,10 @@ function setCameraRoll (websocket: WebSocket, commandID: string, viewer: PointCl
 
   viewer.controls.setRoll(angle, up);
   viewer.controls.update();
+  sendSuccess(websocket, commandID, 'success');
+}
+
+function setCameraRollLock (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, locked: boolean) {
+  viewer.controls.noRoll = locked;
   sendSuccess(websocket, commandID, 'success');
 }
