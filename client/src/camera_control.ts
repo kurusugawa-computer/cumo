@@ -34,7 +34,7 @@ export class CustomCameraControls extends THREE.EventDispatcher {
 
   readonly staticMoving = true;
 
-  minDistance: number = 0;
+  minDistance: number = 0.1;
   maxDistance: number = Infinity
 
   keys: string[] = ['A', 'S', 'Shift', 'Control'];
@@ -147,6 +147,16 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       this.eye.copy(this.object.position).sub(this.target);
       eyeDirection.copy(this.eye).normalize();
       objectUpDirection.copy(this.object.up).normalize();
+
+      if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
+        // use dummy up direction
+        objectUpDirection.set(0, 1, 0);
+        if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
+          objectUpDirection.set(0, 0, 1);
+        }
+        objectUpDirection.cross(eyeDirection).normalize();
+      }
+
       objectSidewaysDirection.crossVectors(objectUpDirection, eyeDirection).normalize();
 
       objectUpDirection.setLength(this.moveCurr.y - this.movePrev.y);
@@ -261,6 +271,23 @@ export class CustomCameraControls extends THREE.EventDispatcher {
 
     this.object.position.addVectors(this.target, this.eye);
 
+    const eyeDirection = new THREE.Vector3();
+    eyeDirection.copy(this.eye).normalize();
+    const objectOldUpDirection = new THREE.Vector3();
+    objectOldUpDirection.copy(this.object.up);
+    const objectUpDirection = new THREE.Vector3();
+    objectUpDirection.copy(this.object.up).normalize();
+
+    if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
+      // use dummy up direction
+      objectUpDirection.set(0, 1, 0);
+      if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
+        objectUpDirection.set(0, 0, 1);
+      }
+      objectUpDirection.cross(eyeDirection).normalize();
+      this.object.up.copy(objectUpDirection);
+    }
+
     if (isPerspectiveCamera(this.object)) {
       this.checkDistances();
       this.object.lookAt(this.target);
@@ -278,6 +305,7 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     } else {
       console.warn('CustomCameraControls: Unsupported camera type');
     }
+    this.object.up.copy(objectOldUpDirection);
   }
 
   onPointerDown = (event: PointerEvent) => {
