@@ -255,6 +255,8 @@ export class CustomCameraControls extends THREE.EventDispatcher {
 
   update = () => {
     this.eye.subVectors(this.object.position, this.target);
+    const oldQuaternion = new THREE.Quaternion();
+    oldQuaternion.copy(this.object.quaternion);
 
     if (!this.noRotate) {
       this.rotateCamera();
@@ -305,7 +307,34 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     } else {
       console.warn('CustomCameraControls: Unsupported camera type');
     }
+
     this.object.up.copy(objectOldUpDirection);
+
+    // limit rotation around this.object.up
+    if (this.noRoll && 1 - Math.abs(eyeDirection.dot(this.object.up)) < 0.1) {
+      console.log(1 - Math.abs(eyeDirection.dot(this.object.up)));
+      const quaternion = new THREE.Quaternion();
+      quaternion.copy(this.object.quaternion);
+      quaternion.multiplyQuaternions(quaternion, oldQuaternion.invert());
+
+      const rotationAxis = new THREE.Vector3(quaternion.x, quaternion.y, quaternion.z);
+      rotationAxis.projectOnVector(this.object.up);
+      const twist = new THREE.Quaternion(rotationAxis.x, rotationAxis.y, rotationAxis.z, quaternion.w);
+      twist.normalize();
+
+      quaternion.setFromAxisAngle(rotationAxis, 0);
+      const sidewayAngle = quaternion.angleTo(twist);
+
+      const cancelQuaternion = new THREE.Quaternion();
+      cancelQuaternion.copy(twist).invert();
+
+      if (sidewayAngle > Math.PI * 0.1) {
+        this.eye.applyQuaternion(cancelQuaternion);
+
+        this.object.position.addVectors(this.target, this.eye);
+        this.object.lookAt(this.target);
+      }
+    }
   }
 
   onPointerDown = (event: PointerEvent) => {
