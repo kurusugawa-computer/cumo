@@ -148,15 +148,6 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       eyeDirection.copy(this.eye).normalize();
       objectUpDirection.copy(this.object.up).normalize();
 
-      if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
-        // use dummy up direction
-        objectUpDirection.set(0, 1, 0);
-        if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
-          objectUpDirection.set(0, 0, 1);
-        }
-        objectUpDirection.cross(eyeDirection).normalize();
-      }
-
       objectSidewaysDirection.crossVectors(objectUpDirection, eyeDirection).normalize();
 
       objectUpDirection.setLength(this.moveCurr.y - this.movePrev.y);
@@ -258,6 +249,20 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     const oldQuaternion = new THREE.Quaternion();
     oldQuaternion.copy(this.object.quaternion);
 
+    const eyeDirection = new THREE.Vector3();
+    eyeDirection.copy(this.eye).normalize();
+    const objectOldUpDirection = new THREE.Vector3();
+    objectOldUpDirection.copy(this.object.up);
+    const objectUpDirection = new THREE.Vector3();
+    objectUpDirection.copy(this.object.up).normalize();
+
+    if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
+      // use screen up direction
+      objectUpDirection.set(0, 1, 0);
+      objectUpDirection.applyQuaternion(this.object.quaternion);
+      this.object.up.copy(objectUpDirection);
+    }
+
     if (!this.noRotate) {
       this.rotateCamera();
     }
@@ -272,23 +277,6 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
 
     this.object.position.addVectors(this.target, this.eye);
-
-    const eyeDirection = new THREE.Vector3();
-    eyeDirection.copy(this.eye).normalize();
-    const objectOldUpDirection = new THREE.Vector3();
-    objectOldUpDirection.copy(this.object.up);
-    const objectUpDirection = new THREE.Vector3();
-    objectUpDirection.copy(this.object.up).normalize();
-
-    if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
-      // use dummy up direction
-      objectUpDirection.set(0, 1, 0);
-      if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
-        objectUpDirection.set(0, 0, 1);
-      }
-      objectUpDirection.cross(eyeDirection).normalize();
-      this.object.up.copy(objectUpDirection);
-    }
 
     if (isPerspectiveCamera(this.object)) {
       this.checkDistances();
@@ -308,11 +296,12 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       console.warn('CustomCameraControls: Unsupported camera type');
     }
 
-    this.object.up.copy(objectOldUpDirection);
+    if (this.noRoll) {
+      this.object.up.copy(objectOldUpDirection);
+    }
 
     // limit rotation around this.object.up
     if (this.noRoll && 1 - Math.abs(eyeDirection.dot(this.object.up)) < 0.1) {
-      console.log(1 - Math.abs(eyeDirection.dot(this.object.up)));
       const quaternion = new THREE.Quaternion();
       quaternion.copy(this.object.quaternion);
       quaternion.multiplyQuaternions(quaternion, oldQuaternion.invert());
