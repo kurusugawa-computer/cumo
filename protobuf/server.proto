@@ -85,6 +85,7 @@ message SetCamera {
         VecXYZf position = 3;
         VecXYZf target = 4;
         Roll roll = 5;
+        bool roll_lock = 6;
     }
     message Roll {
         float angle = 1;

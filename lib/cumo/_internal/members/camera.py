@@ -153,3 +153,24 @@ def set_camera_roll(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+
+
+def set_camera_roll_lock(
+    self: PointCloudViewer,
+    enable: bool,
+):
+    """カメラのロールを固定し、画面の上側が常に同じ方向を向くようにする機能を有効化、または無効化する。
+
+    Args:
+        enable (bool): Trueにセットすることでカメラの"上"が固定され、それが変更されるようなマウス操作が無効化される。
+    """
+    camera = server_pb2.SetCamera()
+    camera.roll_lock = enable
+
+    obj = server_pb2.ServerCommand()
+    obj.set_camera.CopyFrom(camera)
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)

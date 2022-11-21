@@ -34,7 +34,7 @@ export class CustomCameraControls extends THREE.EventDispatcher {
 
   readonly staticMoving = true;
 
-  minDistance: number = 0;
+  minDistance: number = 0.1;
   maxDistance: number = Infinity
 
   keys: string[] = ['A', 'S', 'Shift', 'Control'];
@@ -147,6 +147,7 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       this.eye.copy(this.object.position).sub(this.target);
       eyeDirection.copy(this.eye).normalize();
       objectUpDirection.copy(this.object.up).normalize();
+
       objectSidewaysDirection.crossVectors(objectUpDirection, eyeDirection).normalize();
 
       objectUpDirection.setLength(this.moveCurr.y - this.movePrev.y);
@@ -159,7 +160,10 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       quaternion.setFromAxisAngle(axis, angle);
 
       this.eye.applyQuaternion(quaternion);
-      this.object.up.applyQuaternion(quaternion);
+
+      if (!this.noRoll) {
+        this.object.up.applyQuaternion(quaternion);
+      }
 
       this.movePrev.copy(this.moveCurr);
     }
@@ -242,6 +246,22 @@ export class CustomCameraControls extends THREE.EventDispatcher {
 
   update = () => {
     this.eye.subVectors(this.object.position, this.target);
+    const oldQuaternion = new THREE.Quaternion();
+    oldQuaternion.copy(this.object.quaternion);
+
+    const eyeDirection = new THREE.Vector3();
+    eyeDirection.copy(this.eye).normalize();
+    const objectOldUpDirection = new THREE.Vector3();
+    objectOldUpDirection.copy(this.object.up);
+    const objectUpDirection = new THREE.Vector3();
+    objectUpDirection.copy(this.object.up).normalize();
+
+    if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
+      // use screen up direction
+      objectUpDirection.set(0, 1, 0);
+      objectUpDirection.applyQuaternion(this.object.quaternion);
+      this.object.up.copy(objectUpDirection);
+    }
 
     if (!this.noRotate) {
       this.rotateCamera();
@@ -274,6 +294,35 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       }
     } else {
       console.warn('CustomCameraControls: Unsupported camera type');
+    }
+
+    if (this.noRoll) {
+      this.object.up.copy(objectOldUpDirection);
+    }
+
+    // limit rotation around this.object.up
+    if (this.noRoll && 1 - Math.abs(eyeDirection.dot(this.object.up)) < 0.1) {
+      const quaternion = new THREE.Quaternion();
+      quaternion.copy(this.object.quaternion);
+      quaternion.multiplyQuaternions(quaternion, oldQuaternion.invert());
+
+      const rotationAxis = new THREE.Vector3(quaternion.x, quaternion.y, quaternion.z);
+      rotationAxis.projectOnVector(this.object.up);
+      const twist = new THREE.Quaternion(rotationAxis.x, rotationAxis.y, rotationAxis.z, quaternion.w);
+      twist.normalize();
+
+      quaternion.setFromAxisAngle(rotationAxis, 0);
+      const sidewayAngle = quaternion.angleTo(twist);
+
+      const cancelQuaternion = new THREE.Quaternion();
+      cancelQuaternion.copy(twist).invert();
+
+      if (sidewayAngle > Math.PI * 0.1) {
+        this.eye.applyQuaternion(cancelQuaternion);
+
+        this.object.position.addVectors(this.target, this.eye);
+        this.object.lookAt(this.target);
+      }
     }
   }
 
