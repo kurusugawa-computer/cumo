@@ -1,0 +1,56 @@
+# タグが作成された時にドキュメントを生成してnextcloudにアップロードする
+name: documentation
+on:
+  push:
+    tags:
+      - "*"
+jobs:
+  generate-doc:
+    name: Generate documentation and upload
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+      - name: Generate from protobuf
+        working-directory: ./
+        run: |
+          curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
+          unzip protoc-3.15.6-linux-x86_64.zip && cp ./bin/protoc /usr/local/bin/. && chmod +x /usr/local/bin/protoc
+          protoc \
+          --python_out=./lib/cumo/ \
+          -I. \
+          --experimental_allow_proto3_optional \
+          protobuf/server.proto
+          protoc \
+            --python_out=./lib/cumo/ \
+            -I. \
+            --experimental_allow_proto3_optional \
+            protobuf/client.proto
+          mv ./lib/cumo/protobuf ./lib/cumo/_internal/
+          touch ./lib/cumo/_internal/protobuf/__init__.py
+      - name: Generate api documentation
+        working-directory: ./lib
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="/root/.local/bin:$PATH"
+          cp ../README.md ./
+          poetry install
+          poetry run sphinx-apidoc --doc-project cumo --append-syspath -F -o ./docs .
+          cd docs
+          SPHINXBUILD="poetry run sphinx-build" make html
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.17
+      - name: Setup nextcloud-cli
+        run: |
+          go install github.com/kurusugawa-computer/nextcloud-cli@latest
+          nextcloud-cli login -u="${{ secrets.NEXTCLOUD_USERNAME }}" -p="${{ secrets.NEXTCLOUD_PASSWORD }}" ${{ secrets.NEXTCLOUD_ENDPOINT }}
+      - name: Upload documentation
+        working-directory: ./lib
+        run: |
+          nextcloud-cli upload -o "${{ secrets.NEXTCLOUD_PREFIX }}${{ github.ref_name }}" docs/_build/html/*
