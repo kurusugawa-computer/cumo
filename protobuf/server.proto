@@ -13,6 +13,7 @@ message ServerCommand {
         RemoveObject remove_object = 8;
         RemoveCustomControl remove_custom_control = 9;
         SetCustomControl set_custom_control = 10;
+        bool set_enable = 11;
     }
 }
 

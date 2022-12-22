@@ -245,6 +245,7 @@ export class CustomCameraControls extends THREE.EventDispatcher {
   }
 
   update = () => {
+    if (!this.enabled) return;
     this.eye.subVectors(this.object.position, this.target);
     const oldQuaternion = new THREE.Quaternion();
     oldQuaternion.copy(this.object.quaternion);

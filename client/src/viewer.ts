@@ -6,8 +6,10 @@ import { Overlay } from './overlay';
 import { Canvas2D } from './canvas2d';
 import { Lineset } from './lineset';
 import { CustomCameraControls } from './camera_control';
+import { Spinner } from './spinner';
 
 export class PointCloudViewer {
+    enabled: boolean = true;
     renderer: THREE.WebGLRenderer;
     scene: THREE.Scene;
 
@@ -15,6 +17,7 @@ export class PointCloudViewer {
     overlayContainer: HTMLElement
 
     canvas2d: Canvas2D
+    spinner: Spinner
 
     linesets: Lineset[] = [];
 
@@ -156,6 +159,8 @@ export class PointCloudViewer {
         this.render();
       };
       animate();
+
+      this.spinner = new Spinner(container);
     }
 
     get getdiv () {
@@ -163,6 +168,7 @@ export class PointCloudViewer {
     }
 
     render (): void {
+      if (!this.enabled) return;
       const camera = this.config.camera.usePerspective ? this.perspectiveCamera : this.orthographicCamera;
       this.renderer.render(
         this.scene,

@@ -11,6 +11,7 @@ import { handleRemoveControl } from './handler/remove_control';
 import { handleRemoveObject } from './handler/remove_object';
 import { handleSetCamera } from './handler/set_camera';
 import { handleSetControl } from './handler/set_control';
+import { handleSetEnable } from './handler/set_enable';
 import { handleSetKeyEvent } from './handler/set_key_event';
 
 export function connectWebSocket (viewer: PointCloudViewer, url: string) {
@@ -58,6 +59,9 @@ function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message
         break;
       case commandCase.SET_CUSTOM_CONTROL:
         handleSetControl(websocket, commandID, viewer, message.getSetCustomControl());
+        break;
+      case commandCase.SET_ENABLE:
+        handleSetEnable(websocket, commandID, viewer, message.getSetEnable());
         break;
       default:
         sendFailure(websocket, commandID, 'message has not any command');
