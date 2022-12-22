@@ -30,6 +30,7 @@ mv ./lib/cumo/protobuf ./lib/cumo/_internal/
 touch ./lib/cumo/_internal/protobuf/__init__.py
 
 cd ${WORKDIR}/client
+yarn lint:eslint
 yarn build
 
 cd ${WORKDIR}
@@ -39,4 +40,7 @@ cp README.md lib/
 
 cd ${WORKDIR}/lib
 poetry install
+poetry run autopep8 --diff --recursive --exit-code --exclude=protobuf,pypcd,docs .
+poetry run flake8 --exclude cumo/_vendor,cumo/_internal/protobuf,cumo/__init__.py cumo
+poetry run pylint --jobs=0 cumo
 poetry build

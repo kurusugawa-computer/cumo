@@ -105,3 +105,7 @@ class PointCloudViewer:
         set_custom_checkbox,
         set_custom_button,
     )
+    from cumo._internal.members.set_enable import (
+        stop_render,
+        resume_render,
+    )

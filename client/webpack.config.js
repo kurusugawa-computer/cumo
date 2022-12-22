@@ -29,6 +29,10 @@ module.exports = {
         test: /\.css/,
         use: [MiniCssExtractPlugin.loader, 'css-loader'],
         exclude: '/node_modules/'
+      },
+      {
+        test: /\.(svg)$/i,
+        type: 'asset/source'
       }
     ]
   },
