@@ -22,7 +22,11 @@ RUN apt-get update \
         make build-essential libssl-dev zlib1g-dev libbz2-dev \
         libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
         xz-utils tk-dev libffi-dev liblzma-dev libusb-1.0-0 libgl1-mesa-dev \
+        python3-distutils \
     && apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
+
+RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && sudo apt-get install -y nodejs
 
 RUN curl https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
@@ -45,7 +49,7 @@ RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv \
     && ~/local/bin/python-build -v ${PYTHON_VERSION} ~/local/python-${PYTHON_VERSION}
 
 ENV PATH "$PATH:/home/vscode/local/python-3.8.7/bin"
-
+WORKDIR /home/vscode
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
 ENV PATH "$PATH:/home/vscode/.local/bin"
