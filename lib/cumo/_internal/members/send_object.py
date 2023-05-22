@@ -102,7 +102,7 @@ def send_pointcloud(
     # 引数チェック
     if xyz is None and xyzrgb is None:
         raise ValueError("xyz or xyzrgb is required")
-    if xyz is not None and not(len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
+    if xyz is not None and not (len(xyz.shape) == 2 and xyz.shape[1] == 3 and xyz.dtype == "float32"):
         raise ValueError(
             "xyz must be float32 array of shape (num_points, 3)"
         )
@@ -117,7 +117,7 @@ def send_pointcloud(
             raise ValueError(
                 "rgb must be uint8 array of shape (num_points, 3)"
             )
-    if xyzrgb is not None and not(len(xyzrgb.shape) == 2 and xyzrgb.shape[1] == 4 and xyzrgb.dtype == "float32"):
+    if xyzrgb is not None and not (len(xyzrgb.shape) == 2 and xyzrgb.shape[1] == 4 and xyzrgb.dtype == "float32"):
         raise ValueError(
             "xyzrgb must be float32 array of shape (num_points, 4)"
         )
@@ -394,7 +394,7 @@ def send_overlay_image_from_ndarray(
     Returns:
         UUID: オーバーレイに対応するID。後から操作する際に使う
     """
-    if not(len(ndarray_data.shape) == 3 and ndarray_data.shape[2] == 3 and ndarray_data.dtype == "uint8"):
+    if not (len(ndarray_data.shape) == 3 and ndarray_data.shape[2] == 3 and ndarray_data.dtype == "uint8"):
         raise ValueError("ndarray_data must be uint8 array of shape (height, width, 3)")
     img = Image.fromarray(ndarray_data)
     img_bytes = io.BytesIO()
