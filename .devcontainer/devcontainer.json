@@ -4,36 +4,41 @@
 		"dockerfile": "Dockerfile",
 		"context": ".",
 	},
-	"settings": {
-		"terminal.integrated.profiles.linux": {
-			"bash": {
-				"path": "bash"
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.profiles.linux": {
+					"bash": {
+						"path": "bash"
+					},
+				},
+				"terminal.integrated.defaultProfile.linux": "bash",
+				"python.pythonPath": "/home/vscode/local/python-3.8.7/bin/python",
+				"editor.tabSize": 2,
+				"[typescript]": {
+					"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+				},
+				"[javascript]": {
+					"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+				},
+				"eslint.format.enable": true,
+				"eslint.lintTask.enable": true,
+				"eslint.packageManager": "yarn",
+				"typescript.tsdk": "/workspaces/pointcloud-viewer/client/node_modules/typescript/lib",
+				"python.formatting.provider": "autopep8",
+				"editor.formatOnSave": true
 			},
-		},
-		"terminal.integrated.defaultProfile.linux": "bash",
-		"python.pythonPath": "/home/vscode/local/python-3.8.7/bin/python",
-		"editor.tabSize": 2,
-		"[typescript]": {
-			"editor.defaultFormatter": "dbaeumer.vscode-eslint"
-		},
-		"[javascript]": {
-			"editor.defaultFormatter": "dbaeumer.vscode-eslint"
-		},
-		"eslint.format.enable": true,
-		"eslint.lintTask.enable": true,
-		"eslint.packageManager": "yarn",
-		"typescript.tsdk": "/workspaces/pointcloud-viewer/client/node_modules/typescript/lib",
-		"python.formatting.provider": "autopep8",
+			"extensions": [
+				"ms-python.vscode-pylance",
+				"ms-python.python",
+				"zxh404.vscode-proto3",
+				"visualstudioexptteam.vscodeintellicode",
+				"njpwerner.autodocstring",
+				"dbaeumer.vscode-eslint",
+				"redhat.vscode-yaml",
+			],
+		}
 	},
-	"extensions": [
-		"ms-python.vscode-pylance",
-		"ms-python.python",
-		"zxh404.vscode-proto3",
-		"visualstudioexptteam.vscodeintellicode",
-		"njpwerner.autodocstring",
-		"dbaeumer.vscode-eslint",
-		"redhat.vscode-yaml",
-	],
 	"updateRemoteUserUID": true,
 	"remoteUser": "vscode",
 }

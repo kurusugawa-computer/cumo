@@ -1,7 +1,8 @@
 [flake8]
 max-line-length = 120
-exclude = 
+exclude =
     dist,
     cumo/_internal/protobuf/*
 extend-ignore =
-    E741  # 1文字変数の許容
+    # 1文字変数の許容
+    E741

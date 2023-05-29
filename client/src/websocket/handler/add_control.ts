@@ -32,7 +32,7 @@ export function handleAddControl (
             return;
           }
           viewer.folderUUIDmap[propertyName] = button.getName();
-          parentFolder.add(viewer.config.custom, propertyName).name(button.getName());
+          parentFolder.add(viewer.config.custom, propertyName as any).name(button.getName());
         }
       }
       break;
@@ -54,7 +54,7 @@ export function handleAddControl (
             return;
           }
           viewer.folderUUIDmap[propertyName] = checkbox.getName();
-          parentFolder.add(viewer.config.custom, propertyName)
+          parentFolder.add(viewer.config.custom, propertyName as any)
             .name(checkbox.getName())
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
@@ -102,7 +102,7 @@ export function handleAddControl (
             return;
           }
           viewer.folderUUIDmap[propertyName] = selectbox.getName();
-          parentFolder.add(viewer.config.custom, propertyName, selectbox.getItemsList())
+          parentFolder.add(viewer.config.custom, propertyName as any, selectbox.getItemsList())
             .name(selectbox.getName())
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
@@ -128,7 +128,7 @@ export function handleAddControl (
           viewer.folderUUIDmap[propertyName] = slider.getName();
           parentFolder.add(
             viewer.config.custom,
-            propertyName,
+            propertyName as any,
             slider.getMin(),
             slider.getMax(),
             slider.getStep()
@@ -156,7 +156,7 @@ export function handleAddControl (
             return;
           }
           viewer.folderUUIDmap[propertyName] = textbox.getName();
-          parentFolder.add(viewer.config.custom, propertyName)
+          parentFolder.add(viewer.config.custom, propertyName as any)
             .name(textbox.getName())
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }

@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from os.path import join
 from typing import Union, Optional
 
+# pylint: disable=E1101
 import websockets
 
 
