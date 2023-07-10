@@ -23,8 +23,9 @@ export function handleRemoveObject (websocket: WebSocket, commandID: string, vie
 }
 
 function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
-  for (let i = viewer.scene.children.length - 1; i >= 0; i--) {
-    viewer.scene.remove(viewer.scene.children[i]);
+  while (viewer.scene.meshes[0]) {
+    console.log(viewer.scene.meshes[0]);
+    viewer.scene.meshes[0].dispose(false, true);
   }
 
   for (const overlay of viewer.overlays) {
@@ -38,26 +39,18 @@ function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: Point
 }
 
 function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, uuid: string) {
-  // scene.getObjectById もあるがthree.jsの外で作ったオブジェクトも統一的に扱えるようにUUIDを使う
-  const threejsObject = viewer.scene.getObjectByProperty('uuid', uuid.toUpperCase());
-  if (threejsObject !== undefined) {
-    viewer.scene.remove(threejsObject);
+  const normalizedUUID = uuid.toUpperCase();
+
+  const babylonjsObject = viewer.scene.getNodeByName(normalizedUUID);
+  if (babylonjsObject !== null) {
+    babylonjsObject.dispose(false, true);
     sendSuccess(websocket, commandID, 'success');
     return;
-  }
-  for (let i = 0; i < viewer.overlays.length; i++) {
-    const overlay = viewer.overlays[i];
-    if (overlay.uuid === uuid.toUpperCase()) {
-      overlay.dispose();
-      viewer.overlays.splice(i, 1);
-      sendSuccess(websocket, commandID, 'success');
-      return;
-    }
   }
 
   for (let i = 0; i < viewer.linesets.length; i++) {
     const lineset = viewer.linesets[i];
-    if (lineset.UUID === uuid.toUpperCase()) {
+    if (lineset.UUID === normalizedUUID) {
       viewer.linesets.splice(i, 1);
       sendSuccess(websocket, commandID, 'success');
       return;

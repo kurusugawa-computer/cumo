@@ -1,204 +1,170 @@
 
-import * as THREE from 'three';
 import * as DAT from 'dat.gui';
-import { OrthographicCamera, PerspectiveCamera } from 'three';
 import { Overlay } from './overlay';
 import { Canvas2D } from './canvas2d';
 import { Lineset } from './lineset';
-import { CustomCameraControls } from './camera_control';
 import { Spinner } from './spinner';
 
+import * as BABYLON from '@babylonjs/core';
+import '@babylonjs/core/Legacy/legacy';
+import { CustomCameraInput } from './camera_control';
+
 export class PointCloudViewer {
-    enabled: boolean = true;
-    renderer: THREE.WebGLRenderer;
-    scene: THREE.Scene;
+  enabled: boolean = true;
+  canvas: HTMLCanvasElement;
+  engine: BABYLON.Engine;
+  scene: BABYLON.Scene;
 
-    overlays: Overlay[] = [];
-    overlayContainer: HTMLElement
+  overlays: Overlay[] = [];
+  overlayContainer: HTMLElement
 
-    canvas2d: Canvas2D
-    spinner: Spinner
+  canvas2d: Canvas2D
+  spinner: Spinner
 
-    linesets: Lineset[] = [];
+  linesets: Lineset[] = [];
 
-    perspectiveCamera: THREE.PerspectiveCamera;
-    orthographicCamera: THREE.OrthographicCamera;
+  camera: BABYLON.TargetCamera;
+  cameraInput: CustomCameraInput<PointCloudViewer['camera']>;
 
-    controls: CustomCameraControls;
+  gui: DAT.GUI;
+  guiCustom: DAT.GUI;
 
-    gui: DAT.GUI;
-    guiCustom: DAT.GUI;
+  folderUUIDmap: { [uuid: string]: string };
 
-    folderUUIDmap: { [uuid: string]: string };
+  keyEventHandler = new class {
+    onKeyUp: ((ev: KeyboardEvent) => any) | null = null
+    onKeyDown: ((ev: KeyboardEvent) => any) | null = null
+    onKeyPress: ((ev: KeyboardEvent) => any) | null = null
+  }();
 
-    keyEventHandler = new class {
-      onKeyUp: ((ev: KeyboardEvent) => any) | null = null
-      onKeyDown: ((ev: KeyboardEvent) => any) | null = null
-      onKeyPress: ((ev: KeyboardEvent) => any) | null = null
+  config = new class {
+    controls = new class {
+      rotateSpeed: number = 2.0
+      zoomSpeed: number = 2.0
+      panSpeed: number = 2.0
+      rollSpeed: number = 1.0
     }();
 
-    config = new class {
-      controls = new class {
-        rotateSpeed: number = 2.0
-        zoomSpeed: number = 2.0
-        panSpeed: number = 2.0
+    camera = new class {
+      usePerspective: boolean = true;
+      perspective = new class {
+        fov: number = 30;
       }();
 
-      camera = new class {
-        usePerspective: boolean = true;
-        perspective = new class {
-          fov: number = 30;
-        }();
-
-        orthographic = new class {
-          frustum: number = 30;
-        }();
+      orthographic = new class {
+        frustum: number | null = null;
       }();
-
-      custom: Object = {};
     }();
 
-    constructor (private container: HTMLDivElement) {
-      // シーンのセットアップ
-      const cameraNear = Number.EPSILON;
-      const cameraFar = Number.MAX_SAFE_INTEGER;
+    custom: Object = {};
+  }();
 
-      this.scene = new THREE.Scene();
-      this.scene.background = new THREE.Color(0x000);
+  constructor (private container: HTMLDivElement) {
+    const cameraNear = 0.00001;
+    const cameraFar = 100000;
 
-      const aspect = window.innerWidth / window.innerHeight;
-      this.perspectiveCamera = new PerspectiveCamera(
-        this.config.camera.perspective.fov, aspect, cameraNear, cameraFar);
-      this.perspectiveCamera.position.set(1, 1, 1);
+    this.canvas = document.createElement('canvas');
 
-      const frustum = this.config.camera.orthographic.frustum;
-      this.orthographicCamera = new OrthographicCamera(
-        frustum * aspect / -2, frustum * aspect / 2, frustum / 2, frustum / -2,
-        cameraNear, cameraFar
-      );
-      this.orthographicCamera.position.set(1, 1, 1);
+    container.appendChild(this.canvas);
 
-      // レンダラーのセットアップ
-      this.renderer = new THREE.WebGL1Renderer({
-        preserveDrawingBuffer: true,
-        logarithmicDepthBuffer: true
-      });
-      this.canvas2d = new Canvas2D();
-
-      let DPIChangeDetector = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
-      const handleDPIChange = () => {
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        DPIChangeDetector.removeEventListener('change', handleDPIChange);
-        DPIChangeDetector = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
-        DPIChangeDetector.addEventListener('change', handleDPIChange);
-      };
-      this.renderer.setPixelRatio(window.devicePixelRatio);
-      DPIChangeDetector.addEventListener('change', handleDPIChange);
-
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-      container.appendChild(this.renderer.domElement);
-      this.canvas2d.domElement.style.pointerEvents = 'none';
-      container.appendChild(this.canvas2d.domElement);
-
-      window.addEventListener('resize', () => {
-        const aspect = window.innerWidth / window.innerHeight;
-        const frustum = this.config.camera.orthographic.frustum;
-
-        this.perspectiveCamera.aspect = aspect;
-        this.perspectiveCamera.updateProjectionMatrix();
-
-        this.orthographicCamera.left = -frustum * aspect / 2;
-        this.orthographicCamera.right = frustum * aspect / 2;
-        this.orthographicCamera.top = frustum / 2;
-        this.orthographicCamera.bottom = -frustum / 2;
-        this.orthographicCamera.updateProjectionMatrix();
-
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.controls.handleResize();
-      });
-
-      // コントロールのセットアップ
-      this.gui = new DAT.GUI();
-
-      const guiControl = this.gui.addFolder('control');
-      const guiCamera = this.gui.addFolder('camera');
-      this.guiCustom = this.gui.addFolder('custom');
-
-      guiCamera.add(this.config.camera, 'usePerspective')
-        .name('perspective camera')
-        .onChange((perspective: boolean) => this.switchCamera(perspective));
-
-      guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.controls.rotateSpeed = this.config.controls.rotateSpeed; });
-      guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.controls.zoomSpeed = this.config.controls.zoomSpeed; }); ;
-      guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.controls.panSpeed = this.config.controls.panSpeed; });
-
-      // [UUID]: folderName な map を初期化
-      this.folderUUIDmap = {};
-
-      // カメラコントロールのセットアップ
-
-      this.controls = this.createControls(this.perspectiveCamera);
-
-      container.style.position = 'relative';
-      container.style.height = '100vh';
-
-      this.renderer.domElement.style.position = 'absolute';
-
-      this.overlayContainer = document.createElement('div');
-      this.overlayContainer.style.position = 'absolute';
-      this.overlayContainer.style.height = '100%';
-      this.overlayContainer.style.width = '100%';
-      this.overlayContainer.style.pointerEvents = 'none';
-      this.overlayContainer.style.overflow = 'hidden';
-      container.appendChild(this.overlayContainer);
-
-      // レンダリングループ
-      const animate = () => {
-        requestAnimationFrame(animate);
-        this.controls.update();
-        this.render();
-      };
-      animate();
-
-      this.spinner = new Spinner(container);
-    }
-
-    get getdiv () {
-      return this.container;
-    }
-
-    render (): void {
-      if (!this.enabled) return;
-      const camera = this.config.camera.usePerspective ? this.perspectiveCamera : this.orthographicCamera;
-      this.renderer.render(
-        this.scene,
-        camera
-      );
-      for (let i = 0; i < this.overlays.length; i++) {
-        this.overlays[i].render(this.renderer.domElement, camera);
+    // シーンのセットアップ
+    this.engine = new BABYLON.Engine(this.canvas, true,
+      {
+        adaptToDeviceRatio: true
       }
-      this.canvas2d.ctx.clearRect(0, 0, this.canvas2d.domElement.width, this.canvas2d.domElement.height);
-      for (let i = 0; i < this.linesets.length; i++) {
-        this.linesets[i].render(this.canvas2d, camera);
-      }
-    }
+    );
+    this.scene = new BABYLON.Scene(this.engine);
+    this.scene.clearColor = new BABYLON.Color4(0, 0, 0);
+    this.scene.lightsEnabled = false;
 
-    switchCamera (perspective: boolean): void {
-      const newCamera: THREE.Camera = perspective ? this.perspectiveCamera : this.orthographicCamera;
-      this.controls.switchCamera(newCamera);
-      if (perspective !== this.config.camera.usePerspective) {
-        this.config.camera.usePerspective = perspective;
-        this.gui.updateDisplay();
-      }
-      this.controls.update();
-    }
+    this.camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(-1, -1, -1), this.scene);
+    this.camera.fov = (this.config.camera.perspective.fov / 180) * Math.PI;
+    this.camera.fovMode = BABYLON.Camera.FOVMODE_HORIZONTAL_FIXED;
+    this.camera.maxZ = cameraFar;
+    this.camera.minZ = cameraNear;
+    this.cameraInput = new CustomCameraInput();
+    this.camera.inputs.clear();
+    this.camera.inputs.add(this.cameraInput);
+    this.camera.attachControl();
 
-    private createControls (camera: THREE.Camera): CustomCameraControls {
-      const controls = new CustomCameraControls(camera, this.renderer.domElement);
-      controls.rotateSpeed = this.config.controls.rotateSpeed;
-      controls.zoomSpeed = this.config.controls.zoomSpeed;
-      controls.panSpeed = Math.pow(2, this.config.controls.panSpeed);
-      controls.update();
-      return controls;
+    this.canvas2d = new Canvas2D();
+
+    this.canvas.style.position = 'absolute';
+    this.canvas.style.width = '100vw';
+    this.canvas.style.height = '100vh';
+    this.canvas.width = window.innerWidth * window.devicePixelRatio;
+    this.canvas.height = window.innerHeight * window.devicePixelRatio;
+    this.canvas2d.domElement.style.pointerEvents = 'none';
+    container.appendChild(this.canvas2d.domElement);
+
+    window.addEventListener('resize', () => {
+      this.engine.resize();
+    });
+
+    // コントロールのセットアップ
+    this.gui = new DAT.GUI();
+
+    const guiControl = this.gui.addFolder('control');
+    const guiCamera = this.gui.addFolder('camera');
+    this.guiCustom = this.gui.addFolder('custom');
+
+    guiCamera.add(this.config.camera, 'usePerspective')
+      .name('perspective camera')
+      .onChange((perspective: boolean) => this.switchCamera(perspective));
+
+    guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.rotateSpeed = this.config.controls.rotateSpeed; });
+    guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.zoomSpeed = this.config.controls.zoomSpeed; });
+    guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.panSpeed = this.config.controls.panSpeed; });
+
+    // [UUID]: folderName な map を初期化
+    this.folderUUIDmap = {};
+
+    container.style.position = 'relative';
+    container.style.height = '100vh';
+
+    this.canvas.style.position = 'absolute';
+
+    this.overlayContainer = document.createElement('div');
+    this.overlayContainer.style.position = 'absolute';
+    this.overlayContainer.style.height = '100%';
+    this.overlayContainer.style.width = '100%';
+    this.overlayContainer.style.pointerEvents = 'none';
+    this.overlayContainer.style.overflow = 'hidden';
+    container.appendChild(this.overlayContainer);
+
+    // レンダリングループ
+    this.engine.runRenderLoop(() => {
+      this.render();
+    });
+
+    this.spinner = new Spinner(container);
+  }
+
+  get getdiv () {
+    return this.container;
+  }
+
+  render (): void {
+    if (!this.enabled) return;
+
+    this.scene.render();
+    for (let i = 0; i < this.overlays.length; i++) {
+      this.overlays[i].render(this.canvas, this.scene);
     }
+    this.canvas2d.ctx.clearRect(0, 0, this.canvas2d.domElement.width, this.canvas2d.domElement.height);
+    for (let i = 0; i < this.linesets.length; i++) {
+      this.linesets[i].render(this.canvas2d, this.scene);
+    }
+  }
+
+  switchCamera (perspective: boolean): void {
+    const newMode = perspective ? BABYLON.Camera.PERSPECTIVE_CAMERA : BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+
+    this.camera.mode = newMode;
+
+    if (perspective !== this.config.camera.usePerspective) {
+      this.config.camera.usePerspective = perspective;
+      this.gui.updateDisplay();
+    }
+  }
 }

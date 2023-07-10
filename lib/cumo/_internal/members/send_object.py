@@ -65,7 +65,7 @@ def send_pointcloud_pcd(
     xyz = numpy.stack([pc_data["x"], pc_data["y"], pc_data["z"]], axis=1)
 
     rgb_u32: numpy.ndarray = pc_data["rgb"]
-    rgb_u32.dtype = "uint32"
+    rgb_u32 = rgb_u32.view("uint32")
     r_u8: numpy.ndarray = ((rgb_u32 & 0xff0000) >> 16).astype("uint8")
     g_u8: numpy.ndarray = ((rgb_u32 & 0x00ff00) >> 8).astype("uint8")
     b_u8: numpy.ndarray = (rgb_u32 & 0x0000ff).astype("uint8")
@@ -81,7 +81,7 @@ def send_pointcloud(
     xyz: Optional[numpy.ndarray] = None,
     rgb: Optional[numpy.ndarray] = None,
     xyzrgb: Optional[numpy.ndarray] = None,
-    down_sample: Optional[DownSampleStrategy] = DownSampleStrategy.RANDOM_SAMPLE,
+    down_sample: DownSampleStrategy = DownSampleStrategy.RANDOM_SAMPLE,
     max_num_points: int = DOWNSAMPLING_DEFAULT_MAX_NUM_POINTS,
     point_size: float = 1
 ) -> UUID:
@@ -132,7 +132,7 @@ def send_pointcloud(
                 + (rgb_u32[:, 1] << 8)
                 + rgb_u32[:, 2]
             )
-            rgb_f32.dtype = "float32"
+            rgb_f32 = rgb_f32.view("float32")
 
             concatenated: numpy.ndarray = numpy.column_stack((
                 xyz,

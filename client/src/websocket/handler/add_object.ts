@@ -1,13 +1,14 @@
 import * as PB from '../../protobuf/server_pb.js';
 
-import { PCDLoader } from 'three/examples/jsm/loaders/PCDLoader';
-
-import * as THREE from 'three';
 import * as imageType from 'image-type';
 import { Overlay } from '../../overlay';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
 import { Lineset } from '../../lineset';
+import { PCDLoader } from '@loaders.gl/pcd';
+import * as Loaders from '@loaders.gl/core';
+
+import * as BABYLON from '@babylonjs/core';
 
 export function handleAddObject (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, addObject: PB.AddObject | undefined): void {
   if (addObject === undefined) {
@@ -94,7 +95,7 @@ function addOverlayHTMLText (websocket: WebSocket, commandID: string, viewer: Po
 
 function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType, commandID: string) {
   viewer.overlayContainer.appendChild(element);
-  const p = new THREE.Vector3(position.getX(), position.getY(), position.getZ());
+  const p = new BABYLON.Vector3(position.getX(), position.getY(), position.getZ());
   const overlay = new Overlay(element, p, coordType, commandID);
   viewer.overlays.push(overlay);
 }
@@ -117,28 +118,41 @@ function handleMesh (websocket: WebSocket, commandID:string, viewer: PointCloudV
   for (let i = 0; i < a.length; i++) {
     indices.push(a[i], b[i], c[i]);
   }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setIndex(indices);
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-  const material = new THREE.MeshBasicMaterial();
+  const material = new BABYLON.StandardMaterial(commandID, viewer.scene);
+  material.emissiveColor = new BABYLON.Color3(1, 1, 1);
+
+  const mesh = new BABYLON.Mesh(commandID, viewer.scene);
+  mesh.material = material;
+
+  const vertex = new BABYLON.VertexData();
+  vertex.positions = positions;
+  vertex.indices = indices;
 
   const PBcolors = PBmesh.getColorsList();
   if (PBcolors.length !== 0) {
-    material.vertexColors = true;
     const colors: number[] = [];
     for (let i = 0; i < PBcolors.length; i++) {
       colors.push(
-        Math.max(Math.min(1, PBcolors[i].getR())),
-        Math.max(Math.min(1, PBcolors[i].getG())),
-        Math.max(Math.min(1, PBcolors[i].getB()))
+        Math.max(0, Math.min(1, PBcolors[i].getR())),
+        Math.max(0, Math.min(1, PBcolors[i].getG())),
+        Math.max(0, Math.min(1, PBcolors[i].getB())),
+        0
       );
     }
-    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    vertex.colors = colors;
   }
 
-  const mesh = new THREE.Mesh(geometry, material);
-  viewer.scene.add(mesh);
-  sendSuccess(websocket, commandID, mesh.uuid);
+  const normals:BABYLON.FloatArray = [];
+  BABYLON.VertexData.ComputeNormals(
+    vertex.positions,
+    vertex.indices,
+    normals
+  );
+  vertex.normals = normals;
+
+  vertex.applyToMesh(mesh);
+
+  sendSuccess(websocket, commandID, commandID);
 }
 
 function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, lineset: PB.AddObject.LineSet | undefined): void {
@@ -192,25 +206,76 @@ function handlePointCloud (
   const data_ = pbPointcloud.getPcdData_asU8();
   const data = data_.buffer.slice(data_.byteOffset);
 
-  let pointcloud: ReturnType<typeof PCDLoader.prototype.parse>;
+  const pc = Loaders.parseSync(data, PCDLoader);
 
-  try {
-    pointcloud = new PCDLoader().parse(data, 'test');
-  } catch (error) {
-    console.error(error);
-    sendFailure(websocket, commandID, `failed to parse pcd data: ${error}`);
-    return;
+  const vertexData = new BABYLON.VertexData();
+
+  // https://loaders.gl/docs/specifications/category-mesh#gltf-attribute-name-mapping
+
+  if ('POSITION' in pc.attributes) {
+    const positions:Float32Array = pc.attributes.POSITION.value;
+    vertexData.set(positions, BABYLON.VertexBuffer.PositionKind);
   }
 
-  pointcloud.renderOrder = 10;
+  if ('COLOR_0' in pc.attributes) {
+    const color: Uint8Array | Uint16Array | Float32Array = pc.attributes.COLOR_0.value;
+    const size: number = pc.attributes.COLOR_0.size;
+    const normalizedColor: Float32Array | null = (() => {
+      switch (color.BYTES_PER_ELEMENT) {
+        case 1:
+          return Float32Array.from(color, v => v / 255);
+        case 2:
+          return Float32Array.from(color, v => v / 65535);
+        case 4:
+          if (color instanceof Float32Array) {
+            return color;
+          }
+          break;
+        default:
+          break;
+      }
+      sendFailure(websocket, commandID, `unsupported type: ${Object.prototype.toString.call(color)}, BYTES_PER_ELEMENT: ${color.BYTES_PER_ELEMENT}`);
+      return null;
+    })();
+    if (normalizedColor === null) { return; };
+    if (size === 4) {
+      const n = normalizedColor.length / 4;
+      const rgba = new Float32Array(n * 4);
 
-  if (pointcloud.material instanceof THREE.PointsMaterial) {
-    pointcloud.material.size = pbPointcloud.getPointSize();
-    pointcloud.material.sizeAttenuation = false;
-    pointcloud.material.needsUpdate = true;
+      for (let i = 0; i < n; i++) {
+        rgba[i * 4 + 0] = normalizedColor[i * 3 + 2];
+        rgba[i * 4 + 1] = normalizedColor[i * 3 + 1];
+        rgba[i * 4 + 2] = normalizedColor[i * 3 + 0];
+        rgba[i * 4 + 3] = normalizedColor[i * 4 + 3];
+      }
+      vertexData.set(rgba, BABYLON.VertexBuffer.ColorKind);
+    } else if (size === 3) {
+      const n = normalizedColor.length / 3;
+      const rgba = new Float32Array(n * 4);
+
+      for (let i = 0; i < n; i++) {
+        rgba[i * 4 + 0] = normalizedColor[i * 3 + 2];
+        rgba[i * 4 + 1] = normalizedColor[i * 3 + 1];
+        rgba[i * 4 + 2] = normalizedColor[i * 3 + 0];
+        rgba[i * 4 + 3] = 1.0;
+      }
+      vertexData.set(rgba, BABYLON.VertexBuffer.ColorKind);
+    } else {
+      sendFailure(websocket, commandID, `unsupported element size: ${color.BYTES_PER_ELEMENT}`);
+    }
   }
-  viewer.scene.add(pointcloud);
-  sendSuccess(websocket, commandID, pointcloud.uuid);
+
+  const mat = new BABYLON.StandardMaterial(commandID, viewer.scene);
+  mat.emissiveColor = new BABYLON.Color3(1, 1, 1);
+  mat.disableLighting = true;
+  mat.pointsCloud = true;
+  mat.pointSize = pbPointcloud.getPointSize();
+
+  const mesh = new BABYLON.Mesh(commandID, viewer.scene);
+  vertexData.applyToMesh(mesh, true);
+  mesh.material = mat;
+
+  sendSuccess(websocket, commandID, commandID);
 }
 
 function handleImage (
@@ -231,49 +296,57 @@ function handleImage (
     return;
   }
 
-  new THREE.TextureLoader().loadAsync('data:' + type.mime + ';base64,' + pbImage.getData_asB64()).then((texture: THREE.Texture) => {
-    const material = new THREE.MeshBasicMaterial({
-      map: texture,
-      side: (pbImage.getDoubleSide() ? THREE.DoubleSide : THREE.FrontSide)
-    });
+  const texture = new BABYLON.Texture(
+    'data:' + type.mime + ';base64,' + pbImage.getData_asB64(),
+    viewer.scene,
+    undefined, // noMipmapOrOptions
+    undefined, // invertY
+    undefined, // samplingMode
+    () => {
+      // onLoad
+      console.log('load');
+      const mat = new BABYLON.StandardMaterial(commandID, viewer.scene);
+      mat.diffuseTexture = texture;
+      mat.diffuseTexture.hasAlpha = true;
+      mat.backFaceCulling = !pbImage.getDoubleSide();
+      mat.emissiveColor = new BABYLON.Color3(1, 1, 1);
 
-    const ul = pbImage.getUpperLeft();
-    const ll = pbImage.getLowerLeft();
-    const lr = pbImage.getLowerRight();
-    if (ul === undefined || ll === undefined || lr === undefined) {
-      sendFailure(websocket, commandID, 'failed to get position');
-      return;
+      const ul = pbImage.getUpperLeft();
+      const ll = pbImage.getLowerLeft();
+      const lr = pbImage.getLowerRight();
+      if (ul === undefined || ll === undefined || lr === undefined) {
+        sendFailure(websocket, commandID, 'failed to get position');
+        return;
+      }
+
+      const vertexData = new BABYLON.VertexData();
+
+      vertexData.positions = [
+        ll.getX(), ll.getY(), ll.getZ(),
+        lr.getX(), lr.getY(), lr.getZ(),
+        ul.getX(), ul.getY(), ul.getZ(),
+        ul.getX() + (lr.getX() - ll.getX()), ul.getY() + (lr.getY() - ll.getY()), ul.getZ() + (lr.getZ() - ll.getZ())
+      ];
+      vertexData.indices = [
+        1, 2, 0,
+        1, 3, 2
+      ];
+      vertexData.uvs = [
+        0, 0,
+        1, 0,
+        0, 1,
+        1, 1
+      ];
+
+      const mesh = new BABYLON.Mesh(commandID, viewer.scene);
+      vertexData.applyToMesh(mesh);
+      mesh.material = mat;
+
+      sendSuccess(websocket, commandID, commandID);
+    },
+    () => {
+      // onError
+      sendFailure(websocket, commandID, 'failed to load texture');
     }
-
-    const vertices: number[] = [
-      ll.getX(), ll.getY(), ll.getZ(),
-      lr.getX(), lr.getY(), lr.getZ(),
-      ul.getX(), ul.getY(), ul.getZ(),
-      ul.getX() + (lr.getX() - ll.getX()), ul.getY() + (lr.getY() - ll.getY()), ul.getZ() + (lr.getZ() - ll.getZ())
-    ];
-
-    const indices: number[] = [
-      1, 2, 0,
-      1, 3, 2
-    ];
-
-    const uvs: number[] = [
-      0, 0,
-      1, 0,
-      0, 1,
-      1, 1
-    ];
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
-    geometry.setIndex(indices);
-
-    const mesh = new THREE.Mesh(geometry, material);
-    viewer.scene.add(mesh);
-
-    sendSuccess(websocket, commandID, mesh.uuid);
-  }).catch(() => {
-    sendFailure(websocket, commandID, 'failed to load texture');
-  });
+  );
 }

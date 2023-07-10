@@ -94,7 +94,9 @@ def multiprocessing_worker(
     start_server = websockets.serve(__websocket_handler,
                                     host=host,
                                     port=websocket_port,
-                                    max_size=None)
+                                    max_size=None,
+                                    ping_timeout=60,
+                                    )
     loop.run_until_complete(start_server)
 
     threads = [

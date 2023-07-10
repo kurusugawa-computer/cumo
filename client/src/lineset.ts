@@ -1,5 +1,5 @@
-import * as THREE from 'three';
 import { Canvas2D } from './canvas2d';
+import * as BABYLON from '@babylonjs/core';
 
 export class Lineset {
   // positions: number[] // x,y,z,x,y,z,...
@@ -17,7 +17,7 @@ export class Lineset {
     this.UUID = uuid.toUpperCase();
   }
 
-  render (canvas: Canvas2D, camera: THREE.Camera) {
+  render (canvas: Canvas2D, scene: BABYLON.Scene) {
     for (let i = 0; i * 2 + 1 < this.indices.length; i++) {
       const i0 = this.indices[i * 2 + 0];
       const i1 = this.indices[i * 2 + 1];
@@ -29,15 +29,23 @@ export class Lineset {
       const y1 = this.positions[i1 * 3 + 1];
       const z1 = this.positions[i1 * 3 + 2];
 
-      const p0 = new THREE.Vector3(x0, y0, z0);
-      const p1 = new THREE.Vector3(x1, y1, z1);
-      p0.project(camera);
-      p1.project(camera);
+      const p0 = BABYLON.Vector3.Project(
+        new BABYLON.Vector3(x0, y0, z0),
+        BABYLON.Matrix.Identity(),
+        scene.getTransformMatrix(),
+        new BABYLON.Viewport(0, 0, canvas.domElement.width, canvas.domElement.height)
+      );
+      const p1 = BABYLON.Vector3.Project(
+        new BABYLON.Vector3(x1, y1, z1),
+        BABYLON.Matrix.Identity(),
+        scene.getTransformMatrix(),
+        new BABYLON.Viewport(0, 0, canvas.domElement.width, canvas.domElement.height)
+      );
 
-      const sx0 = (canvas.domElement.width / 2) * (p0.x + 1.0);
-      const sy0 = (canvas.domElement.height / 2) * (-p0.y + 1.0);
-      const sx1 = (canvas.domElement.width / 2) * (p1.x + 1.0);
-      const sy1 = (canvas.domElement.height / 2) * (-p1.y + 1.0);
+      const sx0 = p0.x;
+      const sy0 = p0.y;
+      const sx1 = p1.x;
+      const sy1 = p1.y;
 
       canvas.ctx.save();
 
