@@ -1,17 +1,16 @@
-import * as THREE from 'three';
-
 import * as PB from './protobuf/server_pb';
+import * as BABYLON from '@babylonjs/core';
 
 const CoordinateType = PB.AddObject.Overlay.CoordinateType;
 
 export class Overlay {
   uuid: string
-  __position: THREE.Vector3
+  __position: BABYLON.Vector3
   __elem: HTMLElement
   __coordType: PB.AddObject.Overlay.CoordinateType
-  constructor(elem: HTMLElement, position: THREE.Vector3, coordType:PB.AddObject.Overlay.CoordinateType, uuid: string);
+  constructor(elem: HTMLElement, position: BABYLON.Vector3, coordType: PB.AddObject.Overlay.CoordinateType, uuid: string);
 
-  constructor (elem: HTMLElement, position: THREE.Vector3, coordType:PB.AddObject.Overlay.CoordinateType, uuid: string) {
+  constructor (elem: HTMLElement, position: BABYLON.Vector3, coordType: PB.AddObject.Overlay.CoordinateType, uuid: string) {
     this.__position = position;
     this.__elem = elem;
     this.__coordType = coordType;
@@ -19,15 +18,19 @@ export class Overlay {
     this.uuid = uuid;
   }
 
-  render (canvas: HTMLCanvasElement, camera: THREE.Camera) {
+  render (canvas: HTMLCanvasElement, scene: BABYLON.Scene) {
     let x: number;
     let y: number;
 
     if (this.__coordType === CoordinateType.WORLD_COORDINATE) {
-      const p = new THREE.Vector3().copy(this.__position);
-      p.project(camera);
-      x = (canvas.width / 2) * (p.x + 1.0) / window.devicePixelRatio;
-      y = (canvas.height / 2) * (-p.y + 1.0) / window.devicePixelRatio;
+      const p = BABYLON.Vector3.Project(
+        this.__position,
+        BABYLON.Matrix.Identity(),
+        scene.getTransformMatrix(),
+        new BABYLON.Viewport(0, 0, canvas.width, canvas.height)
+      );
+      x = p.x;
+      y = p.y;
     } else {
       console.assert(this.__coordType === CoordinateType.SCREEN_COORDINATE);
       x = this.__position.x;

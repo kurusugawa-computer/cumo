@@ -75,4 +75,4 @@ declare module 'html2canvas' {
     export = html2canvas;
 }
 
-declare var html2canvas: Html2CanvasStatic;
+declare const html2canvas: Html2CanvasStatic;

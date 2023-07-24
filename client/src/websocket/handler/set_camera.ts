@@ -1,7 +1,7 @@
 import * as PB from '../../protobuf/server_pb.js';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
-import * as THREE from 'three';
+import * as BABYLON from '@babylonjs/core';
 
 export function handleSetCamera (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, camera: PB.SetCamera | undefined): void {
   if (camera === undefined) {
@@ -36,24 +36,19 @@ export function handleSetCamera (websocket: WebSocket, commandID: string, viewer
 
 function setOrthographicCamera (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, frustumHeight: number) {
   viewer.config.camera.orthographic.frustum = frustumHeight;
-
-  const aspect = window.innerWidth / window.innerHeight;
-  viewer.orthographicCamera.left = -frustumHeight * aspect / 2;
-  viewer.orthographicCamera.right = frustumHeight * aspect / 2;
-  viewer.orthographicCamera.top = frustumHeight / 2;
-  viewer.orthographicCamera.bottom = -frustumHeight / 2;
-
-  viewer.orthographicCamera.updateProjectionMatrix();
+  viewer.cameraInput.frustum = frustumHeight;
+  viewer.cameraInput.updateCameraFrustum();
   if (viewer.config.camera.usePerspective) {
     viewer.switchCamera(false);
   }
+
   sendSuccess(websocket, commandID, 'success');
 }
 
 function setPerspectiveCamera (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, fov: number) {
   viewer.config.camera.perspective.fov = fov;
-  viewer.perspectiveCamera.fov = fov;
-  viewer.perspectiveCamera.updateProjectionMatrix();
+  viewer.camera.fov = fov;
+  viewer.cameraInput.updateCameraFrustum();
   if (!viewer.config.camera.usePerspective) {
     viewer.switchCamera(true);
   }
@@ -66,9 +61,9 @@ function setCameraPosition (websocket: WebSocket, commandID: string, viewer: Poi
     return;
   }
 
-  viewer.orthographicCamera.position.set(position.getX(), position.getY(), position.getZ());
-  viewer.perspectiveCamera.position.set(position.getX(), position.getY(), position.getZ());
-  viewer.controls.update();
+  viewer.camera.position.set(position.getX(), position.getY(), position.getZ());
+  viewer.cameraInput.checkInputs();
+
   sendSuccess(websocket, commandID, 'success');
 }
 
@@ -78,10 +73,9 @@ function setCameraTarget (websocket: WebSocket, commandID: string, viewer: Point
     return;
   }
 
-  viewer.controls.target.set(target.getX(), target.getY(), target.getZ());
-  viewer.orthographicCamera.lookAt(target.getX(), target.getY(), target.getZ());
-  viewer.perspectiveCamera.lookAt(target.getX(), target.getY(), target.getZ());
-  viewer.controls.update();
+  viewer.cameraInput.target.set(target.getX(), target.getY(), target.getZ());
+  viewer.cameraInput.checkInputs();
+
   sendSuccess(websocket, commandID, 'success');
 }
 
@@ -96,19 +90,20 @@ function setCameraRoll (websocket: WebSocket, commandID: string, viewer: PointCl
     return;
   }
   const PBup = roll.getUp();
-  const up = new THREE.Vector3();
+  const up = new BABYLON.Vector3();
   if (PBup === undefined) {
-    up.copy(THREE.Object3D.DefaultUp);
+    up.copyFrom(BABYLON.Vector3.Up());
   } else {
     up.set(PBup.getX(), PBup.getY(), PBup.getZ());
   }
 
-  viewer.controls.setRoll(angle, up);
-  viewer.controls.update();
+  viewer.cameraInput.setRoll(Math.PI * angle / 180, up);
+  viewer.cameraInput.checkInputs();
+
   sendSuccess(websocket, commandID, 'success');
 }
 
 function setCameraRollLock (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, locked: boolean) {
-  viewer.controls.noRoll = locked;
+  viewer.cameraInput.noRoll = locked;
   sendSuccess(websocket, commandID, 'success');
 }

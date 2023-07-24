@@ -30,13 +30,14 @@
     "fix:eslint": "eslint . --ext ts,tsx --fix"
   },
   "dependencies": {
+    "@babylonjs/core": "^6.6.0",
+    "@loaders.gl/core": "^3.4.7",
+    "@loaders.gl/pcd": "^3.4.7",
     "@types/dat.gui": "^0.7",
     "@types/google-protobuf": "^3",
-    "@types/three": "^0.126",
     "dat.gui": "^0.7",
     "google-protobuf": "^3",
     "html2canvas": "^1",
-    "image-type": "^4",
-    "three": "^0.126"
+    "image-type": "^4"
   }
 }

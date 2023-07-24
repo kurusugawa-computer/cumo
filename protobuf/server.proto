@@ -207,7 +207,7 @@ message SetCustomControl {
     }
 
     message Button {
-        optional string name = 1;   
+        optional string name = 1;
     }
 
     message ColorPicker {

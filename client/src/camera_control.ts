@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import * as BABYLON from '@babylonjs/core';
 
 const STATE = {
   NONE: -1,
@@ -9,259 +9,233 @@ const STATE = {
 } as const;
 type State = typeof STATE[keyof typeof STATE];
 
+const MOUSEEVENTBUTTON = {
+  LEFT: 0,
+  WHEEL: 1,
+  RIGHT: 2
+};
+
 const EPS: number = 0.000001;
-const changeEvent = { type: 'change' };
-const startEvent = { type: 'start' };
-const endEvent = { type: 'end' };
 
-export class CustomCameraControls extends THREE.EventDispatcher {
-  object: THREE.Camera;
-  domElement: HTMLCanvasElement;
-
+export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements BABYLON.ICameraInput<TCamera> {
   enabled: boolean = true;
-
-  screen: {left: number, top: number, width: number, height: number} = { left: NaN, top: NaN, width: NaN, height: NaN };
-
-  rotateSpeed:number = 1.0;
-  zoomSpeed: number = 1.2;
-  panSpeed: number = 0.3;
-  rollSpeed: number = 1.0;
-
+  noPreventDefault = false;
   noRotate: boolean = false;
   noZoom: boolean = false;
   noPan: boolean = false;
   noRoll: boolean = false;
 
-  readonly staticMoving = true;
+  rotateSpeed: number = 1.0;
+  zoomSpeed: number = 1.2;
+  panSpeed: number = 0.3;
+  rollSpeed: number = 1.0;
 
   minDistance: number = 0.1;
   maxDistance: number = Infinity
 
-  keys: string[] = ['A', 'S', 'Shift', 'Control'];
+  frustum: number | undefined;
+  zoom: number = 1.0;
+  target: BABYLON.Vector3 = BABYLON.Vector3.Zero();
 
-  mouseButtons = {
-    LEFT: THREE.MOUSE.ROTATE,
-    MIDDLE: THREE.MOUSE.DOLLY,
-    RIGHT: THREE.MOUSE.PAN
+  camera: BABYLON.Nullable<TCamera> = null;
+  private canvas: HTMLCanvasElement | null = null;
+  private canvasObserver: MutationObserver | undefined;
+
+  private screen: {
+    left: number, top: number, width: number, height: number
+  } = {
+    left: NaN, top: NaN, width: NaN, height: NaN
   };
 
-  target: THREE.Vector3 = new THREE.Vector3();
-  lastPosition: THREE.Vector3 = new THREE.Vector3();
-  lastZoom:number = 1;
-  state: State = STATE.NONE;
-  keyState: State = STATE.NONE;
-  eye: THREE.Vector3 = new THREE.Vector3();
-  movePrev: THREE.Vector2 = new THREE.Vector2();
-  moveCurr: THREE.Vector2 = new THREE.Vector2();
-  lastAxis: THREE.Vector3 = new THREE.Vector3();
-  lastAngle: number = 0;
-  zoomStart: THREE.Vector2 = new THREE.Vector2();
-  zoomEnd: THREE.Vector2 = new THREE.Vector2();
-  panStart: THREE.Vector2 = new THREE.Vector2();
-  panEnd: THREE.Vector2 = new THREE.Vector2();
-  rollStart: THREE.Vector2 = new THREE.Vector2();
-  rollEnd: THREE.Vector2 = new THREE.Vector2();
+  keys: string[] = ['A', 'S', 'Shift', 'Control'];
 
-  constructor (object: THREE.Camera, domElement: HTMLCanvasElement) {
-    super();
-    this.object = object;
-    this.domElement = domElement;
+  private moveCurr: BABYLON.Vector2 = BABYLON.Vector2.Zero();
+  private movePrev: BABYLON.Vector2 = BABYLON.Vector2.Zero();
+  private zoomStart: BABYLON.Vector2 = BABYLON.Vector2.Zero();
+  private zoomEnd: BABYLON.Vector2 = BABYLON.Vector2.Zero();
+  private panStart: BABYLON.Vector2 = BABYLON.Vector2.Zero();
+  private panEnd: BABYLON.Vector2 = BABYLON.Vector2.Zero();
+  private rollStart: BABYLON.Vector2 = BABYLON.Vector2.Zero();
+  private rollEnd: BABYLON.Vector2 = BABYLON.Vector2.Zero();
+  private state: State = STATE.NONE;
+  private keyState: State = STATE.NONE;
+  private eye: BABYLON.Vector3 = BABYLON.Vector3.Zero();
 
-    this.domElement.addEventListener('contextmenu', this.onContextMenu);
-    this.domElement.addEventListener('pointerdown', this.onPointerDown);
-    this.domElement.addEventListener('wheel', this.onMouseWheel);
-    this.domElement.ownerDocument.addEventListener('pointermove', this.onPointerMove);
-    this.domElement.ownerDocument.addEventListener('pointerup', this.onPointerUp);
+  // interface BABYLON.ICameraInput
+
+  getClassName (): string {
+    return 'CustomCameraInput';
+  }
+
+  getSimpleName (): string {
+    return 'custom';
+  }
+
+  attachControl (noPreventDefault?: boolean | undefined): void {
+    if (noPreventDefault !== undefined) {
+      this.noPreventDefault = noPreventDefault;
+    }
+    if (this.camera === null) return;
+    const canvas = this.camera.getEngine().getRenderingCanvas();
+    if (canvas === null || canvas === undefined) return;
+
+    this.canvas = canvas;
+    this.onContextMenu = this.onContextMenu.bind(this);
+    this.canvas.addEventListener('contextmenu', this.onContextMenu);
+    this.onPointerDown = this.onPointerDown.bind(this);
+    this.canvas.addEventListener('pointerdown', this.onPointerDown);
+    this.onMouseWheel = this.onMouseWheel.bind(this);
+    this.canvas.addEventListener('wheel', this.onMouseWheel);
+    this.onPointerMove = this.onPointerMove.bind(this);
+    this.canvas.ownerDocument.addEventListener('pointermove', this.onPointerMove);
+    this.onPointerUp = this.onPointerUp.bind(this);
+    this.canvas.ownerDocument.addEventListener('pointerup', this.onPointerUp);
+    this.onKeyDown = this.onKeyDown.bind(this);
     window.addEventListener('keydown', this.onKeyDown);
+    this.onKeyUp = this.onKeyUp.bind(this);
     window.addEventListener('keyup', this.onKeyUp);
 
-    this.handleResize();
+    this.onResize = this.onResize.bind(this);
+    this.canvasObserver = new MutationObserver(() => { this.onResize(); });
+    this.canvasObserver.observe(this.canvas, {
+      attributes: true,
+      attributeFilter: ['width']
+    });
+
+    this.zoom = this.camera.position.subtract(this.camera.target).length();
+    this.target = this.camera.target.clone();
+    this.onResize();
+  }
+
+  detachControl (): void {
+    if (this.canvas === null) return;
+    this.canvas.removeEventListener('contextmenu', this.onContextMenu);
+    this.canvas.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas.removeEventListener('wheel', this.onMouseWheel);
+    this.canvas.ownerDocument.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas.ownerDocument.removeEventListener('pointerup', this.onPointerUp);
+    window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener('keyup', this.onKeyUp);
+    window.removeEventListener('resize', this.onResize);
+    this.canvasObserver?.disconnect();
+  }
+
+  checkInputs (): void {
     this.update();
   }
 
-  handleResize = () => {
-    const box = this.domElement.getBoundingClientRect();
-    const d = this.domElement.ownerDocument.documentElement;
-    this.screen.left = box.left + window.pageXOffset - d.clientLeft;
-    this.screen.top = box.top + window.pageYOffset - d.clientTop;
-    this.screen.width = box.width;
-    this.screen.height = box.height;
-  }
+  // checkInputs utilities
 
-  switchCamera = (camera: THREE.Camera) => {
-    const oldCamera = this.object;
-    this.object = camera;
-
-    this.object.up.copy(oldCamera.up);
-    this.object.position.copy(oldCamera.position);
-
-    if (isPerspectiveCamera(this.object) && isPerspectiveCamera(oldCamera)) {
-      this.object.zoom = oldCamera.zoom;
-    }
-  }
-
-  setRoll = (rad: number, up: THREE.Vector3) => {
-    this.object.up.copy(up);
-    this.object.lookAt(this.target);
-
-    this.eye.subVectors(this.object.position, this.target);
-
-    const eyeDirection = new THREE.Vector3();
-    eyeDirection.copy(this.eye).normalize();
-
-    const quaternion = new THREE.Quaternion();
-    quaternion.setFromAxisAngle(eyeDirection, rad);
-
-    this.eye.applyQuaternion(quaternion);
-    this.object.up.applyQuaternion(quaternion);
-  }
-
-  getMouseOnScreen = (pageX: number, pageY: number, dst: THREE.Vector2) => {
-    dst.set(
-      (pageX - this.screen.left) / this.screen.width,
-      (pageY - this.screen.top) / this.screen.height
-    );
-  }
-
-  getMouseOnCircle = (pageX: number, pageY: number, dst: THREE.Vector2) => {
-    dst.set(
-      ((pageX - this.screen.width * 0.5 - this.screen.left) / (this.screen.width * 0.5)),
-      ((this.screen.height + 2 * (this.screen.top - pageY)) / this.screen.width)
-    );
-  }
-
-  rotateCamera = () => {
-    const quaternion = new THREE.Quaternion();
-    const moveDirection = new THREE.Vector3(
+  private rotateCamera () {
+    if (this.camera === null) return;
+    const moveDirection = new BABYLON.Vector3(
       this.moveCurr.x - this.movePrev.x,
       this.moveCurr.y - this.movePrev.y,
       0
     );
-    let angle: number = moveDirection.length();
+    let angle = moveDirection.length();
     if (angle) {
-      const axis = new THREE.Vector3();
-      const eyeDirection = new THREE.Vector3();
-      const objectUpDirection = new THREE.Vector3();
-      const objectSidewaysDirection = new THREE.Vector3();
+      this.target.subtractToRef(this.camera.position, this.eye);
 
-      this.eye.copy(this.object.position).sub(this.target);
-      eyeDirection.copy(this.eye).normalize();
-      objectUpDirection.copy(this.object.up).normalize();
+      const eyeDirection = this.eye.clone();
+      eyeDirection.normalize();
+      const objectUpDirection = this.camera.upVector.clone();
+      objectUpDirection.normalize();
+      const objectSidewaysDirection = objectUpDirection.cross(eyeDirection);
+      objectSidewaysDirection.normalize();
 
-      objectSidewaysDirection.crossVectors(objectUpDirection, eyeDirection).normalize();
+      objectUpDirection.scaleInPlace(this.moveCurr.y - this.movePrev.y);
+      objectSidewaysDirection.scaleInPlace(this.moveCurr.x - this.movePrev.x);
 
-      objectUpDirection.setLength(this.moveCurr.y - this.movePrev.y);
-      objectSidewaysDirection.setLength(this.moveCurr.x - this.movePrev.x);
-
-      moveDirection.copy(objectUpDirection.add(objectSidewaysDirection));
-      axis.crossVectors(moveDirection, this.eye).normalize();
+      objectUpDirection.addToRef(objectSidewaysDirection, moveDirection);
+      const axis = moveDirection.cross(eyeDirection).normalize();
 
       angle *= this.rotateSpeed;
-      quaternion.setFromAxisAngle(axis, angle);
+      const quaternion = BABYLON.Quaternion.RotationAxis(axis, angle).normalize();
 
-      this.eye.applyQuaternion(quaternion);
+      this.eye.applyRotationQuaternionInPlace(quaternion);
 
       if (!this.noRoll) {
-        this.object.up.applyQuaternion(quaternion);
+        this.camera.upVector = this.camera.upVector.normalizeToNew()
+          .applyRotationQuaternion(quaternion).normalizeToNew();
       }
 
-      this.movePrev.copy(this.moveCurr);
+      this.movePrev.copyFrom(this.moveCurr);
     }
   }
 
-  zoomCamera = () => {
+  private zoomCamera () {
+    if (this.camera === null) return;
     const factor = 1.0 + (this.zoomEnd.y - this.zoomStart.y) * this.zoomSpeed;
     if (factor !== 1.0 && factor > 0.0) {
-      if (isPerspectiveCamera(this.object)) {
-        this.eye.multiplyScalar(factor);
-      } else if (isOrthographicCamera(this.object)) {
-        this.object.zoom /= factor;
-        this.object.updateProjectionMatrix();
-      } else {
-        console.warn('CustomCameraControls: Unsupported camera type');
-      }
+      this.zoom /= factor;
+      this.eye.normalize().scaleInPlace(this.zoom);
+      this.updateCameraFrustum();
     }
-    this.zoomStart.copy(this.zoomEnd);
+    this.zoomStart.copyFrom(this.zoomEnd);
   }
 
-  panCamera = () => {
-    const mouseChange = new THREE.Vector2();
-    const objectUp = new THREE.Vector3();
-    const pan = new THREE.Vector3();
+  private panCamera () {
+    if (this.camera === null) return;
+    const mouseChange = this.panEnd.subtract(this.panStart);
 
-    mouseChange.copy(this.panEnd).sub(this.panStart);
+    if (mouseChange.lengthSquared()) {
+      mouseChange.scaleInPlace(this.eye.length() * this.panSpeed);
+      const pan = this.eye.cross(this.camera.upVector).normalize()
+        .scaleInPlace(mouseChange.x);
+      pan.addInPlace(this.camera.upVector.scale(mouseChange.y));
 
-    if (mouseChange.lengthSq()) {
-      if (isOrthographicCamera(this.object)) {
-        const scaleX = (this.object.right - this.object.left) / this.object.zoom / this.domElement.clientWidth;
-        const scaleY = (this.object.top - this.object.bottom) / this.object.zoom / this.domElement.clientWidth;
-
-        mouseChange.x *= scaleX;
-        mouseChange.y *= scaleY;
-      }
-
-      mouseChange.multiplyScalar(this.eye.length() * this.panSpeed);
-
-      pan.copy(this.eye).cross(this.object.up).setLength(mouseChange.x);
-      pan.add(objectUp.copy(this.object.up).setLength(mouseChange.y));
-
-      this.object.position.add(pan);
-      this.target.add(pan);
-      this.panStart.copy(this.panEnd);
+      this.target.addInPlace(pan);
+      this.panStart.copyFrom(this.panEnd);
     }
   }
 
-  rollCamera = () => {
-    const quaternion = new THREE.Quaternion();
+  private rollCamera () {
+    if (this.camera === null) return;
     const angle0 = Math.atan2(this.rollStart.y, this.rollStart.x);
     const angle1 = Math.atan2(this.rollEnd.y, this.rollEnd.x);
-
     const delta = angle0 - angle1;
     if (delta) {
       const angle = delta * this.rollSpeed;
-      const eyeDirection = new THREE.Vector3();
-      eyeDirection.copy(this.eye).normalize();
+      const eyeDirection = this.eye.clone();
+      eyeDirection.normalize();
 
-      quaternion.setFromAxisAngle(eyeDirection, angle);
+      const q = BABYLON.Quaternion.RotationAxis(eyeDirection, angle);
 
-      this.eye.applyQuaternion(quaternion);
-      this.object.up.applyQuaternion(quaternion);
+      this.camera.upVector.applyRotationQuaternionInPlace(q);
     }
-
-    this.rollStart.copy(this.rollEnd);
+    this.rollStart.copyFrom(this.rollEnd);
   }
 
-  checkDistances = () => {
+  private checkDistances () {
     if (this.noZoom && this.noPan) return;
-
-    if (this.eye.lengthSq() > this.maxDistance * this.maxDistance) {
-      this.object.position.addVectors(this.target, this.eye.setLength(this.maxDistance));
-      this.zoomStart.copy(this.zoomEnd);
+    if (this.camera === null) return;
+    if (this.eye.lengthSquared() > this.maxDistance * this.maxDistance) {
+      this.target.subtractToRef(this.eye.clone().normalize().scale(this.maxDistance), this.camera.position);
+      this.zoomStart.copyFrom(this.zoomEnd);
     }
-    if (this.eye.lengthSq() < this.minDistance * this.minDistance) {
-      this.object.position.addVectors(this.target, this.eye.setLength(this.minDistance));
-      this.zoomStart.copy(this.zoomEnd);
+    if (this.eye.lengthSquared() < this.minDistance * this.minDistance) {
+      this.target.subtractToRef(this.eye.clone().normalize().scale(this.maxDistance), this.camera.position);
+      this.zoomStart.copyFrom(this.zoomEnd);
     }
   }
 
-  update = () => {
+  private update () {
+    if (this.camera === null) return;
     if (!this.enabled) return;
-    this.eye.subVectors(this.object.position, this.target);
-    const oldQuaternion = new THREE.Quaternion();
-    oldQuaternion.copy(this.object.quaternion);
+    const oldQuaternion = this.camera.absoluteRotation.clone();
+    this.target.subtractToRef(this.camera.position, this.eye);
+    const eyeDirection = this.eye.clone();
+    eyeDirection.normalize();
+    const objectOldUpDirection = this.camera.upVector.clone();
+    const objectUpDirection = this.camera.upVector.clone();
+    objectUpDirection.normalize();
 
-    const eyeDirection = new THREE.Vector3();
-    eyeDirection.copy(this.eye).normalize();
-    const objectOldUpDirection = new THREE.Vector3();
-    objectOldUpDirection.copy(this.object.up);
-    const objectUpDirection = new THREE.Vector3();
-    objectUpDirection.copy(this.object.up).normalize();
-
-    if (1 - Math.abs(eyeDirection.dot(objectUpDirection)) < EPS) {
+    if (1 - Math.abs(BABYLON.Vector3.Dot(eyeDirection, objectUpDirection)) < EPS) {
       // use screen up direction
       objectUpDirection.set(0, 1, 0);
-      objectUpDirection.applyQuaternion(this.object.quaternion);
-      this.object.up.copy(objectUpDirection);
+      objectUpDirection.applyRotationQuaternionInPlace(this.camera.rotationQuaternion);
+      this.camera.upVector.copyFrom(objectUpDirection);
     }
 
     if (!this.noRotate) {
@@ -277,58 +251,128 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       this.rollCamera();
     }
 
-    this.object.position.addVectors(this.target, this.eye);
+    this.target.subtractToRef(this.eye, this.camera.position);
 
-    if (isPerspectiveCamera(this.object)) {
-      this.checkDistances();
-      this.object.lookAt(this.target);
-      if (this.lastPosition.distanceToSquared(this.object.position) > EPS) {
-        this.dispatchEvent(changeEvent);
-        this.lastPosition.copy(this.object.position);
-      }
-    } else if (isOrthographicCamera(this.object)) {
-      this.object.lookAt(this.target);
-      if (this.lastPosition.distanceToSquared(this.object.position) > EPS || this.lastZoom !== this.object.zoom) {
-        this.dispatchEvent(changeEvent);
-        this.lastPosition.copy(this.object.position);
-        this.lastZoom = this.object.zoom;
-      }
-    } else {
-      console.warn('CustomCameraControls: Unsupported camera type');
-    }
+    this.checkDistances();
 
     if (this.noRoll) {
-      this.object.up.copy(objectOldUpDirection);
+      this.camera.upVector.copyFrom(objectOldUpDirection);
     }
 
-    // limit rotation around this.object.up
-    if (this.noRoll && 1 - Math.abs(eyeDirection.dot(this.object.up)) < 0.1) {
-      const quaternion = new THREE.Quaternion();
-      quaternion.copy(this.object.quaternion);
-      quaternion.multiplyQuaternions(quaternion, oldQuaternion.invert());
+    this.camera.setTarget(this.target);
 
-      const rotationAxis = new THREE.Vector3(quaternion.x, quaternion.y, quaternion.z);
-      rotationAxis.projectOnVector(this.object.up);
-      const twist = new THREE.Quaternion(rotationAxis.x, rotationAxis.y, rotationAxis.z, quaternion.w);
+    // limit rotation around this.object.up
+    if (this.noRoll && 1 - Math.abs(BABYLON.Vector3.Dot(eyeDirection, this.camera.upVector)) < 0.1) {
+      const q = this.camera.absoluteRotation.clone();
+      q.multiplyInPlace(oldQuaternion.invert());
+
+      const rotationAxis = new BABYLON.Vector3(q.x, q.y, q.z);
+      const up = this.camera.upVector.clone().normalize();
+      // project rotation axis onto up vector
+      const d = BABYLON.Vector3.Dot(rotationAxis, up);
+      rotationAxis.copyFrom(up).scaleInPlace(d);
+
+      const twist = new BABYLON.Quaternion(rotationAxis.x, rotationAxis.y, rotationAxis.z, q.w);
       twist.normalize();
 
-      quaternion.setFromAxisAngle(rotationAxis, 0);
-      const sidewayAngle = quaternion.angleTo(twist);
-
-      const cancelQuaternion = new THREE.Quaternion();
-      cancelQuaternion.copy(twist).invert();
+      BABYLON.Quaternion.RotationAxis(rotationAxis, 0);
+      // angle between q and twist
+      const sidewayAngle = 2 * Math.acos(
+        Math.abs(
+          Math.max(-1, Math.min(1, BABYLON.Quaternion.Dot(q.normalizeToNew(), twist)))
+        )
+      );
 
       if (sidewayAngle > Math.PI * 0.1) {
-        this.eye.applyQuaternion(cancelQuaternion);
-
-        this.object.position.addVectors(this.target, this.eye);
-        this.object.lookAt(this.target);
+        this.eye.applyRotationQuaternionInPlace(twist.invert());
+        this.target.subtractToRef(this.eye, this.camera.position);
+        this.camera.setTarget(this.target);
       }
     }
   }
 
-  onPointerDown = (event: PointerEvent) => {
-    if (this.enabled === false) return;
+  // utilities
+
+  setRoll (rad: number, up: BABYLON.Vector3) {
+    if (this.camera === null) return;
+    this.camera.upVector.copyFrom(up);
+    this.camera.setTarget(this.target);
+
+    this.camera.position.subtractToRef(this.target, this.eye);
+    const eyeDirection = this.eye.clone().normalize();
+    const quaternion = BABYLON.Quaternion.RotationAxis(eyeDirection, rad);
+
+    this.eye.applyRotationQuaternionInPlace(quaternion);
+    this.camera.upVector.applyRotationQuaternionInPlace(quaternion);
+  }
+
+  updateCameraFrustum (): [number, number] {
+    if (this.camera === null) return [-1, -1];
+    const eyeLength = this.camera.position.subtract(this.camera.target).length();
+    const f = this.frustum
+      ? this.frustum * this.zoom
+      : 2 * eyeLength * Math.tan(this.camera.fov / 2);
+    switch (this.camera.fovMode) {
+      case BABYLON.Camera.FOVMODE_HORIZONTAL_FIXED:
+      {
+        const aspect = this.screen.height / this.screen.width;
+        this.camera.orthoLeft = f / -2;
+        this.camera.orthoRight = f / 2;
+        this.camera.orthoTop = f * aspect / 2;
+        this.camera.orthoBottom = f * aspect / -2;
+        return [f, f * aspect];
+      }
+      case BABYLON.Camera.FOVMODE_VERTICAL_FIXED:
+      {
+        const aspect = this.screen.width / this.screen.height;
+        this.camera.orthoLeft = f * aspect / -2;
+        this.camera.orthoRight = f * aspect / 2;
+        this.camera.orthoTop = f / 2;
+        this.camera.orthoBottom = f / -2;
+        return [f * aspect, f];
+      }
+      default:
+        console.warn('CustomCameraInput: unsupported camera fovMode');
+        return [-1, -1];
+    }
+  }
+
+  private getMouseOnScreen (pageX: number, pageY: number, dst: BABYLON.Vector2): BABYLON.Vector2 {
+    return dst.set(
+      (pageX - this.screen.left) / this.screen.width,
+      (pageY - this.screen.top) / this.screen.height
+    );
+  }
+
+  private getMouseOnCircle (pageX: number, pageY: number, dst: BABYLON.Vector2): BABYLON.Vector2 {
+    return dst.set(
+      ((pageX - this.screen.width * 0.5 - this.screen.left) / (this.screen.width * 0.5)),
+      ((this.screen.height + 2 * (this.screen.top - pageY)) / this.screen.width)
+    );
+  }
+
+  // event handlers
+
+  private onResize (): void {
+    if (this.canvas === null) return;
+    if (this.camera === null) return;
+    const box = this.canvas.getBoundingClientRect();
+    const d = this.canvas.ownerDocument.documentElement;
+
+    //   (distance from *origin* to *left edge of viewport*)
+    // + (distance from *left edge of viewport* to *left edge of canvas*)
+    // - (width of left border)
+    this.screen.left = window.scrollX + box.left - d.clientLeft;
+
+    this.screen.top = window.scrollY + box.top - d.clientTop;
+    this.screen.width = box.width;
+    this.screen.height = box.height;
+
+    this.updateCameraFrustum();
+  }
+
+  private onPointerDown (event: PointerEvent): void {
+    if (!this.enabled) return;
     switch (event.pointerType) {
       case 'mouse':
       case 'pen':
@@ -339,8 +383,8 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
   }
 
-  onPointerMove = (event: PointerEvent) => {
-    if (this.enabled === false) return;
+  private onPointerMove (event: PointerEvent): void {
+    if (!this.enabled) return;
     switch (event.pointerType) {
       case 'mouse':
       case 'pen':
@@ -351,8 +395,8 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
   }
 
-  onPointerUp = (event: PointerEvent) => {
-    if (this.enabled === false) return;
+  private onPointerUp (event: PointerEvent): void {
+    if (!this.enabled) return;
     switch (event.pointerType) {
       case 'mouse':
       case 'pen':
@@ -363,14 +407,12 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
   }
 
-  onKeyDown = (event: KeyboardEvent) => {
-    if (this.enabled === false) return;
+  private onKeyDown (event: KeyboardEvent): void {
+    if (!this.enabled) return;
 
     window.removeEventListener('keydown', this.onKeyDown);
 
-    if (this.keyState !== STATE.NONE) {
-      return;
-    }
+    if (this.keyState !== STATE.NONE) return;
 
     if (event.key === this.keys[STATE.ROTATE] && !this.noRotate) {
       this.keyState = STATE.ROTATE;
@@ -383,26 +425,27 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
   }
 
-  onKeyUp = (event: KeyboardEvent) => {
-    if (this.enabled === false) {
-      return;
-    }
+  private onKeyUp (event: KeyboardEvent): void {
+    if (!this.enabled) return;
     this.keyState = STATE.NONE;
     window.addEventListener('keydown', this.onKeyDown);
   }
 
-  onMouseDown = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
+  private onMouseDown (event: MouseEvent): void {
+    if (this.canvas === null) return;
+    if (!this.noPreventDefault) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
     if (this.state === STATE.NONE) {
       switch (event.button) {
-        case this.mouseButtons.LEFT:
+        case MOUSEEVENTBUTTON.LEFT:
           this.state = STATE.ROTATE;
           break;
-        case this.mouseButtons.MIDDLE:
+        case MOUSEEVENTBUTTON.WHEEL:
           this.state = STATE.ZOOM;
           break;
-        case this.mouseButtons.RIGHT:
+        case MOUSEEVENTBUTTON.RIGHT:
           this.state = STATE.PAN;
           break;
         default:
@@ -411,38 +454,35 @@ export class CustomCameraControls extends THREE.EventDispatcher {
       }
     }
 
-    const state = this.keyState !== STATE.NONE ? this.keyState : this.state;
-
+    const state = this.keyState === STATE.NONE ? this.state : this.keyState;
     if (state === STATE.ROTATE && !this.noRotate) {
       this.getMouseOnCircle(event.pageX, event.pageY, this.moveCurr);
-      this.movePrev.copy(this.moveCurr);
+      this.movePrev.copyFrom(this.moveCurr);
     } else if (state === STATE.ZOOM && !this.noZoom) {
       this.getMouseOnScreen(event.pageX, event.pageY, this.zoomStart);
-      this.zoomEnd.copy(this.zoomStart);
+      this.zoomEnd.copyFrom(this.zoomStart);
     } else if (state === STATE.PAN && !this.noPan) {
       this.getMouseOnScreen(event.pageX, event.pageY, this.panStart);
-      this.panEnd.copy(this.panStart);
+      this.panEnd.copyFrom(this.panStart);
     } else if (state === STATE.ROLL && !this.noRoll) {
       this.getMouseOnCircle(event.pageX, event.pageY, this.rollStart);
-      this.rollEnd.copy(this.rollStart);
+      this.rollEnd.copyFrom(this.rollStart);
     }
 
-    this.domElement.ownerDocument.addEventListener('pointermove', this.onPointerMove);
-    this.domElement.ownerDocument.addEventListener('pointerup', this.onPointerUp);
-
-    this.dispatchEvent(startEvent);
+    this.canvas.ownerDocument.addEventListener('pointermove', this.onPointerMove);
+    this.canvas.ownerDocument.addEventListener('pointerup', this.onPointerUp);
   }
 
-  onMouseMove = (event: MouseEvent) => {
-    if (this.enabled === false) {
-      return;
+  private onMouseMove (event: MouseEvent): void {
+    if (!this.enabled) return;
+    if (!this.noPreventDefault) {
+      event.preventDefault();
+      event.stopPropagation();
     }
-    event.preventDefault();
-    event.stopPropagation();
-    const state = (this.keyState !== STATE.NONE) ? this.keyState : this.state;
+    const state = (this.keyState === STATE.NONE) ? this.state : this.keyState;
 
     if (state === STATE.ROTATE && !this.noRotate) {
-      this.movePrev.copy(this.moveCurr);
+      this.movePrev.copyFrom(this.moveCurr);
       this.getMouseOnCircle(event.pageX, event.pageY, this.moveCurr);
     } else if (state === STATE.ZOOM && !this.noZoom) {
       this.getMouseOnScreen(event.pageX, event.pageY, this.zoomEnd);
@@ -453,27 +493,23 @@ export class CustomCameraControls extends THREE.EventDispatcher {
     }
   }
 
-  onMouseUp = (event: MouseEvent) => {
-    if (this.enabled === false) {
-      return;
-    }
+  private onMouseUp (event: MouseEvent): void {
+    if (this.canvas === null) return;
+    if (!this.enabled) return;
     event.preventDefault();
     event.stopPropagation();
     this.state = STATE.NONE;
-    this.domElement.ownerDocument.removeEventListener('pointermove', this.onPointerMove);
-    this.domElement.ownerDocument.removeEventListener('pointerup', this.onPointerUp);
-    this.dispatchEvent(endEvent);
+    this.canvas.ownerDocument.removeEventListener('pointermove', this.onPointerMove);
+    this.canvas.ownerDocument.removeEventListener('pointerup', this.onPointerUp);
   }
 
-  onMouseWheel = (event:WheelEvent) => {
-    if (this.enabled === false) {
-      return;
+  private onMouseWheel (event: WheelEvent): void {
+    if (!this.enabled) return;
+    if (this.noZoom) return;
+    if (!this.noPreventDefault) {
+      event.preventDefault();
+      event.stopPropagation();
     }
-    if (this.noZoom === true) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
     switch (event.deltaMode) {
       case WheelEvent.DOM_DELTA_PAGE:
         this.zoomStart.y -= event.deltaY * 0.025;
@@ -486,32 +522,10 @@ export class CustomCameraControls extends THREE.EventDispatcher {
         this.zoomStart.y -= event.deltaY * 0.00025;
         break;
     }
-    this.dispatchEvent(startEvent);
-    this.dispatchEvent(endEvent);
   }
 
-  onContextMenu = (event: MouseEvent) => {
-    if (this.enabled === false) {
-      return;
-    }
-    event.preventDefault();
+  onContextMenu (event: MouseEvent): void {
+    if (!this.enabled) return;
+    if (!this.noPreventDefault) event.preventDefault();
   }
-
-  dispose = () => {
-    this.domElement.removeEventListener('contextmenu', this.onContextMenu);
-    this.domElement.removeEventListener('pointerdown', this.onPointerDown);
-    this.domElement.removeEventListener('wheel', this.onMouseWheel);
-    this.domElement.ownerDocument.removeEventListener('pointermove', this.onPointerMove);
-    this.domElement.ownerDocument.removeEventListener('pointerup', this.onPointerUp);
-    window.removeEventListener('keydown', this.onKeyDown);
-    window.removeEventListener('keyup', this.onKeyUp);
-  }
-}
-
-function isPerspectiveCamera (camera: THREE.Camera): camera is THREE.PerspectiveCamera {
-  return (camera as any).isPerspectiveCamera;
-}
-
-function isOrthographicCamera (camera: THREE.Camera): camera is THREE.OrthographicCamera {
-  return (camera as any).isOrthographicCamera;
 }

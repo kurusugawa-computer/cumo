@@ -20,6 +20,7 @@ def main():
     )
     print(f"open: http://{host}:{http_port}")
     print("setup...")
+    viewer.stop_render()
 
     viewer.remove_all_objects()
     viewer.remove_all_custom_controls()
@@ -99,6 +100,7 @@ def main():
 
     print("resize window and press custom control button \"start\" (or press A key)")
 
+    viewer.resume_render()
     viewer.wait_forever()
 
 
