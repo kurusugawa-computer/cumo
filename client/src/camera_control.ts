@@ -460,7 +460,7 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
       this.movePrev.copyFrom(this.moveCurr);
     } else if (state === STATE.ZOOM && !this.noZoom) {
       this.getMouseOnScreen(event.pageX, event.pageY, this.zoomStart);
-      this.zoomStart.copyFrom(this.zoomStart);
+      this.zoomEnd.copyFrom(this.zoomStart);
     } else if (state === STATE.PAN && !this.noPan) {
       this.getMouseOnScreen(event.pageX, event.pageY, this.panStart);
       this.panEnd.copyFrom(this.panStart);
