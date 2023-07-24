@@ -97,9 +97,26 @@ export class PointCloudViewer {
     this.canvas2d.domElement.style.pointerEvents = 'none';
     container.appendChild(this.canvas2d.domElement);
 
-    window.addEventListener('resize', () => {
+    const onResize = () => {
+      this.canvas.width = window.innerWidth * window.devicePixelRatio;
+      this.canvas.height = window.innerHeight * window.devicePixelRatio;
       this.engine.resize();
-    });
+    };
+
+    window.addEventListener('resize', onResize);
+
+    let removeDPRListener: (()=>void) | null = null;
+    const updateDPR = () => {
+      if (removeDPRListener !== null) removeDPRListener();
+      const mm = window.matchMedia(
+        `window and (resolution: ${window.devicePixelRatio}dppx)`
+      );
+      mm.addEventListener('change', updateDPR);
+      removeDPRListener = () => { mm.removeEventListener('change', updateDPR); };
+
+      onResize();
+    };
+    updateDPR();
 
     // コントロールのセットアップ
     this.gui = new DAT.GUI();
