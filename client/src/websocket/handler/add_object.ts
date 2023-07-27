@@ -310,6 +310,8 @@ function handleImage (
       mat.diffuseTexture.hasAlpha = true;
       mat.backFaceCulling = !pbImage.getDoubleSide();
       mat.emissiveColor = new BABYLON.Color3(1, 1, 1);
+      mat.alphaMode = BABYLON.Engine.ALPHA_COMBINE;
+      mat.useAlphaFromDiffuseTexture = true;
 
       const ul = pbImage.getUpperLeft();
       const ll = pbImage.getLowerLeft();

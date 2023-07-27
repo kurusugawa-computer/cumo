@@ -24,7 +24,6 @@ export function handleRemoveObject (websocket: WebSocket, commandID: string, vie
 
 function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
   while (viewer.scene.meshes[0]) {
-    console.log(viewer.scene.meshes[0]);
     viewer.scene.meshes[0].dispose(false, true);
   }
 
