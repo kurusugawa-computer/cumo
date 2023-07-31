@@ -1,4 +1,4 @@
-import * as PB from '../../protobuf/server_pb.js';
+import * as PB from '../../protobuf/server';
 
 import * as imageType from 'image-type';
 import { Overlay } from '../../overlay';
@@ -15,22 +15,21 @@ export function handleAddObject (websocket: WebSocket, commandID: string, viewer
     sendFailure(websocket, commandID, 'failed to get add_object command');
     return;
   }
-  const objectCase = PB.AddObject.ObjectCase;
-  switch (addObject.getObjectCase()) {
-    case objectCase.LINE_SET:
-      handleLineSet(websocket, commandID, viewer, addObject.getLineSet());
+  switch (addObject.Object) {
+    case 'lineSet':
+      handleLineSet(websocket, commandID, viewer, addObject.lineSet);
       break;
-    case objectCase.POINT_CLOUD:
-      handlePointCloud(websocket, commandID, viewer, addObject.getPointCloud());
+    case 'pointCloud':
+      handlePointCloud(websocket, commandID, viewer, addObject.pointCloud);
       break;
-    case objectCase.OVERLAY:
-      handleOverlay(websocket, commandID, viewer, addObject.getOverlay());
+    case 'overlay':
+      handleOverlay(websocket, commandID, viewer, addObject.overlay);
       break;
-    case objectCase.MESH:
-      handleMesh(websocket, commandID, viewer, addObject.getMesh());
+    case 'mesh':
+      handleMesh(websocket, commandID, viewer, addObject.mesh);
       break;
-    case objectCase.IMAGE:
-      handleImage(websocket, commandID, viewer, addObject.getImage());
+    case 'image':
+      handleImage(websocket, commandID, viewer, addObject.image);
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any object');
@@ -38,24 +37,23 @@ export function handleAddObject (websocket: WebSocket, commandID: string, viewer
   }
 }
 
-function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, overlay: PB.AddObject.Overlay | undefined) {
-  if (overlay === undefined || !overlay.hasPosition()) {
+function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, overlay: PB.AddObjectOverlay | undefined) {
+  if (overlay === undefined || !overlay.hasPosition) {
     sendFailure(websocket, commandID, 'failed to get overlay command');
     return;
   }
-  const position = overlay.getPosition();
+  const position = overlay.position;
   if (position === undefined) {
     sendFailure(websocket, commandID, 'message has not position');
     return;
   }
-  const coordType = overlay.getType();
-  const contentsCase = PB.AddObject.Overlay.ContentsCase;
-  switch (overlay.getContentsCase()) {
-    case contentsCase.HTML:
-      addOverlayHTMLText(websocket, commandID, viewer, overlay.getHtml(), position, coordType);
+  const coordType = overlay.type;
+  switch (overlay.Contents) {
+    case 'html':
+      addOverlayHTMLText(websocket, commandID, viewer, overlay.html, position, coordType);
       break;
-    case contentsCase.IMAGE:
-      addOverlayImage(websocket, commandID, viewer, overlay.getImage(), position, coordType);
+    case 'image':
+      addOverlayImage(websocket, commandID, viewer, overlay.image, position, coordType);
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any contents');
@@ -63,7 +61,7 @@ function handleOverlay (websocket: WebSocket, commandID: string, viewer: PointCl
   }
 }
 
-function addOverlayImage (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, image: PB.AddObject.Overlay.Image | undefined, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType) {
+function addOverlayImage (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, image: PB.AddObjectOverlayImage | undefined, position: PB.VecXYZf, coordType: PB.AddObjectOverlayCoordinateType) {
   if (image === undefined) {
     sendFailure(websocket, commandID, 'failed to get image');
     return;
@@ -71,49 +69,53 @@ function addOverlayImage (websocket: WebSocket, commandID: string, viewer: Point
   const div = document.createElement('div');
   const img = document.createElement('img');
 
-  const data = image.getData_asU8();
+  const data = image.data;
   const type = imageType.default(data);
   if (type === null) {
     sendFailure(websocket, commandID, 'unknown data type');
     return;
   }
 
-  img.src = 'data:' + type.mime + ';base64,' + image.getData_asB64();
+  const url = URL.createObjectURL(new Blob([image.data], {
+    type: type.mime
+  }));
+
+  img.src = url;
   img.style.width = '100%';
-  div.style.width = image.getWidth() + 'px';
+  div.style.width = image.width + 'px';
   div.appendChild(img);
   addOverlayHTML(viewer, div, position, coordType, commandID);
   sendSuccess(websocket, commandID, commandID);
 }
 
-function addOverlayHTMLText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, html: string, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType) {
+function addOverlayHTMLText (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, html: string, position: PB.VecXYZf, coordType: PB.AddObjectOverlayCoordinateType) {
   const div = document.createElement('div');
   div.innerHTML = html;
   addOverlayHTML(viewer, div, position, coordType, commandID);
   sendSuccess(websocket, commandID, commandID);
 }
 
-function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, coordType: PB.AddObject.Overlay.CoordinateType, commandID: string) {
+function addOverlayHTML (viewer: PointCloudViewer, element: HTMLElement, position: PB.VecXYZf, coordType: PB.AddObjectOverlayCoordinateType, commandID: string) {
   viewer.overlayContainer.appendChild(element);
-  const p = new BABYLON.Vector3(position.getX(), position.getY(), position.getZ());
+  const p = new BABYLON.Vector3(position.x, position.y, position.z);
   const overlay = new Overlay(element, p, coordType, commandID);
   viewer.overlays.push(overlay);
 }
 
-function handleMesh (websocket: WebSocket, commandID:string, viewer: PointCloudViewer, PBmesh: PB.AddObject.Mesh | undefined):void {
+function handleMesh (websocket: WebSocket, commandID:string, viewer: PointCloudViewer, PBmesh: PB.AddObjectMesh | undefined):void {
   if (PBmesh === undefined) {
     sendFailure(websocket, commandID, 'failed to get mesh');
     return;
   }
-  const points = PBmesh.getPointsList();
+  const points = PBmesh.points;
   const positions: number[] = [];
   for (let i = 0; i < points.length; i++) {
     const v = points[i];
-    positions.push(v.getX(), v.getY(), v.getZ());
+    positions.push(v.x, v.y, v.z);
   }
-  const a = PBmesh.getVertexAIndexList();
-  const b = PBmesh.getVertexBIndexList();
-  const c = PBmesh.getVertexCIndexList();
+  const a = PBmesh.vertexAIndex;
+  const b = PBmesh.vertexBIndex;
+  const c = PBmesh.vertexCIndex;
   const indices: number[] = [];
   for (let i = 0; i < a.length; i++) {
     indices.push(a[i], b[i], c[i]);
@@ -128,14 +130,14 @@ function handleMesh (websocket: WebSocket, commandID:string, viewer: PointCloudV
   vertex.positions = positions;
   vertex.indices = indices;
 
-  const PBcolors = PBmesh.getColorsList();
+  const PBcolors = PBmesh.colors;
   if (PBcolors.length !== 0) {
     const colors: number[] = [];
     for (let i = 0; i < PBcolors.length; i++) {
       colors.push(
-        Math.max(0, Math.min(1, PBcolors[i].getR())),
-        Math.max(0, Math.min(1, PBcolors[i].getG())),
-        Math.max(0, Math.min(1, PBcolors[i].getB())),
+        Math.max(0, Math.min(1, PBcolors[i].r)),
+        Math.max(0, Math.min(1, PBcolors[i].g)),
+        Math.max(0, Math.min(1, PBcolors[i].b)),
         0
       );
     }
@@ -155,37 +157,37 @@ function handleMesh (websocket: WebSocket, commandID:string, viewer: PointCloudV
   sendSuccess(websocket, commandID, commandID);
 }
 
-function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, lineset: PB.AddObject.LineSet | undefined): void {
+function handleLineSet (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, lineset: PB.AddObjectLineSet | undefined): void {
   if (lineset === undefined) {
     sendFailure(websocket, commandID, 'failed to get lineset');
     return;
   }
-  const points = lineset.getPointsList();
+  const points = lineset.points;
   const positions: number[] = [];
   for (let i = 0; i < points.length; i++) {
     const v = points[i];
-    positions.push(v.getX(), v.getY(), v.getZ());
+    positions.push(v.x, v.y, v.z);
   }
 
-  const fromIndex = lineset.getFromIndexList();
-  const toIndex = lineset.getToIndexList();
+  const fromIndex = lineset.fromIndex;
+  const toIndex = lineset.toIndex;
   const indices: number[] = [];
   for (let i = 0; i < fromIndex.length; i++) {
     indices.push(fromIndex[i]);
     indices.push(toIndex[i]);
   }
 
-  const PBcolors = lineset.getColorsList();
+  const PBcolors = lineset.colors;
   const colors: number[] = [];
   for (let i = 0; i < PBcolors.length; i++) {
     colors.push(
-      Math.max(0, Math.min(255, PBcolors[i].getR())),
-      Math.max(0, Math.min(255, PBcolors[i].getG())),
-      Math.max(0, Math.min(255, PBcolors[i].getB()))
+      Math.max(0, Math.min(255, PBcolors[i].r)),
+      Math.max(0, Math.min(255, PBcolors[i].g)),
+      Math.max(0, Math.min(255, PBcolors[i].b))
     );
   }
 
-  const widths = lineset.getWidthsList();
+  const widths = lineset.widths;
 
   viewer.linesets.push(new Lineset(positions, indices, colors, widths, commandID));
 
@@ -196,14 +198,14 @@ function handlePointCloud (
   websocket: WebSocket,
   commandID: string,
   viewer: PointCloudViewer,
-  pbPointcloud: PB.AddObject.PointCloud | undefined
+  pbPointcloud: PB.AddObjectPointCloud | undefined
 ): void {
   if (pbPointcloud === undefined) {
     sendFailure(websocket, commandID, 'failure to get pointcloud');
     return;
   }
 
-  const data_ = pbPointcloud.getPcdData_asU8();
+  const data_ = pbPointcloud.pcdData;
   const data = data_.buffer.slice(data_.byteOffset);
 
   const pc = Loaders.parseSync(data, PCDLoader);
@@ -269,7 +271,7 @@ function handlePointCloud (
   mat.emissiveColor = new BABYLON.Color3(1, 1, 1);
   mat.disableLighting = true;
   mat.pointsCloud = true;
-  mat.pointSize = pbPointcloud.getPointSize();
+  mat.pointSize = pbPointcloud.pointSize;
 
   const mesh = new BABYLON.Mesh(commandID, viewer.scene);
   vertexData.applyToMesh(mesh, true);
@@ -282,22 +284,26 @@ function handleImage (
   websocket: WebSocket,
   commandID: string,
   viewer: PointCloudViewer,
-  pbImage: PB.AddObject.Image | undefined
+  pbImage: PB.AddObjectImage | undefined
 ) {
   if (pbImage === undefined) {
     sendFailure(websocket, commandID, 'failed to get image');
     return;
   }
 
-  const data = pbImage.getData_asU8();
+  const data = pbImage.data;
   const type = imageType.default(data);
   if (type === null) {
     sendFailure(websocket, commandID, 'unknown data type');
     return;
   }
 
+  const url = URL.createObjectURL(new Blob([data], {
+    type: type.mime
+  }));
+
   const texture = new BABYLON.Texture(
-    'data:' + type.mime + ';base64,' + pbImage.getData_asB64(),
+    url,
     viewer.scene,
     undefined, // noMipmapOrOptions
     undefined, // invertY
@@ -308,14 +314,14 @@ function handleImage (
       const mat = new BABYLON.StandardMaterial(commandID, viewer.scene);
       mat.diffuseTexture = texture;
       mat.diffuseTexture.hasAlpha = true;
-      mat.backFaceCulling = !pbImage.getDoubleSide();
+      mat.backFaceCulling = !pbImage.doubleSide;
       mat.emissiveColor = new BABYLON.Color3(1, 1, 1);
       mat.alphaMode = BABYLON.Engine.ALPHA_COMBINE;
       mat.useAlphaFromDiffuseTexture = true;
 
-      const ul = pbImage.getUpperLeft();
-      const ll = pbImage.getLowerLeft();
-      const lr = pbImage.getLowerRight();
+      const ul = pbImage.upperLeft;
+      const ll = pbImage.lowerLeft;
+      const lr = pbImage.lowerRight;
       if (ul === undefined || ll === undefined || lr === undefined) {
         sendFailure(websocket, commandID, 'failed to get position');
         return;
@@ -324,10 +330,10 @@ function handleImage (
       const vertexData = new BABYLON.VertexData();
 
       vertexData.positions = [
-        ll.getX(), ll.getY(), ll.getZ(),
-        lr.getX(), lr.getY(), lr.getZ(),
-        ul.getX(), ul.getY(), ul.getZ(),
-        ul.getX() + (lr.getX() - ll.getX()), ul.getY() + (lr.getY() - ll.getY()), ul.getZ() + (lr.getZ() - ll.getZ())
+        ll.x, ll.y, ll.z,
+        lr.x, lr.y, lr.z,
+        ul.x, ul.y, ul.z,
+        ul.x + (lr.x - ll.x), ul.y + (lr.y - ll.y), ul.z + (lr.z - ll.z)
       ];
       vertexData.indices = [
         1, 2, 0,

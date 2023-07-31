@@ -1,4 +1,4 @@
-import * as PB from '../../protobuf/server_pb.js';
+import * as PB from '../../protobuf/server';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
 
@@ -12,13 +12,12 @@ export function handleRemoveControl (
     sendFailure(websocket, commandID, 'failure to get command');
     return;
   }
-  const ObjectCase = PB.RemoveCustomControl.ObjectCase;
-  switch (removeControl.getObjectCase()) {
-    case ObjectCase.ALL:
+  switch (removeControl.Object) {
+    case 'all':
       handleRemoveAll(websocket, commandID, viewer);
       break;
-    case ObjectCase.BY_UUID:
-      handleRemoveByUUID(websocket, commandID, viewer, removeControl.getByUuid());
+    case 'byUuid':
+      handleRemoveByUUID(websocket, commandID, viewer, removeControl.byUuid);
       break;
     default:
       break;

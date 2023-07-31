@@ -1,4 +1,4 @@
-import './style.css';
+import './style.sass';
 
 import { connectWebSocket } from './websocket/websocket';
 import { PointCloudViewer } from './viewer';

@@ -1,16 +1,16 @@
-import * as PB from './protobuf/server_pb';
+import * as PB from './protobuf/server';
 import * as BABYLON from '@babylonjs/core';
 
-const CoordinateType = PB.AddObject.Overlay.CoordinateType;
+const CoordinateType = PB.AddObjectOverlayCoordinateType;
 
 export class Overlay {
   uuid: string
   __position: BABYLON.Vector3
   __elem: HTMLElement
-  __coordType: PB.AddObject.Overlay.CoordinateType
-  constructor(elem: HTMLElement, position: BABYLON.Vector3, coordType: PB.AddObject.Overlay.CoordinateType, uuid: string);
+  __coordType: PB.AddObjectOverlayCoordinateType
+  constructor(elem: HTMLElement, position: BABYLON.Vector3, coordType: PB.AddObjectOverlayCoordinateType, uuid: string);
 
-  constructor (elem: HTMLElement, position: BABYLON.Vector3, coordType: PB.AddObject.Overlay.CoordinateType, uuid: string) {
+  constructor (elem: HTMLElement, position: BABYLON.Vector3, coordType: PB.AddObjectOverlayCoordinateType, uuid: string) {
     this.__position = position;
     this.__elem = elem;
     this.__coordType = coordType;

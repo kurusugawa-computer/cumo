@@ -36,6 +36,7 @@
 				"njpwerner.autodocstring",
 				"dbaeumer.vscode-eslint",
 				"redhat.vscode-yaml",
+				"syler.sass-indented",
 			],
 		}
 	},

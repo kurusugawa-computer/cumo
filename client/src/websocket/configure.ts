@@ -2,14 +2,13 @@ const WEBSOCKET_URL_ENDPOINT = '/websocket_url';
 const RETRY_INTERVAL_MSECS = 5000;
 
 const WEBSOCKET_URL_DEBUG = 'ws://localhost:8081';
-declare let DEBUG_MODE: undefined | boolean;
 
 async function sleep (milliseconds:number) {
   return new Promise((resolve:(value: unknown) => void) => setTimeout(resolve, milliseconds));
 }
 
 export async function getWebsocketURL () :Promise<string> {
-  if (typeof (DEBUG_MODE) !== 'undefined') {
+  if (import.meta.env.DEV) {
     console.log('debug mode: websocker url is ' + WEBSOCKET_URL_DEBUG);
     return new Promise((resolve:(value: string) => void) => resolve(WEBSOCKET_URL_DEBUG));
   }

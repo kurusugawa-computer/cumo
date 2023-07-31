@@ -9,18 +9,19 @@ yarn
 
 cd "${WORKDIR}"
 PLUGIN_TS=./client/node_modules/.bin/protoc-gen-ts
+TS_OPT="no_namespace,json_names,target=node"
 protoc \
     --python_out=./lib/cumo/ \
-    --ts_out=import_style=commonjs,binary:./client/src \
-    --js_out=import_style=commonjs,binary:./client/src \
+    --ts_out=./client/src \
+    --ts_opt="${TS_OPT}" \
     -I. \
     --plugin=protoc-gen-ts="${PLUGIN_TS}" \
     --experimental_allow_proto3_optional \
     protobuf/server.proto
 protoc \
   --python_out=./lib/cumo/ \
-  --ts_out=import_style=commonjs,binary:./client/src \
-  --js_out=import_style=commonjs,binary:./client/src \
+  --ts_out=./client/src \
+  --ts_opt="${TS_OPT}" \
   -I. \
   --plugin=protoc-gen-ts="${PLUGIN_TS}" \
   --experimental_allow_proto3_optional \

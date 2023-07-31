@@ -1,4 +1,4 @@
-import * as PB from '../../protobuf/server_pb.js';
+import * as PB from '../../protobuf/server';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
 import * as BABYLON from '@babylonjs/core';
@@ -8,25 +8,24 @@ export function handleSetCamera (websocket: WebSocket, commandID: string, viewer
     sendFailure(websocket, commandID, 'failed to get camera parameter');
     return;
   }
-  const cameraCase = PB.SetCamera.CameraCase;
-  switch (camera.getCameraCase()) {
-    case cameraCase.ORTHOGRAPHIC_FRUSTUM_HEIGHT:
-      setOrthographicCamera(websocket, commandID, viewer, camera.getOrthographicFrustumHeight());
+  switch (camera.Camera) {
+    case 'orthographicFrustumHeight':
+      setOrthographicCamera(websocket, commandID, viewer, camera.orthographicFrustumHeight);
       break;
-    case cameraCase.PERSPECTIVE_FOV:
-      setPerspectiveCamera(websocket, commandID, viewer, camera.getPerspectiveFov());
+    case 'perspectiveFov':
+      setPerspectiveCamera(websocket, commandID, viewer, camera.perspectiveFov);
       break;
-    case cameraCase.POSITION:
-      setCameraPosition(websocket, commandID, viewer, camera.getPosition());
+    case 'position':
+      setCameraPosition(websocket, commandID, viewer, camera.position);
       break;
-    case cameraCase.TARGET:
-      setCameraTarget(websocket, commandID, viewer, camera.getTarget());
+    case 'target':
+      setCameraTarget(websocket, commandID, viewer, camera.target);
       break;
-    case cameraCase.ROLL:
-      setCameraRoll(websocket, commandID, viewer, camera.getRoll());
+    case 'roll':
+      setCameraRoll(websocket, commandID, viewer, camera.roll);
       break;
-    case cameraCase.ROLL_LOCK:
-      setCameraRollLock(websocket, commandID, viewer, camera.getRollLock());
+    case 'rollLock':
+      setCameraRollLock(websocket, commandID, viewer, camera.rollLock);
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any camera parameters');
@@ -61,7 +60,7 @@ function setCameraPosition (websocket: WebSocket, commandID: string, viewer: Poi
     return;
   }
 
-  viewer.camera.position.set(position.getX(), position.getY(), position.getZ());
+  viewer.camera.position.set(position.x, position.y, position.z);
   viewer.cameraInput.checkInputs();
 
   sendSuccess(websocket, commandID, 'success');
@@ -73,28 +72,28 @@ function setCameraTarget (websocket: WebSocket, commandID: string, viewer: Point
     return;
   }
 
-  viewer.cameraInput.target.set(target.getX(), target.getY(), target.getZ());
+  viewer.cameraInput.target.set(target.x, target.y, target.z);
   viewer.cameraInput.checkInputs();
 
   sendSuccess(websocket, commandID, 'success');
 }
 
-function setCameraRoll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, roll: PB.SetCamera.Roll | undefined) {
+function setCameraRoll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, roll: PB.SetCameraRoll | undefined) {
   if (roll === undefined) {
     sendFailure(websocket, commandID, 'failed to get roll');
     return;
   }
-  const angle = roll.getAngle();
+  const angle = roll.angle;
   if (isNaN(angle)) {
     sendFailure(websocket, commandID, 'angle is NaN');
     return;
   }
-  const PBup = roll.getUp();
+  const PBup = roll.up;
   const up = new BABYLON.Vector3();
   if (PBup === undefined) {
     up.copyFrom(BABYLON.Vector3.Up());
   } else {
-    up.set(PBup.getX(), PBup.getY(), PBup.getZ());
+    up.set(PBup.x, PBup.y, PBup.z);
   }
 
   viewer.cameraInput.setRoll(Math.PI * angle / 180, up);

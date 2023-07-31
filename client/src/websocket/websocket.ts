@@ -1,4 +1,4 @@
-import * as PB from '../protobuf/server_pb.js';
+import * as PB from '../protobuf/server';
 
 import { PointCloudViewer } from '../viewer';
 import { sendFailure } from './client_command';
@@ -29,39 +29,38 @@ export function connectWebSocket (viewer: PointCloudViewer, url: string) {
 }
 
 function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message: PB.ServerCommand) {
-  const commandCase = PB.ServerCommand.CommandCase;
-  const commandID = message.getUuid().toUpperCase();
+  const commandID = message.UUID.toUpperCase();
   try {
-    switch (message.getCommandCase()) {
-      case commandCase.LOG_MESSAGE:
-        handleLogMessage(websocket, commandID, message.getLogMessage());
+    switch (message.Command) {
+      case 'logMessage':
+        handleLogMessage(websocket, commandID, message.logMessage);
         break;
-      case commandCase.CAPTURE_SCREEN:
+      case 'captureScreen':
         handleScreenCapture(websocket, commandID, viewer);
         break;
-      case commandCase.ADD_CUSTOM_CONTROL:
-        handleAddControl(websocket, commandID, viewer, message.getAddCustomControl());
+      case 'addCustomControl':
+        handleAddControl(websocket, commandID, viewer, message.addCustomControl);
         break;
-      case commandCase.SET_CAMERA:
-        handleSetCamera(websocket, commandID, viewer, message.getSetCamera());
+      case 'setCamera':
+        handleSetCamera(websocket, commandID, viewer, message.setCamera);
         break;
-      case commandCase.ADD_OBJECT:
-        handleAddObject(websocket, commandID, viewer, message.getAddObject());
+      case 'addObject':
+        handleAddObject(websocket, commandID, viewer, message.addObject);
         break;
-      case commandCase.SET_KEY_EVENT_HANDLER:
-        handleSetKeyEvent(websocket, commandID, viewer, message.getSetKeyEventHandler());
+      case 'setKeyEventHandler':
+        handleSetKeyEvent(websocket, commandID, viewer, message.setKeyEventHandler);
         break;
-      case commandCase.REMOVE_OBJECT:
-        handleRemoveObject(websocket, commandID, viewer, message.getRemoveObject());
+      case 'removeObject':
+        handleRemoveObject(websocket, commandID, viewer, message.removeObject);
         break;
-      case commandCase.REMOVE_CUSTOM_CONTROL:
-        handleRemoveControl(websocket, commandID, viewer, message.getRemoveCustomControl());
+      case 'removeCustomControl':
+        handleRemoveControl(websocket, commandID, viewer, message.removeCustomControl);
         break;
-      case commandCase.SET_CUSTOM_CONTROL:
-        handleSetControl(websocket, commandID, viewer, message.getSetCustomControl());
+      case 'setCustomControl':
+        handleSetControl(websocket, commandID, viewer, message.setCustomControl);
         break;
-      case commandCase.SET_ENABLE:
-        handleSetEnable(websocket, commandID, viewer, message.getSetEnable());
+      case 'setEnable':
+        handleSetEnable(websocket, commandID, viewer, message.setEnable);
         break;
       default:
         sendFailure(websocket, commandID, 'message has not any command');

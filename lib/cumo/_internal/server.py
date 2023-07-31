@@ -4,11 +4,17 @@ import asyncio
 import threading
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from os.path import join
+from os.path import join, splitext
 from typing import Union, Optional
 
 # pylint: disable=E1101
 import websockets
+
+EXT_TO_MIME = {
+    "js": "application/javascript",
+    "html": "text/html",
+    "css": "text/css",
+}
 
 
 def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int):
@@ -31,6 +37,9 @@ def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int):
                     self.send_error(404)
                 if data is not None:
                     self.send_response(200)
+                    ext = splitext(self.path)[1][1:]
+                    if ext in EXT_TO_MIME:
+                        self.send_header("content-type", EXT_TO_MIME[ext])
                     self.end_headers()
                     self.wfile.write(data)
                 else:

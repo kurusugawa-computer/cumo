@@ -1,4 +1,4 @@
-import * as PB from '../../protobuf/server_pb.js';
+import * as PB from '../../protobuf/server';
 import { sendSuccess, sendFailure, sendControlChanged } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
 import { findFolderByUUID } from './util';
@@ -14,10 +14,10 @@ export function handleAddControl (
     return;
   }
   const propertyName = commandID;
-  switch (control.getControlCase()) {
-    case PB.CustomControl.ControlCase.BUTTON:
+  switch (control.Control) {
+    case 'button':
       {
-        const button = control.getButton();
+        const button = control.button;
         if (button) {
           Object.defineProperty(
             viewer.config.custom,
@@ -26,158 +26,158 @@ export function handleAddControl (
               value: () => { sendControlChanged(websocket, commandID, true); }
             }
           );
-          const parentFolder = findFolderByUUID(viewer, button.getParent().toUpperCase());
+          const parentFolder = findFolderByUUID(viewer, button.parent.toUpperCase());
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = button.getName();
-          parentFolder.add(viewer.config.custom, propertyName as any).name(button.getName());
+          viewer.folderUUIDmap[propertyName] = button.name;
+          parentFolder.add(viewer.config.custom, propertyName as any).name(button.name);
         }
       }
       break;
-    case PB.CustomControl.ControlCase.CHECKBOX:
+    case 'checkbox':
       {
-        const checkbox = control.getCheckbox();
+        const checkbox = control.checkbox;
         if (checkbox) {
           Object.defineProperty(
             viewer.config.custom,
             propertyName,
             {
-              value: checkbox.getInitValue(),
+              value: checkbox.initValue,
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, checkbox.getParent().toUpperCase());
+          const parentFolder = findFolderByUUID(viewer, checkbox.parent.toUpperCase());
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = checkbox.getName();
+          viewer.folderUUIDmap[propertyName] = checkbox.name;
           parentFolder.add(viewer.config.custom, propertyName as any)
-            .name(checkbox.getName())
+            .name(checkbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
       }
       break;
-    case PB.CustomControl.ControlCase.COLOR_PICKER:
+    case 'colorPicker':
       {
-        const picker = control.getColorPicker();
+        const picker = control.colorPicker;
         if (picker) {
           Object.defineProperty(
             viewer.config.custom,
             propertyName,
             {
-              value: picker.getInitValue(),
+              value: picker.initValue,
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, picker.getParent().toUpperCase());
+          const parentFolder = findFolderByUUID(viewer, picker.parent.toUpperCase());
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = picker.getName();
+          viewer.folderUUIDmap[propertyName] = picker.name;
           parentFolder.addColor(viewer.config.custom, propertyName)
-            .name(picker.getName())
+            .name(picker.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
       }
       break;
-    case PB.CustomControl.ControlCase.SELECTBOX:
+    case 'selectbox':
       {
-        const selectbox = control.getSelectbox();
+        const selectbox = control.selectbox;
         if (selectbox) {
           Object.defineProperty(
             viewer.config.custom,
             propertyName,
             {
-              value: selectbox.getInitValue(),
+              value: selectbox.initValue,
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, selectbox.getParent().toUpperCase());
+          const parentFolder = findFolderByUUID(viewer, selectbox.parent.toUpperCase());
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = selectbox.getName();
-          parentFolder.add(viewer.config.custom, propertyName as any, selectbox.getItemsList())
-            .name(selectbox.getName())
+          viewer.folderUUIDmap[propertyName] = selectbox.name;
+          parentFolder.add(viewer.config.custom, propertyName as any, selectbox.items)
+            .name(selectbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
       }
       break;
-    case PB.CustomControl.ControlCase.SLIDER:
+    case 'slider':
       {
-        const slider = control.getSlider();
+        const slider = control.slider;
         if (slider) {
           Object.defineProperty(
             viewer.config.custom,
             propertyName,
             {
-              value: slider.getInitValue(),
+              value: slider.initValue,
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, slider.getParent().toUpperCase());
+          const parentFolder = findFolderByUUID(viewer, slider.parent.toUpperCase());
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = slider.getName();
+          viewer.folderUUIDmap[propertyName] = slider.name;
           parentFolder.add(
             viewer.config.custom,
             propertyName as any,
-            slider.getMin(),
-            slider.getMax(),
-            slider.getStep()
+            slider.min,
+            slider.max,
+            slider.step
           )
-            .name(slider.getName())
+            .name(slider.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
       }
       break;
-    case PB.CustomControl.ControlCase.TEXTBOX:
+    case 'textbox':
       {
-        const textbox = control.getTextbox();
+        const textbox = control.textbox;
         if (textbox) {
           Object.defineProperty(
             viewer.config.custom,
             propertyName,
             {
-              value: textbox.getInitValue(),
+              value: textbox.initValue,
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, textbox.getParent().toUpperCase());
+          const parentFolder = findFolderByUUID(viewer, textbox.parent.toUpperCase());
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = textbox.getName();
+          viewer.folderUUIDmap[propertyName] = textbox.name;
           parentFolder.add(viewer.config.custom, propertyName as any)
-            .name(textbox.getName())
+            .name(textbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
         }
       }
       break;
-    case PB.CustomControl.ControlCase.FOLDER:
+    case 'folder':
       {
-        const folder = control.getFolder();
+        const folder = control.folder;
         if (folder) {
           Object.defineProperty(
             viewer.config.custom,
             propertyName,
             {}
           );
-          const parentFolder = findFolderByUUID(viewer, folder.getParent().toUpperCase());
+          const parentFolder = findFolderByUUID(viewer, folder.parent.toUpperCase());
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = folder.getName();
-          parentFolder.addFolder(folder.getName());
+          viewer.folderUUIDmap[propertyName] = folder.name;
+          parentFolder.addFolder(folder.name);
         }
       }
       break;
