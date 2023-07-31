@@ -1,4 +1,4 @@
-import * as PB from '../../protobuf/server_pb.js';
+import * as PB from '../../protobuf/server';
 import { PointCloudViewer } from '../../viewer';
 import { sendFailure, sendSuccess } from '../client_command';
 import { findControllerByUUID } from './util';
@@ -13,85 +13,85 @@ export function handleSetControl (
     sendFailure(websocket, commandID, 'failure to get control');
     return;
   }
-  const target = control.getTarget().toUpperCase();
-  switch (control.getControlCase()) {
-    case PB.SetCustomControl.ControlCase.BUTTON:
+  const target = control.target.toUpperCase();
+  switch (control.Control) {
+    case 'button':
       {
-        const button = control.getButton();
+        const button = control.button;
         if (button) {
           const buttonGUI = findControllerByUUID(viewer, target);
           if (!buttonGUI) {
             sendFailure(websocket, commandID, 'failure to get buttonGUI');
             return;
           }
-          const name = button.getName();
-          if (button.hasName() && name !== undefined) {
+          const name = button.name;
+          if (button.hasName && name !== undefined) {
             buttonGUI.name(name);
           }
           buttonGUI.updateDisplay();
         }
       }
       break;
-    case PB.SetCustomControl.ControlCase.CHECKBOX:
+    case 'checkbox':
       {
-        const checkbox = control.getCheckbox();
+        const checkbox = control.checkbox;
         if (checkbox) {
           const checkboxGUI = findControllerByUUID(viewer, target);
           if (!checkboxGUI) {
             sendFailure(websocket, commandID, 'failure to get checkboxGUI');
             return;
           }
-          const name = checkbox.getName();
-          if (checkbox.hasName() && name !== undefined) {
+          const name = checkbox.name;
+          if (checkbox.name && name !== undefined) {
             checkboxGUI.name(name);
           }
-          const value = checkbox.getValue();
-          if (checkbox.hasValue() && value !== undefined) {
+          const value = checkbox.value;
+          if (checkbox.value && value !== undefined) {
             checkboxGUI.setValue(value);
           }
           checkboxGUI.updateDisplay();
         }
       }
       break;
-    case PB.SetCustomControl.ControlCase.COLOR_PICKER:
+    case 'colorPicker':
       {
-        const picker = control.getColorPicker();
+        const picker = control.colorPicker;
         if (picker) {
           const pickerGUI = findControllerByUUID(viewer, target);
           if (!pickerGUI) {
             sendFailure(websocket, commandID, 'failure to get pickerGUI');
             return;
           }
-          const name = picker.getName();
-          if (picker.hasName() && name !== undefined) {
+          const name = picker.name;
+          if (picker.name && name !== undefined) {
             pickerGUI.name(name);
           }
-          const value = picker.getValue();
-          if (picker.hasValue() && value !== undefined) {
+          const value = picker.value;
+          if (picker.value && value !== undefined) {
             pickerGUI.setValue(value);
           }
           pickerGUI.updateDisplay();
         }
       }
       break;
-    case PB.SetCustomControl.ControlCase.SELECTBOX:
+    case 'selectbox':
       {
-        const selectbox = control.getSelectbox();
+        const selectbox = control.selectbox;
         if (selectbox) {
           const selectboxGUI = findControllerByUUID(viewer, target);
           if (!selectboxGUI) {
             sendFailure(websocket, commandID, 'failure to get selectboxGUI');
             return;
           }
-          const name = selectbox.getName();
-          if (selectbox.hasName() && name !== undefined) {
+          const name = selectbox.name;
+          if (selectbox.name && name !== undefined) {
             selectboxGUI.name(name);
           }
-          const value = selectbox.getValue();
-          if (selectbox.hasValue() && value !== undefined) {
+          const value = selectbox.value;
+          if (selectbox.value && value !== undefined) {
             selectboxGUI.setValue(value);
           }
-          const items = selectbox.getItemsList();
+          const items = selectbox.items;
           const selector = selectboxGUI.domElement.querySelector('div > select');
           if (items.length !== 0 && selector !== null) {
             selector.innerHTML = items.map((value) => `<option value="${value}">${value}</option>`).join('\n');
@@ -100,54 +100,54 @@ export function handleSetControl (
         }
       }
       break;
-    case PB.SetCustomControl.ControlCase.SLIDER:
+    case 'slider':
       {
-        const slider = control.getSlider();
+        const slider = control.slider;
         if (slider) {
           const sliderGUI = findControllerByUUID(viewer, target);
           if (!sliderGUI) {
             sendFailure(websocket, commandID, 'failure to get sliderGUI');
             return;
           }
-          const name = slider.getName();
-          if (slider.hasName() && name !== undefined) {
+          const name = slider.name;
+          if (slider.name && name !== undefined) {
             sliderGUI.name(name);
           }
-          const min = slider.getMin();
-          if (slider.hasMin() && min !== undefined) {
+          const min = slider.min;
+          if (slider.min && min !== undefined) {
             sliderGUI.min(min);
           }
-          const max = slider.getMax();
-          if (slider.hasMax() && max !== undefined) {
+          const max = slider.max;
+          if (slider.max && max !== undefined) {
             sliderGUI.max(max);
           }
-          const value = slider.getValue();
-          if (slider.hasValue() && value !== undefined) {
+          const value = slider.value;
+          if (slider.value && value !== undefined) {
             sliderGUI.setValue(value);
           }
-          const step = slider.getStep();
-          if (slider.hasStep() && step !== undefined) {
+          const step = slider.step;
+          if (slider.step && step !== undefined) {
             sliderGUI.step(step);
           }
           sliderGUI.updateDisplay();
         }
       }
       break;
-    case PB.SetCustomControl.ControlCase.TEXTBOX:
+    case 'textbox':
       {
-        const textbox = control.getTextbox();
+        const textbox = control.textbox;
         if (textbox) {
           const textboxGUI = findControllerByUUID(viewer, target);
           if (!textboxGUI) {
             sendFailure(websocket, commandID, 'failure to get textboxGUI');
             return;
           }
-          const name = textbox.getName();
-          if (textbox.hasName() && name !== undefined) {
+          const name = textbox.name;
+          if (textbox.name && name !== undefined) {
             textboxGUI.name(name);
           }
-          const value = textbox.getValue();
-          if (textbox.hasValue() && value !== undefined) {
+          const value = textbox.value;
+          if (textbox.value && value !== undefined) {
             textboxGUI.setValue(value);
           }
           textboxGUI.updateDisplay();

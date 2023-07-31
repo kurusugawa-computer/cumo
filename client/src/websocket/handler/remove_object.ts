@@ -1,4 +1,4 @@
-import * as PB from '../../protobuf/server_pb.js';
+import * as PB from '../../protobuf/server';
 
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
@@ -8,13 +8,12 @@ export function handleRemoveObject (websocket: WebSocket, commandID: string, vie
     sendFailure(websocket, commandID, 'failed to get add_object command');
     return;
   }
-  const objectCase = PB.RemoveObject.ObjectCase;
-  switch (removeObject.getObjectCase()) {
-    case objectCase.ALL:
+  switch (removeObject.Object) {
+    case 'all':
       handleRemoveAll(websocket, commandID, viewer);
       break;
-    case objectCase.BY_UUID:
-      handleRemoveByUUID(websocket, commandID, viewer, removeObject.getByUuid());
+    case 'byUuid':
+      handleRemoveByUUID(websocket, commandID, viewer, removeObject.byUuid);
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any object');

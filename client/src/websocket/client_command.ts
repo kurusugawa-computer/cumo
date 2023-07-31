@@ -1,23 +1,23 @@
-import * as PB from '../protobuf/client_pb.js';
+import * as PB from '../protobuf/client';
 
 export function sendSuccess (websocket: WebSocket, commandID: string, message: string): void {
   const resultSuccess = new PB.Result();
-  resultSuccess.setSuccess(message);
+  resultSuccess.success = message;
 
   const command = new PB.ClientCommand();
-  command.setResult(resultSuccess);
-  command.setUuid(commandID);
+  command.result = resultSuccess;
+  command.UUID = commandID;
 
   websocket.send(command.serializeBinary());
 }
 
 export function sendFailure (websocket: WebSocket, commandID: string, message: string): void {
   const resultFailure = new PB.Result();
-  resultFailure.setFailure(message);
+  resultFailure.failure = message;
 
   const command = new PB.ClientCommand();
-  command.setResult(resultFailure);
-  command.setUuid(commandID);
+  command.result = resultFailure;
+  command.UUID = commandID;
 
   websocket.send(command.serializeBinary());
   console.error('error: ' + message);
@@ -28,11 +28,11 @@ export function sendImage (websocket: WebSocket, commandID: string, blob: Blob):
     blob.arrayBuffer().then(
       function (buffer: ArrayBuffer): void {
         const image = new PB.Image();
-        image.setData(new Uint8Array(buffer));
+        image.data = new Uint8Array(buffer);
 
         const command = new PB.ClientCommand();
-        command.setImage(image);
-        command.setUuid(commandID);
+        command.image = image;
+        command.UUID = commandID;
 
         websocket.send(command.serializeBinary());
         resolve();
@@ -48,59 +48,59 @@ export function sendControlChanged (websocket: WebSocket, commandID: string, val
   const changed = new PB.ControlChanged();
   switch (typeof (value)) {
     case 'boolean':
-      changed.setBoolean(value);
+      changed.boolean = value;
       break;
     case 'number':
-      changed.setNumber(value);
+      changed.number = value;
       break;
     case 'string':
-      changed.setText(value);
+      changed.text = value;
       break;
     default:
       console.error('unexpected type:' + typeof (value));
       break;
   }
   const command = new PB.ClientCommand();
-  command.setControlChanged(changed);
-  command.setUuid(commandID);
+  command.controlChanged = changed;
+  command.UUID = commandID;
   websocket.send(command.serializeBinary());
 }
 
-function KeyboardEvent2Protobuf (event: KeyboardEvent): PB.KeyEventOccurred.KeyEvent {
-  const ret = new PB.KeyEventOccurred.KeyEvent();
-  ret.setKey(event.key);
-  ret.setCode(event.code);
-  ret.setAltkey(event.altKey);
-  ret.setCtrlkey(event.ctrlKey);
-  ret.setMetakey(event.metaKey);
-  ret.setShiftkey(event.shiftKey);
-  ret.setRepeat(event.repeat);
+function KeyboardEvent2Protobuf (event: KeyboardEvent): PB.KeyEventOccurredKeyEvent {
+  const ret = new PB.KeyEventOccurredKeyEvent();
+  ret.key = event.key;
+  ret.code = event.code;
+  ret.altKey = event.altKey;
+  ret.ctrlKey = event.ctrlKey;
+  ret.metaKey = event.metaKey;
+  ret.shiftKey = event.shiftKey;
+  ret.repeat = event.repeat;
   return ret;
 }
 
 export function sendKeyUp (websocket: WebSocket, commandID: string, event: KeyboardEvent) {
   const keyEventOccurred = new PB.KeyEventOccurred();
-  keyEventOccurred.setKeyup(KeyboardEvent2Protobuf(event));
+  keyEventOccurred.keyup = KeyboardEvent2Protobuf(event);
   const command = new PB.ClientCommand();
-  command.setKeyEventOccurred(keyEventOccurred);
-  command.setUuid(commandID);
+  command.keyEventOccurred = keyEventOccurred;
+  command.UUID = commandID;
   websocket.send(command.serializeBinary());
 }
 
 export function sendKeyDown (websocket: WebSocket, commandID: string, event: KeyboardEvent) {
   const keyEventOccurred = new PB.KeyEventOccurred();
-  keyEventOccurred.setKeydown(KeyboardEvent2Protobuf(event));
+  keyEventOccurred.keydown = KeyboardEvent2Protobuf(event);
   const command = new PB.ClientCommand();
-  command.setKeyEventOccurred(keyEventOccurred);
-  command.setUuid(commandID);
+  command.keyEventOccurred = keyEventOccurred;
+  command.UUID = commandID;
   websocket.send(command.serializeBinary());
 }
 
 export function sendKeyPress (websocket: WebSocket, commandID: string, event: KeyboardEvent) {
   const keyEventOccurred = new PB.KeyEventOccurred();
-  keyEventOccurred.setKeypress(KeyboardEvent2Protobuf(event));
+  keyEventOccurred.keypress = KeyboardEvent2Protobuf(event);
   const command = new PB.ClientCommand();
-  command.setKeyEventOccurred(keyEventOccurred);
-  command.setUuid(commandID);
+  command.keyEventOccurred = keyEventOccurred;
+  command.UUID = commandID;
   websocket.send(command.serializeBinary());
 }

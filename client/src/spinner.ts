@@ -1,5 +1,5 @@
 /// <reference path="index.d.ts" />
-import SPINNER_SVG from './spinner.svg';
+import SPINNER_SVG from './spinner.svg?raw';
 
 export class Spinner {
   __elem: HTMLDivElement

@@ -1,4 +1,4 @@
-import * as PB from '../../protobuf/server_pb.js';
+import * as PB from '../../protobuf/server';
 import { PointCloudViewer } from '../../viewer';
 import { sendFailure, sendKeyDown, sendKeyPress, sendKeyUp, sendSuccess } from '../client_command';
 
@@ -7,16 +7,15 @@ export function handleSetKeyEvent (websocket: WebSocket, commandID: string, view
     sendFailure(websocket, commandID, 'failed to get command');
     return;
   }
-  const EventCase = PB.SetKeyEventHandler.EventCase;
-  switch (setKeyEventHandler.getEventCase()) {
-    case EventCase.KEYUP:
-      handleSetKeyUp(websocket, commandID, viewer, setKeyEventHandler.getKeyup());
+  switch (setKeyEventHandler.Event) {
+    case 'keyup':
+      handleSetKeyUp(websocket, commandID, viewer, setKeyEventHandler.keyup);
       break;
-    case EventCase.KEYDOWN:
-      handleSetKeyDown(websocket, commandID, viewer, setKeyEventHandler.getKeydown());
+    case 'keydown':
+      handleSetKeyDown(websocket, commandID, viewer, setKeyEventHandler.keydown);
       break;
-    case EventCase.KEYPRESS:
-      handleSetKeyPress(websocket, commandID, viewer, setKeyEventHandler.getKeypress());
+    case 'keypress':
+      handleSetKeyPress(websocket, commandID, viewer, setKeyEventHandler.keypress);
       break;
     default:
       sendFailure(websocket, commandID, 'event not set');
