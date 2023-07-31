@@ -51,6 +51,7 @@ jobs:
           - ./client/node_modules
       env:
         - PLUGIN_TS=./client/node_modules/.bin/protoc-gen-ts
+        - TS_OPT="no_namespace,json_names,target=node"
       before_install:
         - curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-linux-x86_64.zip
         - unzip protoc-3.15.6-linux-x86_64.zip && sudo cp ./bin/protoc /usr/local/bin/. && sudo chmod +x /usr/local/bin/protoc
@@ -58,7 +59,8 @@ jobs:
         - cd client && yarn install && cd ..
         - |-
           protoc \
-          --ts_out=import_style=commonjs,binary:./client/src \
+          --ts_out=./client/src \
+          --ts_opt="${TS_OPT}" \
           --js_out=import_style=commonjs,binary:./client/src \
           -I. \
           --plugin=protoc-gen-ts="${PLUGIN_TS}" \
@@ -66,7 +68,8 @@ jobs:
           protobuf/server.proto
         - |-
           protoc \
-          --ts_out=import_style=commonjs,binary:./client/src \
+          --ts_out=./client/src \
+          --ts_opt="${TS_OPT}" \
           --js_out=import_style=commonjs,binary:./client/src \
           -I. \
           --plugin=protoc-gen-ts="${PLUGIN_TS}" \
