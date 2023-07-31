@@ -23,6 +23,7 @@ export default vite.defineConfig(({ command, mode }) => {
       },
       outDir: 'public'
     },
+    publicDir: '',
     plugins: [
       ViteMinifyPlugin({})
     ],
