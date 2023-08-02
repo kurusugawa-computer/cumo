@@ -46,6 +46,16 @@ function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: Po
     return;
   }
 
+  for (let i = 0; i < viewer.overlays.length; i++) {
+    const overlay = viewer.overlays[i];
+    if (overlay.uuid === uuid.toUpperCase()) {
+      overlay.dispose();
+      viewer.overlays.splice(i, 1);
+      sendSuccess(websocket, commandID, 'success');
+      return;
+    }
+  }
+
   for (let i = 0; i < viewer.linesets.length; i++) {
     const lineset = viewer.linesets[i];
     if (lineset.UUID === normalizedUUID) {
