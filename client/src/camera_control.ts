@@ -34,7 +34,6 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
   maxDistance: number = Number.MAX_SAFE_INTEGER;
 
   frustum: number | undefined;
-  zoom: number = 1.0;
   target: BABYLON.Vector3 = BABYLON.Vector3.Zero();
 
   camera: BABYLON.Nullable<TCamera> = null;
@@ -102,7 +101,6 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
       attributeFilter: ['width']
     });
 
-    this.zoom = this.camera.position.subtract(this.camera.target).length();
     this.target = this.camera.target.clone();
     this.onResize();
   }
@@ -168,8 +166,9 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
     if (this.camera === null) return;
     const factor = 1.0 + (this.zoomEnd.y - this.zoomStart.y) * this.zoomSpeed;
     if (factor !== 1.0 && factor > 0.0) {
-      this.zoom /= factor;
-      this.eye.normalize().scaleInPlace(this.zoom);
+      this.target.subtractToRef(this.camera.position, this.eye);
+      const currentDist = this.eye.length();
+      this.eye.normalize().scaleInPlace(currentDist / factor);
       this.updateCameraFrustum();
     }
     this.zoomStart.copyFrom(this.zoomEnd);
@@ -213,13 +212,11 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
     if (this.eye.lengthSquared() > this.maxDistance * this.maxDistance) {
       this.eye.normalize().scaleInPlace(this.maxDistance);
       this.target.subtractToRef(this.eye, this.camera.position);
-      this.zoom = this.maxDistance;
       this.zoomStart.copyFrom(this.zoomEnd);
     }
     if (this.eye.lengthSquared() < this.minDistance * this.minDistance) {
       this.eye.normalize().scaleInPlace(this.minDistance);
       this.target.subtractToRef(this.eye, this.camera.position);
-      this.zoom = this.minDistance;
       this.zoomStart.copyFrom(this.zoomEnd);
     }
   }
@@ -314,7 +311,7 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
     if (this.camera === null) return [-1, -1];
     const eyeLength = this.camera.position.subtract(this.camera.target).length();
     const f = this.frustum
-      ? this.frustum * this.zoom
+      ? this.frustum
       : 2 * eyeLength * Math.tan(this.camera.fov / 2);
     switch (this.camera.fovMode) {
       case BABYLON.Camera.FOVMODE_HORIZONTAL_FIXED:
