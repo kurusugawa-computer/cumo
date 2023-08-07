@@ -30,8 +30,8 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
   panSpeed: number = 0.3;
   rollSpeed: number = 1.0;
 
-  minDistance: number = 0.1;
-  maxDistance: number = Infinity
+  minDistance: number = 0.001;
+  maxDistance: number = Number.MAX_SAFE_INTEGER;
 
   frustum: number | undefined;
   zoom: number = 1.0;
@@ -211,11 +211,15 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
     if (this.noZoom && this.noPan) return;
     if (this.camera === null) return;
     if (this.eye.lengthSquared() > this.maxDistance * this.maxDistance) {
-      this.target.subtractToRef(this.eye.clone().normalize().scale(this.maxDistance), this.camera.position);
+      this.eye.normalize().scaleInPlace(this.maxDistance);
+      this.target.subtractToRef(this.eye, this.camera.position);
+      this.zoom = this.maxDistance;
       this.zoomStart.copyFrom(this.zoomEnd);
     }
     if (this.eye.lengthSquared() < this.minDistance * this.minDistance) {
-      this.target.subtractToRef(this.eye.clone().normalize().scale(this.maxDistance), this.camera.position);
+      this.eye.normalize().scaleInPlace(this.minDistance);
+      this.target.subtractToRef(this.eye, this.camera.position);
+      this.zoom = this.minDistance;
       this.zoomStart.copyFrom(this.zoomEnd);
     }
   }
