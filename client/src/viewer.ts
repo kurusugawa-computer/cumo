@@ -169,8 +169,11 @@ export class PointCloudViewer {
       this.overlays[i].render(this.canvas, this.scene);
     }
     this.canvas2d.ctx.clearRect(0, 0, this.canvas2d.domElement.width, this.canvas2d.domElement.height);
+
+    const mat = this.camera.getTransformationMatrix();
+
     for (let i = 0; i < this.linesets.length; i++) {
-      this.linesets[i].render(this.canvas2d, this.scene);
+      this.linesets[i].render(this.canvas2d, this.scene, mat);
     }
   }
 
