@@ -33,7 +33,6 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
   minDistance: number = 0.001;
   maxDistance: number = Number.MAX_SAFE_INTEGER;
 
-  frustum: number | undefined;
   target: BABYLON.Vector3 = BABYLON.Vector3.Zero();
 
   camera: BABYLON.Nullable<TCamera> = null;
@@ -169,6 +168,7 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
       this.target.subtractToRef(this.camera.position, this.eye);
       const currentDist = this.eye.length();
       this.eye.normalize().scaleInPlace(currentDist / factor);
+      this.target.subtractToRef(this.eye, this.camera.position);
       this.updateCameraFrustum();
     }
     this.zoomStart.copyFrom(this.zoomEnd);
@@ -309,13 +309,12 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
 
   updateCameraFrustum (): [number, number] {
     if (this.camera === null) return [-1, -1];
-    const eyeLength = this.camera.position.subtract(this.camera.target).length();
-    const f = this.frustum
-      ? this.frustum
-      : 2 * eyeLength * Math.tan(this.camera.fov / 2);
+    const eyeLength = this.camera.position.subtract(this.target).length();
+    const f = 2 * eyeLength * Math.tan(this.camera.fov / 2);
     switch (this.camera.fovMode) {
       case BABYLON.Camera.FOVMODE_HORIZONTAL_FIXED:
       {
+        // f is frustum width
         const aspect = this.screen.height / this.screen.width;
         this.camera.orthoLeft = f / -2;
         this.camera.orthoRight = f / 2;
@@ -325,6 +324,7 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
       }
       case BABYLON.Camera.FOVMODE_VERTICAL_FIXED:
       {
+        // f is frustum height
         const aspect = this.screen.width / this.screen.height;
         this.camera.orthoLeft = f * aspect / -2;
         this.camera.orthoRight = f * aspect / 2;
