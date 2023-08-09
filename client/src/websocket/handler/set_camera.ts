@@ -35,7 +35,18 @@ export function handleSetCamera (websocket: WebSocket, commandID: string, viewer
 
 function setOrthographicCamera (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, frustumHeight: number) {
   viewer.config.camera.orthographic.frustum = frustumHeight;
-  viewer.cameraInput.frustum = frustumHeight;
+  const eye = viewer.cameraInput.target.subtract(viewer.camera.position);
+  const eyeLength = (() => {
+    if (viewer.camera.fovMode === BABYLON.Camera.FOVMODE_HORIZONTAL_FIXED) {
+      const frustumWidth = frustumHeight * (viewer.canvas.height / viewer.canvas.width);
+      return (frustumWidth / 2) / Math.tan(viewer.camera.fov / 2);
+    } else {
+      return (frustumHeight / 2) / Math.tan(viewer.camera.fov / 2);
+    }
+  })();
+  eye.normalize().scaleInPlace(eyeLength);
+  viewer.cameraInput.target.subtractToRef(eye, viewer.camera.position);
+  viewer.cameraInput.checkInputs();
   viewer.cameraInput.updateCameraFrustum();
   if (viewer.config.camera.usePerspective) {
     viewer.switchCamera(false);
