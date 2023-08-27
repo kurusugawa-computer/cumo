@@ -79,3 +79,28 @@ export function findGUIController (
 
   return null;
 }
+
+// ラベルが隠れないように画面の半分までGUIの横幅を広げる
+export function adjustControlPanelWidthFromContent (gui: GUI) {
+  const labels = document.querySelectorAll<HTMLDivElement>('.dg .property-name').values();
+  let maxWidth = 0;
+  const ctx = document.createElement('canvas').getContext('2d');
+  if (ctx === null) return;
+  for (const l of labels) {
+    ctx.font = window.getComputedStyle(l).font;
+    const m = ctx.measureText(l.innerText);
+    const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+    maxWidth = Math.max(w, maxWidth);
+  }
+  const mainWidth = Math.ceil(maxWidth / 0.4);
+  const title = document.querySelector<HTMLLIElement>('.dg li.title');
+  const padding = (() => {
+    if (title === null) return 20;
+    const s = window.getComputedStyle(title);
+    // computed length is always in the form '*px'
+    return Number.parseFloat(s.paddingLeft) + Number.parseFloat(s.paddingRight);
+  })();
+  // +1 for dat.gui bugs
+  // sometimes the actual width will be 1px less than the passed value
+  gui.width = Math.max(gui.width, Math.min(mainWidth + padding + 1, window.innerWidth / 2));
+}

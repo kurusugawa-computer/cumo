@@ -1,6 +1,7 @@
 import * as PB from '../../protobuf/server';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
+import { adjustControlPanelWidthFromContent } from './util';
 
 export function handleRemoveControl (
   websocket: WebSocket,
@@ -22,6 +23,7 @@ export function handleRemoveControl (
     default:
       break;
   }
+  adjustControlPanelWidthFromContent(viewer.gui);
 }
 
 function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
