@@ -1,7 +1,7 @@
 import * as PB from '../../protobuf/server';
 import { sendSuccess, sendFailure, sendControlChanged } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
-import { findFolderByUUID } from './util';
+import { adjustControlPanelWidthFromContent, findFolderByUUID } from './util';
 
 export function handleAddControl (
   websocket: WebSocket,
@@ -185,5 +185,6 @@ export function handleAddControl (
       sendFailure(websocket, commandID, 'invalid command');
       return;
   }
+  adjustControlPanelWidthFromContent(viewer.gui);
   sendSuccess(websocket, commandID, commandID);
 }

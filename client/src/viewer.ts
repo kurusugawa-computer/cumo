@@ -8,6 +8,7 @@ import { Spinner } from './spinner';
 import * as BABYLON from '@babylonjs/core';
 import '@babylonjs/core/Legacy/legacy';
 import { CustomCameraInput } from './camera_control';
+import { adjustControlPanelWidthFromContent } from './websocket/handler/util';
 
 export class PointCloudViewer {
   enabled: boolean = true;
@@ -132,6 +133,8 @@ export class PointCloudViewer {
     guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.rotateSpeed = this.config.controls.rotateSpeed; });
     guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.zoomSpeed = this.config.controls.zoomSpeed; });
     guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.panSpeed = this.config.controls.panSpeed; });
+
+    adjustControlPanelWidthFromContent(this.gui);
 
     // [UUID]: folderName な map を初期化
     this.folderUUIDmap = {};
