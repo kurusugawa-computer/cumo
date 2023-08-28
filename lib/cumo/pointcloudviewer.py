@@ -5,6 +5,7 @@ from enum import Enum, auto
 from typing import Optional
 
 # pylint: disable=import-outside-toplevel
+# mypy: disable-error-code=misc
 
 
 class DownSampleStrategy(Enum):

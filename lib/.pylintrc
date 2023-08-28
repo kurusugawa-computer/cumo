@@ -20,3 +20,6 @@ disable=
   protected-access,
 
 ignore=dist,cumo/_internal/protobuf
+
+[TYPECHECK]
+generated-members=server_pb2.ServerCommand

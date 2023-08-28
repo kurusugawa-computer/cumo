@@ -19,7 +19,7 @@ def clean_defer_queue(self: PointCloudViewer, q: queue.Queue):
 
 
 def _wait_until(self: PointCloudViewer, uuid: UUID) -> client_pb2.ClientCommand:
-    defer_queue = queue.Queue()
+    defer_queue: queue.Queue = queue.Queue()
     while True:
         data: bytes = self._websocket_message_queue.get()
         command: client_pb2.ClientCommand = client_pb2.ClientCommand()

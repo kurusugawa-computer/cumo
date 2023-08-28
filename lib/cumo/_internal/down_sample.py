@@ -1,5 +1,6 @@
-import numpy
+from typing import Dict, Tuple
 
+import numpy
 import numpy.random
 
 from cumo.pointcloudviewer import DownSampleStrategy
@@ -29,7 +30,7 @@ def down_sample_random(pc: numpy.ndarray, max_num_points: int) -> numpy.ndarray:
 
 def down_sample_voxel(pc: numpy.ndarray, voxel_size: float, max_num_points: int) -> numpy.ndarray:
     scale = 1.0 / voxel_size
-    voxels = {}
+    voxels: Dict[Tuple[float, float, float], Tuple[numpy.ndarray, float, int]] = {}
     output = []
 
     for i, _ in enumerate(pc):
@@ -40,8 +41,8 @@ def down_sample_voxel(pc: numpy.ndarray, voxel_size: float, max_num_points: int)
     for ((x, y, z), (acc, c, n)) in voxels.items():
         output.append(numpy.hstack((acc / n, c)))
 
-    output = numpy.array(output).astype(numpy.float32)
+    output_arr = numpy.array(output).astype(numpy.float32)
 
     if len(output) > max_num_points:
-        return down_sample_random(output, max_num_points)
-    return output
+        return down_sample_random(output_arr, max_num_points)
+    return output_arr
