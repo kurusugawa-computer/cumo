@@ -87,10 +87,15 @@ message SetCamera {
         VecXYZf target = 4;
         Roll roll = 5;
         bool roll_lock = 6;
+        CameraMode mode = 7;
     }
     message Roll {
         float angle = 1;
         VecXYZf up = 2;
+    }
+    enum CameraMode {
+        PERSPECTIVE = 0;
+        ORTHOGRAPHIC = 1;
     }
 }
 

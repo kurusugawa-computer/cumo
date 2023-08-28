@@ -1,7 +1,7 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
 from uuid import uuid4
 from math import sqrt
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from cumo._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from cumo import PointCloudViewer
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 def set_orthographic_camera(
     self: PointCloudViewer,
-    frustum_height: float = 30,
+    frustum_height: Optional[float] = None,
 ) -> None:
     """カメラを正投影カメラに切り替えさせる。
 
@@ -18,7 +18,10 @@ def set_orthographic_camera(
     :type frustum_height: float, optional
     """
     camera = server_pb2.SetCamera()
-    camera.orthographic_frustum_height = frustum_height
+    if frustum_height is None:
+        camera.mode = server_pb2.SetCamera.CameraMode.ORTHOGRAPHIC
+    else:
+        camera.orthographic_frustum_height = frustum_height
     obj = server_pb2.ServerCommand()
     obj.set_camera.CopyFrom(camera)
     uuid = uuid4()
@@ -30,7 +33,7 @@ def set_orthographic_camera(
 
 def set_perspective_camera(
     self: PointCloudViewer,
-    fov: float = 30,
+    fov: Optional[float] = None,
 ) -> None:
     """カメラを遠近投影カメラに切り替えさせる。
 
@@ -38,7 +41,10 @@ def set_perspective_camera(
     :type fov: float, optional
     """
     camera = server_pb2.SetCamera()
-    camera.perspective_fov = fov
+    if fov is None:
+        camera.mode = server_pb2.SetCamera.CameraMode.PERSPECTIVE
+    else:
+        camera.perspective_fov = fov
     obj = server_pb2.ServerCommand()
     obj.set_camera.CopyFrom(camera)
     uuid = uuid4()
