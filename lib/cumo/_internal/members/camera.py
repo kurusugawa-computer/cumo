@@ -3,6 +3,7 @@ from uuid import uuid4
 from math import sqrt
 from typing import TYPE_CHECKING, Optional
 from cumo._internal.protobuf import server_pb2
+from cumo.camera_state import CameraState, Vector3f, CameraMode
 if TYPE_CHECKING:
     from cumo import PointCloudViewer
 # pylint: disable=no-member
@@ -180,3 +181,37 @@ def set_camera_roll_lock(
     ret = self._wait_until(uuid)
     if ret.result.HasField("failure"):
         raise RuntimeError(ret.result.failure)
+
+
+def get_camera_state(
+    self: PointCloudViewer
+) -> CameraState:
+    """カメラの状態を取得する
+
+    Args:
+        self (PointCloudViewer): _description_
+
+    Raises:
+        RuntimeError: _description_
+
+    Returns:
+        _type_: _description_
+    """
+    obj = server_pb2.ServerCommand()
+    obj.get_camera_state = True
+    uuid = uuid4()
+    self._send_data(obj, uuid)
+    ret = self._wait_until(uuid)
+    if ret.HasField("camera_state"):
+        return CameraState(
+            position=Vector3f(ret.camera_state.position),
+            target=Vector3f(ret.camera_state.target),
+            up=Vector3f(ret.camera_state.up),
+            mode=CameraMode._FromProtobuf(ret.camera_state.mode),
+            roll_lock=ret.camera_state.roll_lock,
+            fov=ret.camera_state.fov,
+            frustum_height=ret.camera_state.frustum_height
+        )
+    if ret.result.HasField("failure"):
+        raise RuntimeError(ret.result.failure)
+    raise RuntimeError("unexpected response")

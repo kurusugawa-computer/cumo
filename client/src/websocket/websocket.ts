@@ -6,6 +6,7 @@ import { sendFailure } from './client_command';
 import { handleAddControl } from './handler/add_control';
 import { handleAddObject } from './handler/add_object';
 import { handleScreenCapture } from './handler/capture_screen';
+import { handleGetCameraState } from './handler/get_camera';
 import { handleLogMessage } from './handler/log_message';
 import { handleRemoveControl } from './handler/remove_control';
 import { handleRemoveObject } from './handler/remove_object';
@@ -61,6 +62,9 @@ function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message
         break;
       case 'setEnable':
         handleSetEnable(websocket, commandID, viewer, message.setEnable);
+        break;
+      case 'getCameraState':
+        handleGetCameraState(websocket, commandID, viewer);
         break;
       default:
         sendFailure(websocket, commandID, 'message has not any command');

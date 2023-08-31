@@ -51,6 +51,7 @@ class PointCloudViewer:
         set_perspective_camera,
         set_camera_roll,
         set_camera_roll_lock,
+        get_camera_state,
     )
     from cumo._internal.members.custom_control import (
         add_custom_button,

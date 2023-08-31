@@ -14,6 +14,7 @@ message ServerCommand {
         RemoveCustomControl remove_custom_control = 9;
         SetCustomControl set_custom_control = 10;
         bool set_enable = 11;
+        bool get_camera_state = 12;
     }
 }
 
@@ -163,6 +164,10 @@ message SetKeyEventHandler {
         bool keyup = 2;
         bool keypress = 3;
     }
+}
+
+message SetCameraEventHandler {
+    float interval = 1;
 }
 
 message VecXYZf {

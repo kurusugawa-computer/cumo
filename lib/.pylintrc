@@ -22,4 +22,4 @@ disable=
 ignore=dist,cumo/_internal/protobuf
 
 [TYPECHECK]
-generated-members=server_pb2.ServerCommand
+generated-members=server_pb2.ServerCommand,client_pb2.VecXYZf,client_pb2.CameraState
