@@ -1,17 +1,18 @@
 from __future__ import annotations  # Postponed Evaluation of Annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 from uuid import uuid4
 from cumo._internal.protobuf import server_pb2
 if TYPE_CHECKING:
     from cumo import PointCloudViewer
 
 
-def wait_forever(self: PointCloudViewer) -> None:
+def wait_forever(self: PointCloudViewer) -> NoReturn:
     """
     サーバーが動作している間待ち続ける。
     この関数を実行した後にコールバック内で ``sys.exit()`` を呼び出すなどすることでプログラムを終了できる。
     """
-    self._wait_until(None)
+    data = self._wait_until(None)
+    assert False, f"[bug] _wait_until(None) returns something: {data}"
 
 
 def console_log(

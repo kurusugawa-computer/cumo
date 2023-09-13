@@ -157,8 +157,8 @@ def set_custom_selectbox(
     target: UUID,
     items: Optional[list] = None,
     name: Optional[str] = None,
-    value: Optional[int] = None,
-    on_changed: Optional[Callable[[int], None]] = None,
+    value: Optional[str] = None,
+    on_changed: Optional[Callable[[str], None]] = None,
 ) -> UUID:
     """指定されたセレクトボックスの値を変更する。
 
@@ -169,9 +169,9 @@ def set_custom_selectbox(
     :param name: 表示名
     :type name: Optional[str], optional
     :param value: 値
-    :type value: Optional[int], optional
+    :type value: Optional[str], optional
     :param on_changed: 値が変化したときに呼ばれるコールバック関数。引数にセレクトボックスの設定値が渡される
-    :type on_changed: Optional[Callable[[int], None]], optional
+    :type on_changed: Optional[Callable[[str], None]], optional
 
     Returns:
         UUID: コントロールに対応するID。後から操作する際に使う

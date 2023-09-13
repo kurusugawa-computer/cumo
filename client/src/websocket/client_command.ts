@@ -104,3 +104,17 @@ export function sendKeyPress (websocket: WebSocket, commandID: string, event: Ke
   command.UUID = commandID;
   websocket.send(command.serializeBinary());
 }
+
+export function sendCameraState (websocket: WebSocket, commandID: string, state: PB.CameraState) {
+  const command = new PB.ClientCommand();
+  command.cameraState = state;
+  command.UUID = commandID;
+  websocket.send(command.serializeBinary());
+}
+
+export function sendCameraStateChanged (websocket: WebSocket, commandID: string, state: PB.CameraState) {
+  const command = new PB.ClientCommand();
+  command.camearaStateChanged = state;
+  command.UUID = commandID;
+  websocket.send(command.serializeBinary());
+}

@@ -2,9 +2,11 @@ __all__ = ["PointCloudViewer"]
 
 import multiprocessing
 from enum import Enum, auto
-from typing import Optional
+from typing import Optional, Dict, Callable
+from uuid import UUID
 
 # pylint: disable=import-outside-toplevel
+# mypy: disable-error-code=misc
 
 
 class DownSampleStrategy(Enum):
@@ -34,10 +36,10 @@ class PointCloudViewer:
     :type autostart: bool, optional
     """
     _server_process: multiprocessing.Process
-    _custom_handlers: dict
-    _key_event_handlers: dict
-    _websocket_broadcasting_queue: multiprocessing.Queue
-    _websocket_message_queue: multiprocessing.Queue
+    _custom_handlers: Dict[str, Dict[UUID, Callable]]
+    _key_event_handlers: Dict[str, Dict[UUID, Callable]]
+    _websocket_broadcasting_queue: "multiprocessing.Queue[str]"
+    _websocket_message_queue: "multiprocessing.Queue[bytes]"
 
     from cumo._internal.members.capture_screen import (
         capture_screen,
@@ -50,6 +52,9 @@ class PointCloudViewer:
         set_perspective_camera,
         set_camera_roll,
         set_camera_roll_lock,
+        get_camera_state,
+        add_camera_state_changed_handler,
+        remove_camera_state_changed_handler
     )
     from cumo._internal.members.custom_control import (
         add_custom_button,

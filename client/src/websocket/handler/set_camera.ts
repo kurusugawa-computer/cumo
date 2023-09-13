@@ -27,6 +27,9 @@ export function handleSetCamera (websocket: WebSocket, commandID: string, viewer
     case 'rollLock':
       setCameraRollLock(websocket, commandID, viewer, camera.rollLock);
       break;
+    case 'mode':
+      viewer.switchCamera(camera.mode === PB.SetCameraCameraMode.PERSPECTIVE);
+      break;
     default:
       sendFailure(websocket, commandID, 'message has not any camera parameters');
       break;

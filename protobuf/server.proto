@@ -14,6 +14,8 @@ message ServerCommand {
         RemoveCustomControl remove_custom_control = 9;
         SetCustomControl set_custom_control = 10;
         bool set_enable = 11;
+        bool get_camera_state = 12;
+        SetCameraStateEventHandler set_camera_state_event_handler = 13;
     }
 }
 
@@ -87,10 +89,15 @@ message SetCamera {
         VecXYZf target = 4;
         Roll roll = 5;
         bool roll_lock = 6;
+        CameraMode mode = 7;
     }
     message Roll {
         float angle = 1;
         VecXYZf up = 2;
+    }
+    enum CameraMode {
+        PERSPECTIVE = 0;
+        ORTHOGRAPHIC = 1;
     }
 }
 
@@ -157,6 +164,14 @@ message SetKeyEventHandler {
         bool keydown = 1;
         bool keyup = 2;
         bool keypress = 3;
+    }
+}
+
+message SetCameraStateEventHandler {
+    oneof Action {
+        float add_with_interval = 1;
+        string remove_by_uuid = 2;
+        bool remove_all = 3;
     }
 }
 

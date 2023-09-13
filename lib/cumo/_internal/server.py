@@ -1,4 +1,6 @@
-import multiprocessing
+# pylint: disable=W0611
+import multiprocessing  # only for type annotations
+
 import pkgutil
 import asyncio
 import threading
@@ -9,6 +11,7 @@ from typing import Union, Optional
 
 # pylint: disable=E1101
 import websockets
+import websockets.server
 
 EXT_TO_MIME = {
     "js": "application/javascript",
@@ -19,14 +22,16 @@ EXT_TO_MIME = {
 
 def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int):
     class _PointCloudViewerHTTPRequestHandler(BaseHTTPRequestHandler):
-        def do_GET(self):
+        def do_GET(self) -> None:
             if self.path == "/":
                 self.redirect("index.html")
             elif self.path == "/websocket_url":
                 self.send_response(200)
                 self.end_headers()
+                address = self.server.server_address
+                assert isinstance(address, tuple)
                 self.wfile.write(
-                    f"ws://{self.server.server_address[0]}:{websocket_port}".encode("utf-8")
+                    f"ws://{address[0]}:{websocket_port}".encode("utf-8")
                 )
             else:
                 path = join("/public/", "./"+self.path)
@@ -63,10 +68,10 @@ def multiprocessing_worker(
     host: str,
     websocket_port: int,
     http_port: int,
-    websocket_broadcasting_queue: multiprocessing.Queue,
-    websocket_message_queue: multiprocessing.Queue,
+    websocket_broadcasting_queue: "multiprocessing.Queue[str]",
+    websocket_message_queue: "multiprocessing.Queue[bytes]",
 ):
-    websocket_connection: Optional[websockets.WebSocketServerProtocol] = None
+    websocket_connection: Optional[websockets.server.WebSocketServerProtocol] = None
 
     async def __broadcast():
         nonlocal websocket_connection
@@ -78,7 +83,7 @@ def multiprocessing_worker(
         except asyncio.CancelledError:
             pass
 
-    async def __websocket_handler(websocket: websockets.WebSocketServerProtocol, _path: str):
+    async def __websocket_handler(websocket: websockets.server.WebSocketServerProtocol, _path: str):
         nonlocal websocket_connection
         if websocket_connection is not None:
             await websocket.close()
@@ -87,8 +92,9 @@ def multiprocessing_worker(
         loop = asyncio.get_running_loop()
         broadcast_task = loop.create_task(__broadcast())
         try:
+            msg: Union[str, bytes]
             async for msg in websocket:
-                msg: bytes = msg
+                assert isinstance(msg, bytes)
                 websocket_message_queue.put(msg)
         finally:
             websocket_connection = None
@@ -100,12 +106,12 @@ def multiprocessing_worker(
         _MakePointCloudViewerHTTPRequestHandler(websocket_port=websocket_port),
     )
 
-    start_server = websockets.serve(__websocket_handler,
-                                    host=host,
-                                    port=websocket_port,
-                                    max_size=None,
-                                    ping_timeout=60,
-                                    )
+    start_server = websockets.server.serve(__websocket_handler,
+                                           host=host,
+                                           port=websocket_port,
+                                           max_size=None,
+                                           ping_timeout=60,
+                                           )
     loop.run_until_complete(start_server)
 
     threads = [
@@ -116,8 +122,8 @@ def multiprocessing_worker(
             target=http_server.serve_forever
         )
     ]
+    thread: threading.Thread
     for thread in threads:
-        thread: threading.Thread = thread
         thread.setDaemon(True)
         thread.start()
 

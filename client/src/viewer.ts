@@ -7,7 +7,7 @@ import { Spinner } from './spinner';
 
 import * as BABYLON from '@babylonjs/core';
 import '@babylonjs/core/Legacy/legacy';
-import { CustomCameraInput } from './camera_control';
+import { CustomCameraInput, CustomCameraInputEventHandlers } from './camera_control';
 import { adjustControlPanelWidthFromContent } from './websocket/handler/util';
 
 export class PointCloudViewer {
@@ -37,6 +37,14 @@ export class PointCloudViewer {
     onKeyDown: ((ev: KeyboardEvent) => any) | null = null
     onKeyPress: ((ev: KeyboardEvent) => any) | null = null
   }();
+
+  cameraEventHandler: {
+    [K in keyof CustomCameraInputEventHandlers]: {
+      [uuid: string]: CustomCameraInputEventHandlers[K]
+    }
+  } = {
+    statechange: {}
+  }
 
   config = new class {
     controls = new class {

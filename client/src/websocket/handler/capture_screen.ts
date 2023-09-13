@@ -6,6 +6,7 @@ export function handleScreenCapture (websocket: WebSocket, commandID: string, vi
   const divcanvas = viewer.getdiv;
 
   viewer.cameraInput.checkInputs();
+  viewer.render();
 
   viewer.scene.afterRender = () => {
     html2canvas(divcanvas).then((canvas) => {

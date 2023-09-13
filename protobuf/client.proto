@@ -9,6 +9,8 @@ message ClientCommand {
         Image image = 4;
         ControlChanged control_changed = 5;
         KeyEventOccurred key_event_occurred = 6;
+        CameraState camera_state = 7;
+        CameraState cameara_state_changed = 8;
     }
 }
 
@@ -46,4 +48,24 @@ message KeyEventOccurred {
         bool metaKey = 6;
         bool repeat = 7;
     }
+}
+
+message CameraState {
+    VecXYZf position = 1;
+    VecXYZf target = 2;
+    VecXYZf up = 3;
+    CameraMode mode = 4;
+    bool roll_lock = 5;
+    float fov = 6;
+    float frustum_height = 7;
+    enum CameraMode {
+        PERSPECTIVE = 0;
+        ORTHOGRAPHIC = 1;
+    }
+}
+
+message VecXYZf {
+    float x = 1;
+    float y = 2;
+    float z = 3;
 }
