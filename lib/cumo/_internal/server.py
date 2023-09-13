@@ -1,4 +1,6 @@
-import multiprocessing
+# pylint: disable=W0611
+import multiprocessing  # only for type annotations
+
 import pkgutil
 import asyncio
 import threading
@@ -66,8 +68,8 @@ def multiprocessing_worker(
     host: str,
     websocket_port: int,
     http_port: int,
-    websocket_broadcasting_queue: multiprocessing.Queue,
-    websocket_message_queue: multiprocessing.Queue,
+    websocket_broadcasting_queue: "multiprocessing.Queue[str]",
+    websocket_message_queue: "multiprocessing.Queue[bytes]",
 ):
     websocket_connection: Optional[websockets.server.WebSocketServerProtocol] = None
 
@@ -92,6 +94,7 @@ def multiprocessing_worker(
         try:
             msg: Union[str, bytes]
             async for msg in websocket:
+                assert isinstance(msg, bytes)
                 websocket_message_queue.put(msg)
         finally:
             websocket_connection = None

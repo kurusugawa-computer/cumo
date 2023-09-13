@@ -15,6 +15,7 @@ message ServerCommand {
         SetCustomControl set_custom_control = 10;
         bool set_enable = 11;
         bool get_camera_state = 12;
+        SetCameraStateEventHandler set_camera_state_event_handler = 13;
     }
 }
 
@@ -166,8 +167,12 @@ message SetKeyEventHandler {
     }
 }
 
-message SetCameraEventHandler {
-    float interval = 1;
+message SetCameraStateEventHandler {
+    oneof Action {
+        float add_with_interval = 1;
+        string remove_by_uuid = 2;
+        bool remove_all = 3;
+    }
 }
 
 message VecXYZf {

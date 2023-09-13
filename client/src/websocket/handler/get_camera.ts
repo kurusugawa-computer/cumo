@@ -1,7 +1,8 @@
-import { CameraState, CameraStateCameraMode, VecXYZf } from '../../protobuf/client';
+import { CameraState, CameraStateCameraMode } from '../../protobuf/client';
 import { PointCloudViewer } from '../../viewer';
 import * as BABYLON from '@babylonjs/core';
 import { sendCameraState } from '../client_command';
+import { Vector32VecXYZf } from '../handler/util';
 
 export function handleGetCameraState (websocket: WebSocket, commandID: string, viewer: PointCloudViewer): void {
   viewer.cameraInput.updateCameraFrustum();
@@ -15,12 +16,4 @@ export function handleGetCameraState (websocket: WebSocket, commandID: string, v
     frustumHeight: (viewer.camera.orthoTop ?? 0) - (viewer.camera.orthoBottom ?? 0)
   });
   sendCameraState(websocket, commandID, cameraState);
-}
-
-function Vector32VecXYZf (v: BABYLON.Vector3): VecXYZf {
-  return new VecXYZf({
-    x: v.x,
-    y: v.y,
-    z: v.z
-  });
 }

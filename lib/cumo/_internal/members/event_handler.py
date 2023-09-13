@@ -7,6 +7,8 @@ from google.protobuf.message import DecodeError
 from cumo._internal.protobuf import server_pb2
 from cumo._internal.protobuf import client_pb2
 from cumo.keyboard_event import KeyboardEvent
+from cumo._internal.members.camera import _EVENT_CAMERA_STATE_CHANGED
+from cumo.camera_state import CameraState, Vector3f, CameraMode
 if TYPE_CHECKING:
     from cumo import PointCloudViewer
 
@@ -31,31 +33,38 @@ def _wait_until(self: PointCloudViewer, uuid: UUID) -> client_pb2.ClientCommand:
         if UUID(hex=command.UUID) == uuid:
             clean_defer_queue(self, defer_queue)
             return command
-        for_me = self._handle_message(command)
-        if not for_me:
+        handled = self._handle_message(command)
+        if not handled:
             # 他の_wait_untilループで受け取るべきデータが来てしまったので退避させる
             defer_queue.put(data)
 
 
 def _handle_message(self: PointCloudViewer, command: client_pb2.ClientCommand) -> bool:
+    """call event handler associated with the command from client. returns True if any handler called.
+    """
     if command.HasField("control_changed"):
         _handle_control_changed(self, command)
         return True
     if command.HasField("key_event_occurred"):
         _handle_key_event_occurred(self, command)
         return True
+    if command.HasField("cameara_state_changed"):
+        _handle_camera_state_changed(self, command)
     return False
 
 
 def _get_custom_handler(self: PointCloudViewer, uuid: UUID, name: str) -> Optional[Callable]:
-    t = (uuid, name)
-    if t in self._custom_handlers:
-        return self._custom_handlers[t]
+    if name not in self._custom_handlers:
+        return None
+    if uuid in self._custom_handlers[name]:
+        return self._custom_handlers[name][uuid]
     return None
 
 
 def _set_custom_handler(self: PointCloudViewer, uuid: UUID, name: str, func: Callable) -> None:
-    self._custom_handlers[(uuid, name)] = func
+    if name not in self._custom_handlers:
+        self._custom_handlers[name] = {}
+    self._custom_handlers[name][uuid] = func
 
 
 def _handle_control_changed(self: PointCloudViewer, command: client_pb2.ClientCommand):
@@ -116,6 +125,28 @@ def handle_keypress(self: PointCloudViewer, ev_pb: client_pb2.KeyEventOccurred.K
         uuid: UUID = t[0]
         handler: Callable[[KeyboardEvent, UUID], None] = t[1]
         handler(ev, uuid)
+
+
+def _handle_camera_state_changed(self: PointCloudViewer, ev_pb: client_pb2.ClientCommand):
+    uuid = UUID(ev_pb.UUID)
+    pb_state = ev_pb.cameara_state_changed
+    state = CameraState(
+        position=Vector3f(pb_state.position),
+        target=Vector3f(pb_state.target),
+        up=Vector3f(pb_state.up),
+        mode=(
+            CameraMode.PERSPECTIVE
+            if pb_state.mode == client_pb2.CameraState.CameraMode.PERSPECTIVE
+            else CameraMode.ORTHOGRAPHIC
+        ),
+        roll_lock=pb_state.roll_lock,
+        fov=pb_state.fov,
+        frustum_height=pb_state.frustum_height
+    )
+    handler: Callable[[CameraState, UUID], None] = self._get_custom_handler(uuid, _EVENT_CAMERA_STATE_CHANGED)
+
+    if handler is not None:
+        handler(state, uuid)
 
 
 def _send_data(self: PointCloudViewer, pbobj: server_pb2.ServerCommand, uuid: UUID) -> None:

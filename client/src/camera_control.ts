@@ -1,4 +1,6 @@
 import * as BABYLON from '@babylonjs/core';
+import { CameraState, CameraStateCameraMode } from './protobuf/client';
+import { Vector32VecXYZf } from './websocket/handler/util';
 
 const STATE = {
   NONE: -1,
@@ -17,6 +19,10 @@ const MOUSEEVENTBUTTON = {
 
 const EPS: number = 0.000001;
 
+export type CustomCameraInputEventHandlers = {
+  'statechange': (e: {newState: CameraState}) => void;
+};
+
 export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements BABYLON.ICameraInput<TCamera> {
   enabled: boolean = true;
   noPreventDefault = false;
@@ -34,6 +40,14 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
   maxDistance: number = Number.MAX_SAFE_INTEGER;
 
   target: BABYLON.Vector3 = BABYLON.Vector3.Zero();
+  lastTarget: BABYLON.Vector3 = BABYLON.Vector3.Zero();
+
+  lastPosition: BABYLON.Vector3 = BABYLON.Vector3.Zero();
+  lastUpVector: BABYLON.Vector3 = BABYLON.Vector3.Zero();
+  lastFov: number = 0;
+  lastFrustumHeight: number = 0
+
+  lastMode: number = BABYLON.Camera.PERSPECTIVE_CAMERA;
 
   camera: BABYLON.Nullable<TCamera> = null;
   private canvas: HTMLCanvasElement | null = null;
@@ -58,6 +72,12 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
   private state: State = STATE.NONE;
   private keyState: State = STATE.NONE;
   private eye: BABYLON.Vector3 = BABYLON.Vector3.Zero();
+
+  private eventHandlers: {
+    [key in keyof CustomCameraInputEventHandlers]: CustomCameraInputEventHandlers[key][]
+  } = {
+    statechange: []
+  }
 
   // interface BABYLON.ICameraInput
 
@@ -290,6 +310,34 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
         this.camera.setTarget(this.target);
       }
     }
+
+    const cameraChanged =
+    BABYLON.Vector3.DistanceSquared(this.camera.position, this.lastPosition) > EPS ||
+    BABYLON.Vector3.DistanceSquared(this.target, this.lastTarget) > EPS ||
+    BABYLON.Vector3.DistanceSquared(this.camera.upVector, this.lastUpVector) > EPS ||
+    Math.abs(this.camera.fov - this.lastFov) > EPS ||
+    Math.abs(((this.camera.orthoTop ?? 0) - (this.camera.orthoBottom ?? 0)) - this.lastFrustumHeight) > EPS ||
+    this.camera.mode !== this.lastMode;
+    if (cameraChanged) {
+      this.lastPosition.copyFrom(this.camera.position);
+      this.lastTarget.copyFrom(this.target);
+      this.lastUpVector.copyFrom(this.camera.upVector);
+      this.lastFov = this.camera.fov;
+      this.lastFrustumHeight = (this.camera.orthoTop ?? 0) - (this.camera.orthoBottom ?? 0);
+      this.lastMode = this.camera.mode;
+
+      this.dispatchEvent('statechange', {
+        newState: new CameraState({
+          position: Vector32VecXYZf(this.camera.position),
+          target: Vector32VecXYZf(this.target),
+          up: Vector32VecXYZf(this.camera.upVector),
+          mode: this.camera.mode === BABYLON.Camera.PERSPECTIVE_CAMERA ? CameraStateCameraMode.PERSPECTIVE : CameraStateCameraMode.ORTHOGRAPHIC,
+          rollLock: this.noRoll,
+          fov: this.camera.fov,
+          frustumHeight: (this.camera.orthoTop ?? 0) - (this.camera.orthoBottom ?? 0)
+        })
+      });
+    }
   }
 
   // utilities
@@ -335,6 +383,38 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
       default:
         console.warn('CustomCameraInput: unsupported camera fovMode');
         return [-1, -1];
+    }
+  }
+
+  addEventListerner<K extends keyof CustomCameraInputEventHandlers> (
+    type: K,
+    handler: CustomCameraInputEventHandlers[K]
+  ) {
+    if (type in this.eventHandlers) {
+      this.eventHandlers[type].push(handler);
+    }
+  }
+
+  removeEventListener<K extends keyof CustomCameraInputEventHandlers> (
+    type: K,
+    handler: CustomCameraInputEventHandlers[K]
+  ) {
+    if (type in this.eventHandlers) {
+      const i = this.eventHandlers[type].indexOf(handler);
+      if (i !== -1) {
+        this.eventHandlers[type].splice(i, 1);
+      }
+    }
+  }
+
+  private dispatchEvent<K extends keyof CustomCameraInputEventHandlers> (
+    type: K,
+    param: Parameters<CustomCameraInputEventHandlers[K]>[0]
+  ) {
+    if (type in this.eventHandlers) {
+      for (const h of this.eventHandlers[type]) {
+        h(param);
+      }
     }
   }
 

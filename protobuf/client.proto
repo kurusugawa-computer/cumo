@@ -10,6 +10,7 @@ message ClientCommand {
         ControlChanged control_changed = 5;
         KeyEventOccurred key_event_occurred = 6;
         CameraState camera_state = 7;
+        CameraState cameara_state_changed = 8;
     }
 }
 

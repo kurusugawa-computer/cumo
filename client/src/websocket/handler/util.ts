@@ -1,5 +1,7 @@
+import * as BABYLON from '@babylonjs/core';
 import { GUI, GUIController } from 'dat.gui';
 import { PointCloudViewer } from '../../viewer';
+import { VecXYZf } from '../../protobuf/client';
 
 // ルートフォルダを示すUUID
 export const RootFolderUUID = '00000000-0000-0000-0000-000000000000';
@@ -103,4 +105,12 @@ export function adjustControlPanelWidthFromContent (gui: GUI) {
   // +1 for dat.gui bugs
   // sometimes the actual width will be 1px less than the passed value
   gui.width = Math.max(gui.width, Math.min(mainWidth + padding + 1, window.innerWidth / 2));
+}
+
+export function Vector32VecXYZf (v: BABYLON.Vector3): VecXYZf {
+  return new VecXYZf({
+    x: v.x,
+    y: v.y,
+    z: v.z
+  });
 }
