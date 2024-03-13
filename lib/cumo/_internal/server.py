@@ -20,7 +20,7 @@ EXT_TO_MIME = {
 }
 
 
-def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int):
+def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int, host: str):
     class _PointCloudViewerHTTPRequestHandler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             if self.path == "/":
@@ -28,10 +28,8 @@ def _MakePointCloudViewerHTTPRequestHandler(websocket_port: int):
             elif self.path == "/websocket_url":
                 self.send_response(200)
                 self.end_headers()
-                address = self.server.server_address
-                assert isinstance(address, tuple)
                 self.wfile.write(
-                    f"ws://{address[0]}:{websocket_port}".encode("utf-8")
+                    f"ws://{host}:{websocket_port}".encode("utf-8")
                 )
             else:
                 path = join("/public/", "./"+self.path)
@@ -102,12 +100,12 @@ def multiprocessing_worker(
 
     loop = asyncio.get_event_loop()
     http_server = HTTPServer(
-        (host, http_port),
-        _MakePointCloudViewerHTTPRequestHandler(websocket_port=websocket_port),
+        ("", http_port),
+        _MakePointCloudViewerHTTPRequestHandler(websocket_port=websocket_port, host=host),
     )
 
     start_server = websockets.server.serve(__websocket_handler,
-                                           host=host,
+                                           host="",
                                            port=websocket_port,
                                            max_size=None,
                                            ping_timeout=60,
