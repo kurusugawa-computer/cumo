@@ -255,6 +255,10 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
     if (1 - Math.abs(BABYLON.Vector3.Dot(eyeDirection, objectUpDirection)) < EPS) {
       // use screen up direction
       objectUpDirection.set(0, 1, 0);
+      if (this.camera.rotationQuaternion !== null) {
+        this.camera.rotationQuaternion = new BABYLON.Quaternion();
+      }
+      this.camera.rotationQuaternion.fromRotationMatrix(this.camera.getWorldMatrix());
       objectUpDirection.applyRotationQuaternionInPlace(this.camera.rotationQuaternion);
       this.camera.upVector.copyFrom(objectUpDirection);
     }
