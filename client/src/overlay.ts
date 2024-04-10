@@ -22,22 +22,24 @@ export class Overlay {
     let x: number;
     let y: number;
 
+    const offset = canvas.getClientRects()[0];
+
     if (this.__coordType === CoordinateType.WORLD_COORDINATE) {
       const p = BABYLON.Vector3.Project(
         this.__position,
-        BABYLON.Matrix.Identity(),
+        BABYLON.Matrix.IdentityReadOnly,
         scene.getTransformMatrix(),
         new BABYLON.Viewport(0, 0, canvas.width, canvas.height)
       );
-      x = p.x;
-      y = p.y;
+      x = p.x / window.devicePixelRatio;
+      y = p.y / window.devicePixelRatio;
     } else {
       console.assert(this.__coordType === CoordinateType.SCREEN_COORDINATE);
       x = this.__position.x;
       y = this.__position.y;
     }
-    this.__elem.style.top = '' + y + 'px';
-    this.__elem.style.left = '' + x + 'px';
+    this.__elem.style.top = '' + y + offset.top + 'px';
+    this.__elem.style.left = '' + x + offset.left + 'px';
   }
 
   dispose () {
