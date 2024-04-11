@@ -38,8 +38,8 @@ export class Overlay {
       x = this.__position.x;
       y = this.__position.y;
     }
-    this.__elem.style.top = '' + y + offset.top + 'px';
-    this.__elem.style.left = '' + x + offset.left + 'px';
+    this.__elem.style.top = '' + (y + offset.top) + 'px';
+    this.__elem.style.left = '' + (x + offset.left) + 'px';
   }
 
   dispose () {
