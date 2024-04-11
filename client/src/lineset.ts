@@ -17,7 +17,7 @@ export class Lineset {
     this.UUID = uuid.toUpperCase();
   }
 
-  render (canvas: Canvas2D, scene: BABYLON.Scene, transformMatrix: BABYLON.Matrix) {
+  render (canvas: Canvas2D, transformMatrix: BABYLON.Matrix) {
     const frustumPlanes = BABYLON.Frustum.GetPlanes(transformMatrix);
     const viewport = new BABYLON.Viewport(0, 0, canvas.domElement.width, canvas.domElement.height);
     const p0 = new BABYLON.Vector3();

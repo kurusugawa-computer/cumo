@@ -109,7 +109,8 @@ export class PointCloudViewer {
     const onResize = () => {
       this.canvas.width = window.innerWidth * window.devicePixelRatio;
       this.canvas.height = window.innerHeight * window.devicePixelRatio;
-      this.engine.resize();
+      this.engine.setHardwareScalingLevel(1 / window.devicePixelRatio);
+      this.engine.resize(true);
     };
 
     window.addEventListener('resize', onResize);
@@ -184,7 +185,7 @@ export class PointCloudViewer {
     const mat = this.camera.getTransformationMatrix();
 
     for (let i = 0; i < this.linesets.length; i++) {
-      this.linesets[i].render(this.canvas2d, this.scene, mat);
+      this.linesets[i].render(this.canvas2d, mat);
     }
   }
 
