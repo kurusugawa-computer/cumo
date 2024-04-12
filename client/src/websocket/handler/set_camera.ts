@@ -29,6 +29,7 @@ export function handleSetCamera (websocket: WebSocket, commandID: string, viewer
       break;
     case 'mode':
       viewer.switchCamera(camera.mode === PB.SetCameraCameraMode.PERSPECTIVE);
+      sendSuccess(websocket, commandID, 'success');
       break;
     default:
       sendFailure(websocket, commandID, 'message has not any camera parameters');
