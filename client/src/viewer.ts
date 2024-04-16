@@ -69,8 +69,8 @@ export class PointCloudViewer {
   }();
 
   constructor (private container: HTMLDivElement) {
-    const cameraNear = 0.00001;
-    const cameraFar = 100000;
+    const cameraNear = 0.1;
+    const cameraFar = 10000;
 
     this.canvas = document.createElement('canvas');
 

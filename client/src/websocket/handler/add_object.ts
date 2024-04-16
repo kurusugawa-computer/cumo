@@ -274,7 +274,6 @@ function handlePointCloud (
   mat.pointSize = pbPointcloud.pointSize;
 
   const mesh = new BABYLON.Mesh(commandID, viewer.scene);
-  mesh.renderingGroupId = 1;
   vertexData.applyToMesh(mesh, true);
   mesh.material = mat;
 
