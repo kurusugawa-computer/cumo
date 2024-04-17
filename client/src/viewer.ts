@@ -85,6 +85,7 @@ export class PointCloudViewer {
     this.scene = new BABYLON.Scene(this.engine);
     this.scene.clearColor = new BABYLON.Color4(0, 0, 0);
     this.scene.lightsEnabled = false;
+    this.scene.useRightHandedSystem = true;
 
     this.camera = new BABYLON.FreeCamera('camera', new BABYLON.Vector3(-1, -1, -1), this.scene);
     this.camera.fov = (this.config.camera.perspective.fov / 180) * Math.PI;
