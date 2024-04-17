@@ -1,7 +1,7 @@
 [tool.poetry]
 readme = "README.md"
 name = "cumo"
-version = "0.33.2"
+version = "0.33.3"
 description = "Webブラウザ上に点群を描画する python ライブラリ"
 authors = ["Kurusugawa Computer"]
 license = "BSD"
