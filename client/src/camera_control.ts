@@ -203,9 +203,9 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
 
       // calculate true up vector
       const eye = this.eye.clone();
-      const camUp = this.camera.upVector.clone();
-      const upProj = eye.scale(BABYLON.Vector3.Dot(eye, camUp) / eye.lengthSquared());
-      const upVector = camUp.subtract(upProj).normalize();
+      const cameraUp = this.camera.upVector.clone();
+      const cameraUpProjection = eye.scale(BABYLON.Vector3.Dot(eye, cameraUp) / eye.lengthSquared());
+      const upVector = cameraUp.subtract(cameraUpProjection).normalize();
 
       // screen coordinate: positive y is up and positive x is right
       // camera coordinate: if axis A is pointing up and axis B is pointing forward, then the other axis is pointing left (right handed coordinate system)
