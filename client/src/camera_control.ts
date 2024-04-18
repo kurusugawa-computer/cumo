@@ -201,12 +201,18 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
     if (mouseChange.lengthSquared()) {
       mouseChange.scaleInPlace(this.eye.length() * this.panSpeed);
 
+      // calculate true up vector
+      const eye = this.eye.clone();
+      const cameraUp = this.camera.upVector.clone();
+      const cameraUpProjection = eye.scale(BABYLON.Vector3.Dot(eye, cameraUp) / eye.lengthSquared());
+      const upVector = cameraUp.subtract(cameraUpProjection).normalize();
+
       // screen coordinate: positive y is up and positive x is right
       // camera coordinate: if axis A is pointing up and axis B is pointing forward, then the other axis is pointing left (right handed coordinate system)
-      const pan = this.eye.cross(this.camera.upVector).normalize()
+      const pan = this.eye.cross(upVector).normalize()
         .scaleInPlace(-mouseChange.x);
 
-      pan.addInPlace(this.camera.upVector.scale(mouseChange.y));
+      pan.addInPlace(upVector.scale(mouseChange.y));
 
       this.target.addInPlace(pan);
       this.panStart.copyFrom(this.panEnd);
