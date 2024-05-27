@@ -145,40 +145,57 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
 
   private rotateCamera () {
     if (this.camera === null) return;
-    const moveDirection = new BABYLON.Vector3(
-      this.moveCurr.x - this.movePrev.x,
-      this.moveCurr.y - this.movePrev.y,
-      0
-    );
-    let angle = moveDirection.length();
-    if (angle) {
+    // roll-rock mode
+    if (this.noRoll) {
       this.target.subtractToRef(this.camera.position, this.eye);
-
       const eyeDirection = this.eye.clone();
-      eyeDirection.normalize();
-      const objectUpDirection = this.camera.upVector.clone();
-      objectUpDirection.normalize();
-      const objectSidewaysDirection = objectUpDirection.cross(eyeDirection);
-      objectSidewaysDirection.normalize();
 
-      objectUpDirection.scaleInPlace(this.moveCurr.y - this.movePrev.y);
-      objectSidewaysDirection.scaleInPlace(this.moveCurr.x - this.movePrev.x);
+      let sidewayAngle = -(this.moveCurr.x - this.movePrev.x);
+      if (sidewayAngle) {
+        const objectUpDirection = this.camera.upVector.clone();
+        objectUpDirection.normalize();
+        sidewayAngle *= this.rotateSpeed;
+        const quaternion = BABYLON.Quaternion.RotationAxis(objectUpDirection, sidewayAngle).normalize();
+        this.eye.applyRotationQuaternionInPlace(quaternion);
+      }
+      let upAngle = this.moveCurr.y - this.movePrev.y;
+      if (upAngle) {
+        const objectSidewayDirection = this.camera.upVector.cross(eyeDirection);
+        objectSidewayDirection.normalize();
+        upAngle *= this.rotateSpeed;
+        const quaternion = BABYLON.Quaternion.RotationAxis(objectSidewayDirection, upAngle).normalize();
+        this.eye.applyRotationQuaternionInPlace(quaternion);
+      }
+    } else {
+      const moveDirection = new BABYLON.Vector3(
+        this.moveCurr.x - this.movePrev.x,
+        this.moveCurr.y - this.movePrev.y,
+        0
+      );
+      let angle = moveDirection.length();
+      if (angle) {
+        this.target.subtractToRef(this.camera.position, this.eye);
 
-      objectUpDirection.addToRef(objectSidewaysDirection, moveDirection);
-      const axis = moveDirection.cross(eyeDirection).normalize();
+        const eyeDirection = this.eye.clone();
+        eyeDirection.normalize();
+        const objectUpDirection = this.camera.upVector.clone();
+        objectUpDirection.normalize();
+        const objectSidewaysDirection = objectUpDirection.cross(eyeDirection);
+        objectSidewaysDirection.normalize();
+        objectUpDirection.scaleInPlace(this.moveCurr.y - this.movePrev.y);
+        objectSidewaysDirection.scaleInPlace(this.moveCurr.x - this.movePrev.x);
+        objectUpDirection.addToRef(objectSidewaysDirection, moveDirection);
+        const axis = moveDirection.cross(eyeDirection).normalize();
+        angle *= this.rotateSpeed;
+        const quaternion = BABYLON.Quaternion.RotationAxis(axis, angle).normalize();
 
-      angle *= this.rotateSpeed;
-      const quaternion = BABYLON.Quaternion.RotationAxis(axis, angle).normalize();
+        this.eye.applyRotationQuaternionInPlace(quaternion);
 
-      this.eye.applyRotationQuaternionInPlace(quaternion);
-
-      if (!this.noRoll) {
         this.camera.upVector = this.camera.upVector.normalizeToNew()
           .applyRotationQuaternion(quaternion).normalizeToNew();
       }
-
-      this.movePrev.copyFrom(this.moveCurr);
     }
+    this.movePrev.copyFrom(this.moveCurr);
   }
 
   private zoomCamera () {
