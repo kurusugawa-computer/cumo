@@ -150,7 +150,7 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
       this.target.subtractToRef(this.camera.position, this.eye);
       const eyeDirection = this.eye.clone();
 
-      let sidewayAngle = this.moveCurr.x - this.movePrev.x;
+      let sidewayAngle = -(this.moveCurr.x - this.movePrev.x);
       if (sidewayAngle) {
         const objectUpDirection = this.camera.upVector.clone();
         objectUpDirection.normalize();
