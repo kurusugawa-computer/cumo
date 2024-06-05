@@ -163,6 +163,16 @@ export class CustomCameraInput<TCamera extends BABYLON.TargetCamera> implements 
         const objectSidewayDirection = this.camera.upVector.cross(eyeDirection);
         objectSidewayDirection.normalize();
         upAngle *= this.rotateSpeed;
+        // avoid rolling
+        const negatedEyeDirection = eyeDirection.negate();
+        const normal = BABYLON.Vector3.Cross(this.camera.upVector, negatedEyeDirection).normalize();
+        const angleBetweenUpandEye = BABYLON.Vector3.GetAngleBetweenVectors(this.camera.upVector, negatedEyeDirection, normal);
+        const angleOffset = 0.00156;
+        if (upAngle >= 0) {
+          upAngle = Math.min(upAngle, Math.max(0, angleBetweenUpandEye - angleOffset));
+        } else {
+          upAngle = -Math.min(Math.abs(upAngle), Math.max(0, Math.PI - angleBetweenUpandEye - angleOffset));
+        }
         const quaternion = BABYLON.Quaternion.RotationAxis(objectSidewayDirection, upAngle).normalize();
         this.eye.applyRotationQuaternionInPlace(quaternion);
       }
