@@ -4,20 +4,17 @@ import { PointCloudViewer } from '../../viewer';
 import { VecXYZf } from '../../protobuf/client';
 
 // ルートフォルダを示すUUID
-export const RootFolderUUID = '00000000-0000-0000-0000-000000000000';
+export const UUIDCustomRoot = '00000000-0000-0000-0000-000000000000';
 
 export function findFolderByUUID (
   viewer: PointCloudViewer,
   uuid: string
 ): GUI | null {
-  if (uuid === RootFolderUUID) {
-    return viewer.guiCustom;
+  const gui = viewer.UUIDToGUI[uuid];
+  if (gui instanceof GUI) {
+    return gui;
   }
-  return findGUI(
-    viewer.guiCustom,
-    new Set(),
-    (gui) => viewer.folderUUIDmap[uuid] === gui.name
-  );
+  return null;
 }
 
 export function findControllerByUUID (

@@ -31,8 +31,8 @@ export function handleAddControl (
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = button.name;
-          parentFolder.add(viewer.config.custom, propertyName as any).name(button.name);
+          const controller = parentFolder.add(viewer.config.custom, propertyName as any).name(button.name);
+          viewer.UUIDToGUI[propertyName] = controller;
         }
       }
       break;
@@ -53,10 +53,10 @@ export function handleAddControl (
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = checkbox.name;
-          parentFolder.add(viewer.config.custom, propertyName as any)
+          const controller = parentFolder.add(viewer.config.custom, propertyName as any)
             .name(checkbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
+          viewer.UUIDToGUI[propertyName] = controller;
         }
       }
       break;
@@ -77,10 +77,10 @@ export function handleAddControl (
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = picker.name;
-          parentFolder.addColor(viewer.config.custom, propertyName)
+          const controller = parentFolder.addColor(viewer.config.custom, propertyName)
             .name(picker.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
+          viewer.UUIDToGUI[propertyName] = controller;
         }
       }
       break;
@@ -101,10 +101,10 @@ export function handleAddControl (
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = selectbox.name;
-          parentFolder.add(viewer.config.custom, propertyName as any, selectbox.items)
+          const controller = parentFolder.add(viewer.config.custom, propertyName as any, selectbox.items)
             .name(selectbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
+          viewer.UUIDToGUI[propertyName] = controller;
         }
       }
       break;
@@ -125,8 +125,7 @@ export function handleAddControl (
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = slider.name;
-          parentFolder.add(
+          const controller = parentFolder.add(
             viewer.config.custom,
             propertyName as any,
             slider.min,
@@ -135,6 +134,7 @@ export function handleAddControl (
           )
             .name(slider.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
+          viewer.UUIDToGUI[propertyName] = controller;
         }
       }
       break;
@@ -155,10 +155,10 @@ export function handleAddControl (
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = textbox.name;
-          parentFolder.add(viewer.config.custom, propertyName as any)
+          const controller = parentFolder.add(viewer.config.custom, propertyName as any)
             .name(textbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
+          viewer.UUIDToGUI[propertyName] = controller;
         }
       }
       break;
@@ -176,8 +176,8 @@ export function handleAddControl (
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          viewer.folderUUIDmap[propertyName] = folder.name;
-          parentFolder.addFolder(folder.name);
+          const controller = parentFolder.addFolder(folder.name);
+          viewer.UUIDToGUI[propertyName] = controller;
         }
       }
       break;

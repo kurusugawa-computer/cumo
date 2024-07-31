@@ -8,7 +8,7 @@ import { Spinner } from './spinner';
 import * as BABYLON from '@babylonjs/core';
 import '@babylonjs/core/Legacy/legacy';
 import { CustomCameraInput, CustomCameraInputEventHandlers } from './camera_control';
-import { adjustControlPanelWidthFromContent } from './websocket/handler/util';
+import { adjustControlPanelWidthFromContent, UUIDCustomRoot } from './websocket/handler/util';
 
 export class PointCloudViewer {
   enabled: boolean = true;
@@ -30,7 +30,7 @@ export class PointCloudViewer {
   gui: DAT.GUI;
   guiCustom: DAT.GUI;
 
-  folderUUIDmap: { [uuid: string]: string };
+  UUIDToGUI: { [uuid: string]: DAT.GUIController | DAT.GUI };
 
   keyEventHandler = new class {
     onKeyUp: ((ev: KeyboardEvent) => any) | null = null
@@ -144,10 +144,11 @@ export class PointCloudViewer {
     guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.zoomSpeed = this.config.controls.zoomSpeed; });
     guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.panSpeed = this.config.controls.panSpeed; });
 
-    adjustControlPanelWidthFromContent(this.gui);
+    // UUID To GUIまたはGUIControllerのマップ
+    this.UUIDToGUI = {};
+    this.UUIDToGUI[UUIDCustomRoot] = this.guiCustom;
 
-    // [UUID]: folderName な map を初期化
-    this.folderUUIDmap = {};
+    adjustControlPanelWidthFromContent(this.gui);
 
     container.style.position = 'relative';
     container.style.height = '100vh';
