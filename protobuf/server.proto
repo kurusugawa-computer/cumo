@@ -16,6 +16,7 @@ message ServerCommand {
         bool set_enable = 11;
         bool get_camera_state = 12;
         SetCameraStateEventHandler set_camera_state_event_handler = 13;
+        SetProperty set_property = 14;
     }
 }
 
@@ -228,5 +229,15 @@ message SetCustomControl {
     message ColorPicker {
         optional string name = 1;
         optional string value = 2;
+    }
+}
+
+message SetProperty {
+    repeated string target = 1;
+    oneof value {
+        float float_value = 2;
+        bool bool_value = 3;
+        string string_value = 4;
+        int32 int_value = 5;
     }
 }

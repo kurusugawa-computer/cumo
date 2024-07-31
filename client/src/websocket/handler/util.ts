@@ -114,3 +114,8 @@ export function Vector32VecXYZf (v: BABYLON.Vector3): VecXYZf {
     z: v.z
   });
 }
+
+export type PropertyType =
+  number |
+  string |
+  boolean

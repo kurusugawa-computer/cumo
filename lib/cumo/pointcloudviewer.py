@@ -114,3 +114,6 @@ class PointCloudViewer:
         stop_render,
         resume_render,
     )
+    from cumo._internal.members.manage_properties import (
+        set_property
+    )
