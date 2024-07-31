@@ -11,8 +11,11 @@ export function findFolderByUUID (
   uuid: string
 ): GUI | null {
   const gui = viewer.UUIDToGUI[uuid];
-  if (gui instanceof GUI) {
-    return gui;
+  switch (gui.type) {
+    case 'folder':
+      return gui.instance;
+    default:
+      break;
   }
   return null;
 }

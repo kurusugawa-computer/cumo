@@ -32,7 +32,7 @@ export function handleAddControl (
             return;
           }
           const controller = parentFolder.add(viewer.config.custom, propertyName as any).name(button.name);
-          viewer.UUIDToGUI[propertyName] = controller;
+          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
         }
       }
       break;
@@ -56,7 +56,7 @@ export function handleAddControl (
           const controller = parentFolder.add(viewer.config.custom, propertyName as any)
             .name(checkbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = controller;
+          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
         }
       }
       break;
@@ -80,7 +80,7 @@ export function handleAddControl (
           const controller = parentFolder.addColor(viewer.config.custom, propertyName)
             .name(picker.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = controller;
+          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
         }
       }
       break;
@@ -104,7 +104,7 @@ export function handleAddControl (
           const controller = parentFolder.add(viewer.config.custom, propertyName as any, selectbox.items)
             .name(selectbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = controller;
+          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
         }
       }
       break;
@@ -134,7 +134,7 @@ export function handleAddControl (
           )
             .name(slider.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = controller;
+          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
         }
       }
       break;
@@ -158,7 +158,7 @@ export function handleAddControl (
           const controller = parentFolder.add(viewer.config.custom, propertyName as any)
             .name(textbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = controller;
+          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
         }
       }
       break;
@@ -176,8 +176,8 @@ export function handleAddControl (
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
-          const controller = parentFolder.addFolder(folder.name);
-          viewer.UUIDToGUI[propertyName] = controller;
+          const gui = parentFolder.addFolder(folder.name);
+          viewer.UUIDToGUI[propertyName] = { type: 'folder', instance: gui };
         }
       }
       break;

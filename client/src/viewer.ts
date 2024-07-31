@@ -30,7 +30,9 @@ export class PointCloudViewer {
   gui: DAT.GUI;
   guiCustom: DAT.GUI;
 
-  UUIDToGUI: { [uuid: string]: DAT.GUIController | DAT.GUI };
+  UUIDToGUI: { [uuid: string]:
+    {type: 'folder', instance: DAT.GUI} | {type: 'controller', instance: DAT.GUIController}
+  };
 
   keyEventHandler = new class {
     onKeyUp: ((ev: KeyboardEvent) => any) | null = null
@@ -146,7 +148,7 @@ export class PointCloudViewer {
 
     // UUID To GUIまたはGUIControllerのマップ
     this.UUIDToGUI = {};
-    this.UUIDToGUI[UUIDCustomRoot] = this.guiCustom;
+    this.UUIDToGUI[UUIDCustomRoot] = { type: 'folder', instance: this.guiCustom };
 
     adjustControlPanelWidthFromContent(this.gui);
 
