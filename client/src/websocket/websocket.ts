@@ -15,7 +15,6 @@ import { handleSetCamera } from './handler/set_camera';
 import { handleSetControl } from './handler/set_control';
 import { handleSetEnable } from './handler/set_enable';
 import { handleSetKeyEvent } from './handler/set_key_event';
-import { handleSetProperty } from './handler/set_property';
 
 export function connectWebSocket (viewer: PointCloudViewer, url: string) {
   const websocket = new WebSocket(url);
@@ -70,9 +69,6 @@ function handleProtobuf (websocket: WebSocket, viewer: PointCloudViewer, message
         break;
       case 'setCameraStateEventHandler':
         handleSetCameraStateEventHandler(websocket, commandID, viewer, message.setCameraStateEventHandler);
-        break;
-      case 'setProperty':
-        handleSetProperty(websocket, commandID, viewer, message.setProperty);
         break;
       default:
         sendFailure(websocket, commandID, 'message has not any command');
