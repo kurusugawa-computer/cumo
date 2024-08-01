@@ -8,7 +8,8 @@ import { Spinner } from './spinner';
 import * as BABYLON from '@babylonjs/core';
 import '@babylonjs/core/Legacy/legacy';
 import { CustomCameraInput, CustomCameraInputEventHandlers } from './camera_control';
-import { adjustControlPanelWidthFromContent, UUIDCustomRoot } from './websocket/handler/util';
+import { adjustControlPanelWidthFromContent, DefaultUUID } from './websocket/handler/util';
+import { GUIRegistry } from './gui_manager';
 
 export class PointCloudViewer {
   enabled: boolean = true;
@@ -30,9 +31,7 @@ export class PointCloudViewer {
   gui: DAT.GUI;
   guiCustom: DAT.GUI;
 
-  UUIDToGUI: { [uuid: string]:
-    {type: 'folder', instance: DAT.GUI} | {type: 'controller', instance: DAT.GUIController}
-  };
+  guiRegistry: GUIRegistry
 
   keyEventHandler = new class {
     onKeyUp: ((ev: KeyboardEvent) => any) | null = null
@@ -138,17 +137,24 @@ export class PointCloudViewer {
     const guiCamera = this.gui.addFolder('camera');
     this.guiCustom = this.gui.addFolder('custom');
 
-    guiCamera.add(this.config.camera, 'usePerspective')
+    const guiRotateSpeed = guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.rotateSpeed = this.config.controls.rotateSpeed; });
+    const guiZoomSpeed = guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.zoomSpeed = this.config.controls.zoomSpeed; });
+    const guiPanSpeed = guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.panSpeed = this.config.controls.panSpeed; });
+
+    const guiUsePerspective = guiCamera.add(this.config.camera, 'usePerspective')
       .name('perspective camera')
       .onChange((perspective: boolean) => this.switchCamera(perspective));
 
-    guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.rotateSpeed = this.config.controls.rotateSpeed; });
-    guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.zoomSpeed = this.config.controls.zoomSpeed; });
-    guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.panSpeed = this.config.controls.panSpeed; });
-
     // UUID To GUIまたはGUIControllerのマップ
-    this.UUIDToGUI = {};
-    this.UUIDToGUI[UUIDCustomRoot] = { type: 'folder', instance: this.guiCustom };
+    this.guiRegistry = new GUIRegistry();
+    this.guiRegistry.setFolder(DefaultUUID.CustomRoot, this.guiCustom);
+    this.guiRegistry.setFolder(DefaultUUID.Root, this.gui);
+    this.guiRegistry.setFolder(DefaultUUID.Controls, guiControl);
+    this.guiRegistry.setFolder(DefaultUUID.Camera, guiCamera);
+    this.guiRegistry.setController(DefaultUUID.RotateSpeed, guiRotateSpeed);
+    this.guiRegistry.setController(DefaultUUID.ZoomSpeed, guiZoomSpeed);
+    this.guiRegistry.setController(DefaultUUID.PanSpeed, guiPanSpeed);
+    this.guiRegistry.setController(DefaultUUID.UsePerspective, guiUsePerspective);
 
     adjustControlPanelWidthFromContent(this.gui);
 

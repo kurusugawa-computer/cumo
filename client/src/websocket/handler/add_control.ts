@@ -1,7 +1,7 @@
 import * as PB from '../../protobuf/server';
 import { sendSuccess, sendFailure, sendControlChanged } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
-import { adjustControlPanelWidthFromContent, findFolderByUUID } from './util';
+import { adjustControlPanelWidthFromContent } from './util';
 
 export function handleAddControl (
   websocket: WebSocket,
@@ -26,13 +26,13 @@ export function handleAddControl (
               value: () => { sendControlChanged(websocket, commandID, true); }
             }
           );
-          const parentFolder = findFolderByUUID(viewer, button.parent.toUpperCase());
+          const parentFolder = viewer.guiRegistry.getFolder(button.parent);
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
           const controller = parentFolder.add(viewer.config.custom, propertyName as any).name(button.name);
-          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
+          viewer.guiRegistry.setController(propertyName, controller);
         }
       }
       break;
@@ -48,7 +48,7 @@ export function handleAddControl (
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, checkbox.parent.toUpperCase());
+          const parentFolder = viewer.guiRegistry.getFolder(checkbox.parent);
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
@@ -56,7 +56,7 @@ export function handleAddControl (
           const controller = parentFolder.add(viewer.config.custom, propertyName as any)
             .name(checkbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
+          viewer.guiRegistry.setController(propertyName, controller);
         }
       }
       break;
@@ -72,7 +72,7 @@ export function handleAddControl (
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, picker.parent.toUpperCase());
+          const parentFolder = viewer.guiRegistry.getFolder(picker.parent);
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
@@ -80,7 +80,7 @@ export function handleAddControl (
           const controller = parentFolder.addColor(viewer.config.custom, propertyName)
             .name(picker.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
+          viewer.guiRegistry.setController(propertyName, controller);
         }
       }
       break;
@@ -96,7 +96,7 @@ export function handleAddControl (
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, selectbox.parent.toUpperCase());
+          const parentFolder = viewer.guiRegistry.getFolder(selectbox.parent);
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
@@ -104,7 +104,7 @@ export function handleAddControl (
           const controller = parentFolder.add(viewer.config.custom, propertyName as any, selectbox.items)
             .name(selectbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
+          viewer.guiRegistry.setController(propertyName, controller);
         }
       }
       break;
@@ -120,7 +120,7 @@ export function handleAddControl (
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, slider.parent.toUpperCase());
+          const parentFolder = viewer.guiRegistry.getFolder(slider.parent);
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
@@ -134,7 +134,7 @@ export function handleAddControl (
           )
             .name(slider.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
+          viewer.guiRegistry.setController(propertyName, controller);
         }
       }
       break;
@@ -150,7 +150,7 @@ export function handleAddControl (
               writable: true
             }
           );
-          const parentFolder = findFolderByUUID(viewer, textbox.parent.toUpperCase());
+          const parentFolder = viewer.guiRegistry.getFolder(textbox.parent);
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
@@ -158,7 +158,7 @@ export function handleAddControl (
           const controller = parentFolder.add(viewer.config.custom, propertyName as any)
             .name(textbox.name)
             .onChange((v: string | number | boolean) => { sendControlChanged(websocket, commandID, v); });
-          viewer.UUIDToGUI[propertyName] = { type: 'controller', instance: controller };
+          viewer.guiRegistry.setController(propertyName, controller);
         }
       }
       break;
@@ -171,13 +171,13 @@ export function handleAddControl (
             propertyName,
             {}
           );
-          const parentFolder = findFolderByUUID(viewer, folder.parent.toUpperCase());
+          const parentFolder = viewer.guiRegistry.getFolder(folder.parent);
           if (!parentFolder) {
             sendFailure(websocket, commandID, 'failure to get parent folder');
             return;
           }
           const gui = parentFolder.addFolder(folder.name);
-          viewer.UUIDToGUI[propertyName] = { type: 'folder', instance: gui };
+          viewer.guiRegistry.setFolder(propertyName, gui);
         }
       }
       break;

@@ -39,18 +39,27 @@ function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: Point
 
 function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, uuid: string) {
   const upperedUUID = uuid.toUpperCase();
-  const gui = viewer.UUIDToGUI[upperedUUID];
+  const gui = viewer.guiRegistry.get(upperedUUID);
+  if (gui === undefined) {
+    sendFailure(websocket, commandID, 'no such uuid');
+    return;
+  }
   switch (gui.type) {
+    case 'folder':
+      if (gui.instance.parent) {
+        gui.instance.parent.removeFolder(gui.instance);
+      } else { // root folder
+        gui.instance.destroy();
+      }
+      break;
     case 'controller':
       gui.instance.remove();
       break;
-    case 'folder':
-      viewer.guiCustom.removeFolder(gui.instance);
-      break;
     default:
-      sendFailure(websocket, commandID, 'failure to get control');
-      return;
+      break;
   }
-  delete viewer.UUIDToGUI[upperedUUID];
+  viewer.guiRegistry.delete(upperedUUID);
+
+  viewer.gui.updateDisplay();
   sendSuccess(websocket, commandID, 'success');
 }

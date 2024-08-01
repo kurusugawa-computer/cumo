@@ -1,7 +1,6 @@
 import * as PB from '../../protobuf/server';
 import { PointCloudViewer } from '../../viewer';
 import { sendFailure, sendSuccess } from '../client_command';
-import { findControllerByUUID } from './util';
 
 export function handleSetControl (
   websocket: WebSocket,
@@ -19,7 +18,7 @@ export function handleSetControl (
       {
         const button = control.button;
         if (button) {
-          const buttonGUI = findControllerByUUID(viewer, target);
+          const buttonGUI = viewer.guiRegistry.getController(target);
           if (!buttonGUI) {
             sendFailure(websocket, commandID, 'failure to get buttonGUI');
             return;
@@ -36,7 +35,7 @@ export function handleSetControl (
       {
         const checkbox = control.checkbox;
         if (checkbox) {
-          const checkboxGUI = findControllerByUUID(viewer, target);
+          const checkboxGUI = viewer.guiRegistry.getController(target);
           if (!checkboxGUI) {
             sendFailure(websocket, commandID, 'failure to get checkboxGUI');
             return;
@@ -57,7 +56,7 @@ export function handleSetControl (
       {
         const picker = control.colorPicker;
         if (picker) {
-          const pickerGUI = findControllerByUUID(viewer, target);
+          const pickerGUI = viewer.guiRegistry.getController(target);
           if (!pickerGUI) {
             sendFailure(websocket, commandID, 'failure to get pickerGUI');
             return;
@@ -78,7 +77,7 @@ export function handleSetControl (
       {
         const selectbox = control.selectbox;
         if (selectbox) {
-          const selectboxGUI = findControllerByUUID(viewer, target);
+          const selectboxGUI = viewer.guiRegistry.getController(target);
           if (!selectboxGUI) {
             sendFailure(websocket, commandID, 'failure to get selectboxGUI');
             return;
@@ -104,7 +103,7 @@ export function handleSetControl (
       {
         const slider = control.slider;
         if (slider) {
-          const sliderGUI = findControllerByUUID(viewer, target);
+          const sliderGUI = viewer.guiRegistry.getController(target);
           if (!sliderGUI) {
             sendFailure(websocket, commandID, 'failure to get sliderGUI');
             return;
@@ -137,7 +136,7 @@ export function handleSetControl (
       {
         const textbox = control.textbox;
         if (textbox) {
-          const textboxGUI = findControllerByUUID(viewer, target);
+          const textboxGUI = viewer.guiRegistry.getController(target);
           if (!textboxGUI) {
             sendFailure(websocket, commandID, 'failure to get textboxGUI');
             return;
