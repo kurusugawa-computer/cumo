@@ -114,3 +114,10 @@ class PointCloudViewer:
         stop_render,
         resume_render,
     )
+    from cumo._internal.members.set_config import (
+        set_pan_speed,
+        set_zoom_speed,
+        set_rotate_speed,
+        set_roll_speed,
+        set_use_perspective,
+    )
