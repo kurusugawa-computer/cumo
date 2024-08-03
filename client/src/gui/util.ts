@@ -1,4 +1,16 @@
+
 import * as DAT from 'dat.gui';
+
+export const DefaultUUID = {
+  CustomRoot: '00000000-0000-0000-0000-000000000000',
+  Root: '00000000-0000-0000-0000-000000000001',
+  Controls: '00000000-0000-0000-0000-000000000002',
+  Camera: '00000000-0000-0000-0000-000000000003',
+  RotateSpeed: '00000000-0000-0000-0000-000000000101',
+  ZoomSpeed: '00000000-0000-0000-0000-000000000102',
+  PanSpeed: '00000000-0000-0000-0000-000000000103',
+  UsePerspective: '00000000-0000-0000-0000-000000000201'
+};
 
 export type GUIData = {type: 'folder', instance: DAT.GUI} | {type: 'controller', instance: DAT.GUIController};
 
