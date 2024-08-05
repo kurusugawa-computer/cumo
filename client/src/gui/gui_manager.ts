@@ -1,17 +1,17 @@
-import * as DAT from 'dat.gui';
+import { GUI } from 'lil-gui';
 import { PointCloudViewer } from '../viewer';
 import { DefaultUUID, GUIRegistry } from './util';
 
 export class GUIManager {
-  gui: DAT.GUI;
-  guiCustom: DAT.GUI;
+  gui: GUI;
+  guiCustom: GUI;
   guiRegistry: GUIRegistry
 
   customProperty: {[key: string]: any};
 
   constructor (private viewer: PointCloudViewer) {
     // コントロールのセットアップ
-    this.gui = new DAT.GUI();
+    this.gui = new GUI();
 
     const guiControl = this.gui.addFolder('control');
     const guiCamera = this.gui.addFolder('camera');
@@ -49,30 +49,40 @@ export class GUIManager {
 
   // ラベルが隠れないように画面の半分までGUIの横幅を広げる
   adjustControlPanelWidthFromContent () {
-    const labels = document.querySelectorAll<HTMLDivElement>('.dg .property-name').values();
-    let maxWidth = 0;
-    const ctx = document.createElement('canvas').getContext('2d');
-    if (ctx === null) return;
-    for (const l of labels) {
-      ctx.font = window.getComputedStyle(l).font;
-      const m = ctx.measureText(l.innerText);
-      const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
-      maxWidth = Math.max(w, maxWidth);
-    }
-    const mainWidth = Math.ceil(maxWidth / 0.4);
-    const title = document.querySelector<HTMLLIElement>('.dg li.title');
-    const padding = (() => {
-      if (title === null) return 20;
-      const s = window.getComputedStyle(title);
-      // computed length is always in the form '*px'
-      return Number.parseFloat(s.paddingLeft) + Number.parseFloat(s.paddingRight);
-    })();
+    // const labels = document.querySelectorAll<HTMLDivElement>('.dg .property-name').values();
+    // let maxWidth = 0;
+    // const ctx = document.createElement('canvas').getContext('2d');
+    // if (ctx === null) return;
+    // for (const l of labels) {
+    //   ctx.font = window.getComputedStyle(l).font;
+    //   const m = ctx.measureText(l.innerText);
+    //   const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+    //   maxWidth = Math.max(w, maxWidth);
+    // }
+    // const mainWidth = Math.ceil(maxWidth / 0.4);
+    // const title = document.querySelector<HTMLLIElement>('.dg li.title');
+    // const padding = (() => {
+    //   if (title === null) return 20;
+    //   const s = window.getComputedStyle(title);
+    //   // computed length is always in the form '*px'
+    //   return Number.parseFloat(s.paddingLeft) + Number.parseFloat(s.paddingRight);
+    // })();
     // +1 for dat.gui bugs
     // sometimes the actual width will be 1px less than the passed value
-    this.gui.width = Math.max(this.gui.width, Math.min(mainWidth + padding + 1, window.innerWidth / 2));
+    // this.gui.width = Math.max(this.gui.width, Math.min(mainWidth + padding + 1, window.innerWidth / 2)); TODO:
   }
 
   updateAll () {
-    this.gui.updateDisplay();
+    for (const [, gui] of this.guiRegistry.map) {
+      switch (gui.type) {
+        case 'folder': {
+          break;
+        }
+        case 'controller': {
+          gui.instance.updateDisplay();
+          break;
+        }
+      }
+    }
   }
 }

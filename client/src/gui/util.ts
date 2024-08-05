@@ -1,5 +1,4 @@
-
-import * as DAT from 'dat.gui';
+import { GUI, Controller } from 'lil-gui';
 
 export const DefaultUUID = {
   CustomRoot: '00000000-0000-0000-0000-000000000000',
@@ -12,7 +11,7 @@ export const DefaultUUID = {
   UsePerspective: '00000000-0000-0000-0000-000000000201'
 };
 
-export type GUIData = {type: 'folder', instance: DAT.GUI} | {type: 'controller', instance: DAT.GUIController};
+export type GUIData = {type: 'folder', instance: GUI} | {type: 'controller', instance: Controller};
 
 export class GUIRegistry {
     map : Map<string, GUIData>;
@@ -37,7 +36,7 @@ export class GUIRegistry {
     }
 
     // ==== ユーティリティ関数 ====
-    getFolder (key: string): DAT.GUI | undefined {
+    getFolder (key: string): GUI | undefined {
       const data = this.get(key);
       if (data && data.type === 'folder') {
         return data.instance;
@@ -45,7 +44,7 @@ export class GUIRegistry {
       return undefined;
     }
 
-    getController (key: string): DAT.GUIController | undefined {
+    getController (key: string): Controller | undefined {
       const data = this.get(key);
       if (data && data.type === 'controller') {
         return data.instance;
@@ -53,11 +52,11 @@ export class GUIRegistry {
       return undefined;
     }
 
-    setFolder (key: string, value: DAT.GUI) {
+    setFolder (key: string, value: GUI) {
       this.set(key, { type: 'folder', instance: value });
     }
 
-    setController (key: string, value: DAT.GUIController) {
+    setController (key: string, value: Controller) {
       this.set(key, { type: 'controller', instance: value });
     }
 }

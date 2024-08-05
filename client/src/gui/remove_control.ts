@@ -1,11 +1,11 @@
 import { GUIManager } from './gui_manager';
 
 export function removeAllInCustom (manager: GUIManager) {
-  for (let i = manager.guiCustom.__controllers.length - 1; i >= 0; i--) {
-    manager.guiCustom.__controllers[i].remove();
+  for (let i = manager.guiCustom.controllers.length - 1; i >= 0; i--) {
+    manager.guiCustom.controllers[i].destroy();
   }
-  for (const [, folder] of Object.entries(manager.guiCustom.__folders)) {
-    manager.guiCustom.removeFolder(folder);
+  for (let i = manager.guiCustom.folders.length - 1; i >= 0; i--) {
+    manager.guiCustom.folders[i].destroy();
   }
 }
 
@@ -14,20 +14,7 @@ export function removeByUUID (manager: GUIManager, id: string) {
   if (gui === undefined) {
     throw new Error('no such uuid');
   }
-  switch (gui.type) {
-    case 'folder':
-      if (gui.instance.parent) {
-        gui.instance.parent.removeFolder(gui.instance);
-      } else { // root folder
-        gui.instance.destroy();
-      }
-      break;
-    case 'controller':
-      gui.instance.remove();
-      break;
-    default:
-      break;
-  }
+  gui.instance.destroy();
   manager.guiRegistry.delete(id);
   manager.updateAll();
 }
