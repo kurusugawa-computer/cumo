@@ -1,5 +1,3 @@
-
-import * as DAT from 'dat.gui';
 import { Overlay } from './overlay';
 import { Canvas2D } from './canvas2d';
 import { Lineset } from './lineset';
@@ -8,7 +6,7 @@ import { Spinner } from './spinner';
 import * as BABYLON from '@babylonjs/core';
 import '@babylonjs/core/Legacy/legacy';
 import { CustomCameraInput, CustomCameraInputEventHandlers } from './camera_control';
-import { adjustControlPanelWidthFromContent } from './websocket/handler/util';
+import { GUIManager } from './gui/gui_manager';
 
 export class PointCloudViewer {
   enabled: boolean = true;
@@ -27,10 +25,7 @@ export class PointCloudViewer {
   camera: BABYLON.TargetCamera;
   cameraInput: CustomCameraInput<PointCloudViewer['camera']>;
 
-  gui: DAT.GUI;
-  guiCustom: DAT.GUI;
-
-  folderUUIDmap: { [uuid: string]: string };
+  gui: GUIManager
 
   keyEventHandler = new class {
     onKeyUp: ((ev: KeyboardEvent) => any) | null = null
@@ -47,13 +42,6 @@ export class PointCloudViewer {
   }
 
   config = new class {
-    controls = new class {
-      rotateSpeed: number = 2.0
-      zoomSpeed: number = 2.0
-      panSpeed: number = 2.0
-      rollSpeed: number = 1.0
-    }();
-
     camera = new class {
       usePerspective: boolean = true;
       perspective = new class {
@@ -64,8 +52,6 @@ export class PointCloudViewer {
         frustum: number | null = null;
       }();
     }();
-
-    custom: Object = {};
   }();
 
   constructor (private container: HTMLDivElement) {
@@ -129,25 +115,7 @@ export class PointCloudViewer {
     };
     updateDPR();
 
-    // コントロールのセットアップ
-    this.gui = new DAT.GUI();
-
-    const guiControl = this.gui.addFolder('control');
-    const guiCamera = this.gui.addFolder('camera');
-    this.guiCustom = this.gui.addFolder('custom');
-
-    guiCamera.add(this.config.camera, 'usePerspective')
-      .name('perspective camera')
-      .onChange((perspective: boolean) => this.switchCamera(perspective));
-
-    guiControl.add(this.config.controls, 'rotateSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.rotateSpeed = this.config.controls.rotateSpeed; });
-    guiControl.add(this.config.controls, 'zoomSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.zoomSpeed = this.config.controls.zoomSpeed; });
-    guiControl.add(this.config.controls, 'panSpeed', 0, 10, 0.1).onChange(() => { this.cameraInput.panSpeed = this.config.controls.panSpeed; });
-
-    adjustControlPanelWidthFromContent(this.gui);
-
-    // [UUID]: folderName な map を初期化
-    this.folderUUIDmap = {};
+    this.gui = new GUIManager(this);
 
     container.style.position = 'relative';
     container.style.height = '100vh';
@@ -197,7 +165,7 @@ export class PointCloudViewer {
 
     if (perspective !== this.config.camera.usePerspective) {
       this.config.camera.usePerspective = perspective;
-      this.gui.updateDisplay();
+      this.gui.updateAll();
     }
   }
 }
