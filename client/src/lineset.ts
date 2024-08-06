@@ -19,7 +19,7 @@ export class Lineset {
 
   render (canvas: Canvas2D, transformMatrix: BABYLON.Matrix) {
     const frustumPlanes = BABYLON.Frustum.GetPlanes(transformMatrix);
-    const viewport = new BABYLON.Viewport(0, 0, canvas.domElement.width, canvas.domElement.height);
+    const viewport = new BABYLON.Viewport(0, 0, canvas.domElement.clientWidth, canvas.domElement.clientHeight);
     const p0 = new BABYLON.Vector3();
     const p1 = new BABYLON.Vector3();
 
