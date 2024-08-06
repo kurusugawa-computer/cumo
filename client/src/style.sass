@@ -2,17 +2,20 @@ body
     background-color: black
     margin: 0
 
-.dg .property-name
-    cursor: default
-    float: left
-    clear: left
-    width: 40%
+.lil-gui.root
+    width: fit-content
+    max-width: 50%
+
+.lil-gui .controller .name
     overflow: hidden
     text-overflow: ellipsis
+    flex-grow: 1
+    max-width: 65%
     white-space: nowrap
 
-.cr.function .property-name
-    width: 100%
+.lil-gui .controller .widget
+    width: 35%
+    min-width: 150px
 
 @keyframes spinner
     0%
