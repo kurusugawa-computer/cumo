@@ -17,15 +17,9 @@ export class GUIManager {
     const guiCamera = this.gui.addFolder('camera');
     this.guiCustom = this.gui.addFolder('custom');
 
-    const guiRotateSpeed = guiControl
-      .add(viewer.config.controls, 'rotateSpeed', 0, 10, 0.1)
-      .onChange(() => { viewer.cameraInput.rotateSpeed = viewer.config.controls.rotateSpeed; });
-    const guiZoomSpeed = guiControl
-      .add(viewer.config.controls, 'zoomSpeed', 0, 10, 0.1)
-      .onChange(() => { viewer.cameraInput.zoomSpeed = viewer.config.controls.zoomSpeed; });
-    const guiPanSpeed = guiControl
-      .add(viewer.config.controls, 'panSpeed', 0, 10, 0.1)
-      .onChange(() => { viewer.cameraInput.panSpeed = viewer.config.controls.panSpeed; });
+    const guiRotateSpeed = guiControl.add(viewer.cameraInput, 'rotateSpeed', 0, 10, 0.1);
+    const guiZoomSpeed = guiControl.add(viewer.cameraInput, 'zoomSpeed', 0, 10, 0.1);
+    const guiPanSpeed = guiControl.add(viewer.cameraInput, 'panSpeed', 0, 10, 0.1);
 
     const guiUsePerspective = guiCamera.add(viewer.config.camera, 'usePerspective')
       .name('perspective camera')
@@ -73,16 +67,8 @@ export class GUIManager {
   }
 
   updateAll () {
-    for (const [, gui] of this.guiRegistry.map) {
-      switch (gui.type) {
-        case 'folder': {
-          break;
-        }
-        case 'controller': {
-          gui.instance.updateDisplay();
-          break;
-        }
-      }
+    for (const controller of this.gui.controllersRecursive()) {
+      controller.updateDisplay();
     }
   }
 }

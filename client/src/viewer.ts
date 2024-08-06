@@ -42,13 +42,6 @@ export class PointCloudViewer {
   }
 
   config = new class {
-    controls = new class {
-      rotateSpeed: number = 2.0
-      zoomSpeed: number = 2.0
-      panSpeed: number = 2.0
-      rollSpeed: number = 1.0
-    }();
-
     camera = new class {
       usePerspective: boolean = true;
       perspective = new class {

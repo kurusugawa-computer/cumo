@@ -16,7 +16,7 @@ export function handleSetConfig (
       {
         const panSpeed = config.panSpeed;
         if (panSpeed) {
-          viewer.config.controls.panSpeed = panSpeed;
+          viewer.cameraInput.panSpeed = panSpeed;
         }
       }
       break;
@@ -24,7 +24,7 @@ export function handleSetConfig (
       {
         const zoomSpeed = config.zoomSpeed;
         if (zoomSpeed) {
-          viewer.config.controls.zoomSpeed = zoomSpeed;
+          viewer.cameraInput.zoomSpeed = zoomSpeed;
         }
       }
       break;
@@ -32,7 +32,7 @@ export function handleSetConfig (
       {
         const rotateSpeed = config.rotateSpeed;
         if (rotateSpeed) {
-          viewer.config.controls.rotateSpeed = rotateSpeed;
+          viewer.cameraInput.rotateSpeed = rotateSpeed;
         }
       }
       break;
@@ -40,7 +40,7 @@ export function handleSetConfig (
       {
         const rollSpeed = config.rollSpeed;
         if (rollSpeed) {
-          viewer.config.controls.rollSpeed = rollSpeed;
+          viewer.cameraInput.rollSpeed = rollSpeed;
         }
       }
       break;
