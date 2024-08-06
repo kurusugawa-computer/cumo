@@ -29,7 +29,7 @@ export class Overlay {
         this.__position,
         BABYLON.Matrix.IdentityReadOnly,
         scene.getTransformMatrix(),
-        new BABYLON.Viewport(0, 0, canvas.width, canvas.height)
+        new BABYLON.Viewport(0, 0, canvas.clientWidth, canvas.clientHeight)
       );
       x = p.x / window.devicePixelRatio;
       y = p.y / window.devicePixelRatio;
