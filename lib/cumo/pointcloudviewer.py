@@ -119,5 +119,4 @@ class PointCloudViewer:
         set_zoom_speed,
         set_rotate_speed,
         set_roll_speed,
-        set_use_perspective,
     )

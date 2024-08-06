@@ -44,14 +44,6 @@ export function handleSetConfig (
         }
       }
       break;
-    case 'usePerspective':
-      {
-        const usePerspective = config.usePerspective;
-        if (usePerspective) {
-          viewer.config.camera.usePerspective = usePerspective;
-        }
-      }
-      break;
     default:
       throw new Error('unknown config');
   }

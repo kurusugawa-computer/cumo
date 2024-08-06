@@ -83,21 +83,4 @@ def set_roll_speed(
     if not ret.result.HasField("success"):
         raise RuntimeError("unexpected response")
 
-
-def set_use_perspective(
-    self: PointCloudViewer,
-    use_perspective: bool,
-) -> None:
-    config = server_pb2.SetConfig()
-    config.usePerspective = use_perspective
-
-    obj = server_pb2.ServerCommand()
-    obj.set_config.CopyFrom(config)
-    uuid = uuid4()
-    self._send_data(obj, uuid)
-
-    ret = self._wait_until(uuid)
-    if ret.result.HasField("failure"):
-        raise RuntimeError(ret.result.failure)
-    if not ret.result.HasField("success"):
-        raise RuntimeError("unexpected response")
+# cameraのpropertyの操作はcamera.pyに記述されている

@@ -238,6 +238,5 @@ message SetConfig {
         float zoomSpeed = 2;
         float panSpeed = 3;
         float rollSpeed = 4;
-        bool usePerspective = 5;
     }
 }
