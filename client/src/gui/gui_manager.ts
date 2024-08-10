@@ -1,4 +1,5 @@
 import { GUI } from 'lil-gui';
+import Moveable from 'moveable';
 import { PointCloudViewer } from '../viewer';
 import { DefaultUUID, GUIRegistry } from './util';
 
@@ -6,6 +7,7 @@ export class GUIManager {
   gui: GUI;
   guiCustom: GUI;
   guiRegistry: GUIRegistry
+  guiMove: Moveable
 
   customProperty: {[key: string]: any};
 
@@ -36,34 +38,19 @@ export class GUIManager {
     this.guiRegistry.setController(DefaultUUID.PanSpeed, guiPanSpeed);
     this.guiRegistry.setController(DefaultUUID.UsePerspective, guiUsePerspective);
 
-    this.adjustControlPanelWidthFromContent();
-
     this.customProperty = {};
-  }
 
-  // ラベルが隠れないように画面の半分までGUIの横幅を広げる
-  adjustControlPanelWidthFromContent () {
-    // const labels = document.querySelectorAll<HTMLDivElement>('.dg .property-name').values();
-    // let maxWidth = 0;
-    // const ctx = document.createElement('canvas').getContext('2d');
-    // if (ctx === null) return;
-    // for (const l of labels) {
-    //   ctx.font = window.getComputedStyle(l).font;
-    //   const m = ctx.measureText(l.innerText);
-    //   const w = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
-    //   maxWidth = Math.max(w, maxWidth);
-    // }
-    // const mainWidth = Math.ceil(maxWidth / 0.4);
-    // const title = document.querySelector<HTMLLIElement>('.dg li.title');
-    // const padding = (() => {
-    //   if (title === null) return 20;
-    //   const s = window.getComputedStyle(title);
-    //   // computed length is always in the form '*px'
-    //   return Number.parseFloat(s.paddingLeft) + Number.parseFloat(s.paddingRight);
-    // })();
-    // +1 for dat.gui bugs
-    // sometimes the actual width will be 1px less than the passed value
-    // this.gui.width = Math.max(this.gui.width, Math.min(mainWidth + padding + 1, window.innerWidth / 2)); TODO:
+    // GUIをドラッグしてサイズ変更する
+    this.guiMove = new Moveable(document.body, {
+      target: this.gui.domElement,
+      resizable: true,
+      renderDirections: ['w'],
+      edge: ['w']
+    });
+    this.guiMove.on('resize', ({ target, width }) => {
+      target.style.width = width + 'px';
+    });
+    this.guiMove.useResizeObserver = true; // fit-contentで自動変更された場合に自動で調節
   }
 
   updateAll () {

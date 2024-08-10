@@ -87,6 +87,5 @@ export function handleAddControl (
       throw new Error('invalid command');
   }
 
-  viewer.gui.adjustControlPanelWidthFromContent();
   sendSuccess(websocket, commandID, commandID);
 }

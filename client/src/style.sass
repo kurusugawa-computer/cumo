@@ -2,20 +2,30 @@ body
     background-color: black
     margin: 0
 
+.moveable-control
+    display: none // レイアウト無視・アクセス不可
+
+.moveable-line
+    height: 20px !important
+    opacity: 0 // レイアウト反映・アクセス可能
+
 .lil-gui.root
     width: fit-content
     max-width: 50%
 
+.lil-gui .controller
+    justify-content: space-between
+
 .lil-gui .controller .name
     overflow: hidden
     text-overflow: ellipsis
-    flex-grow: 1
-    max-width: 65%
     white-space: nowrap
+    min-width: 0px
+    flex-shrink: 1
 
 .lil-gui .controller .widget
-    width: 35%
-    min-width: 150px
+    width: 150px
+    flex-shrink: 0
 
 @keyframes spinner
     0%

@@ -23,7 +23,6 @@ export function handleRemoveControl (
     default:
       break;
   }
-  viewer.gui.adjustControlPanelWidthFromContent();
 }
 
 function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
