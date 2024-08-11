@@ -51,7 +51,7 @@ export function setSelectbox (manager: GUIManager, id: string, name?: string, va
     selectbox.setValue(value);
   }
   if (items) {
-    selectbox.options(items); // TODO: これでダメなのか調べる
+    selectbox.options(items);
   }
   selectbox.updateDisplay();
 }

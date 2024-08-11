@@ -92,11 +92,6 @@ export function addFolder (manager: GUIManager, id: string, parent: string, name
   if (!parentFolder) {
     throw new Error('failure to get parent folder');
   }
-  Object.defineProperty( // TODO: これ本当に必要か要検討
-    manager.customProperty,
-    id,
-    {}
-  );
   const folder = parentFolder.addFolder(name);
   manager.guiRegistry.setFolder(id, folder);
 }
