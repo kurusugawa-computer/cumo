@@ -27,6 +27,8 @@ export class GUIManager {
       .name('perspective camera')
       .onChange((perspective: boolean) => viewer.switchCamera(perspective));
 
+    this.gui.add({ f: () => {} }, 'f').name('12345678901234567890123456789');
+
     // GUIの情報を登録
     this.guiRegistry = new GUIRegistry();
     this.guiRegistry.setFolder(DefaultUUID.CustomRoot, this.guiCustom);
