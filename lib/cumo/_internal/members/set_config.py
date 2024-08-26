@@ -12,6 +12,11 @@ def set_pan_speed(
     self: PointCloudViewer,
     speed: float,
 ) -> None:
+    """カメラのパン速度を設定する。
+
+    :param speed: パン速度
+    :type speed: float
+    """
     config = server_pb2.SetConfig()
     config.panSpeed = speed
 
@@ -31,6 +36,11 @@ def set_zoom_speed(
     self: PointCloudViewer,
     speed: float,
 ) -> None:
+    """カメラのズーム速度を設定する。
+
+    :param speed: ズーム速度
+    :type speed: float
+    """
     config = server_pb2.SetConfig()
     config.zoomSpeed = speed
 
@@ -50,6 +60,11 @@ def set_rotate_speed(
     self: PointCloudViewer,
     speed: float,
 ) -> None:
+    """カメラの回転速度を設定する。
+
+    :param speed: 回転速度
+    :type speed: float
+    """
     config = server_pb2.SetConfig()
     config.rotateSpeed = speed
 
@@ -69,6 +84,11 @@ def set_roll_speed(
     self: PointCloudViewer,
     speed: float,
 ) -> None:
+    """カメラのロール速度を設定する。
+
+    :param speed: ロール速度
+    :type speed: float
+    """
     config = server_pb2.SetConfig()
     config.rollSpeed = speed
 
