@@ -8,7 +8,7 @@ export function setButton (manager: GUIManager, id: string, name?: string) {
   if (name) {
     button.name(name);
   }
-  button.updateDisplay();
+  manager.updateAll();
 }
 
 export function setCheckBox (manager: GUIManager, id: string, name?: string, value?: boolean) {
@@ -22,7 +22,7 @@ export function setCheckBox (manager: GUIManager, id: string, name?: string, val
   if (value !== undefined) {
     checkbox.setValue(value);
   }
-  checkbox.updateDisplay();
+  manager.updateAll();
 }
 
 export function setColorPicker (manager: GUIManager, id: string, name?: string, value?: string) {
@@ -36,7 +36,7 @@ export function setColorPicker (manager: GUIManager, id: string, name?: string, 
   if (value) {
     picker.setValue(value);
   }
-  picker.updateDisplay();
+  manager.updateAll();
 }
 
 export function setSelectbox (manager: GUIManager, id: string, name?: string, value?: string, items?: string[]) {
@@ -53,7 +53,7 @@ export function setSelectbox (manager: GUIManager, id: string, name?: string, va
   if (items) {
     selectbox.options(items);
   }
-  selectbox.updateDisplay();
+  manager.updateAll();
 }
 
 export function setSlider (manager: GUIManager, id: string, name?: string, min?: number, max?: number, value?: number, step?: number) {
@@ -76,7 +76,7 @@ export function setSlider (manager: GUIManager, id: string, name?: string, min?:
   if (step !== undefined) {
     slider.step(step);
   }
-  slider.updateDisplay();
+  manager.updateAll();
 }
 
 export function setTextbox (manager: GUIManager, id: string, name?: string, value?: string) {
@@ -90,5 +90,5 @@ export function setTextbox (manager: GUIManager, id: string, name?: string, valu
   if (value) {
     textbox.setValue(value);
   }
-  textbox.updateDisplay();
+  manager.updateAll();
 }

@@ -7,6 +7,7 @@ export function removeAllInCustom (manager: GUIManager) {
   for (let i = manager.guiCustom.folders.length - 1; i >= 0; i--) {
     manager.guiCustom.folders[i].destroy();
   }
+  manager.updateAll();
 }
 
 export function removeByUUID (manager: GUIManager, id: string) {

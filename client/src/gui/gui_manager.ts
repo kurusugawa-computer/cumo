@@ -48,14 +48,58 @@ export class GUIManager {
       edge: ['w']
     });
     this.guiMove.on('resize', ({ target, width }) => {
-      target.style.width = width + 'px';
+      const maxWidth = document.body.clientWidth * 0.5;
+      target.style.width = Math.min(width, maxWidth) + 'px';
     });
-    this.guiMove.useResizeObserver = true; // fit-contentで自動変更された場合に自動で調節
+
+    this.updateAll();
+
+    // 画面リサイズ時にGUIの表示を更新
+    document.body.onresize = () => {
+      this.updateAll();
+    };
   }
 
   updateAll () {
     for (const controller of this.gui.controllersRecursive()) {
       controller.updateDisplay();
     }
+
+    // 全体の幅を調整
+    this.adjustControlPanelWidthFromContent();
+  }
+
+  // ラベルが隠れないように画面の半分までGUIの横幅を広げる
+  adjustControlPanelWidthFromContent () {
+    // 各コントロールのラベルの幅を取得
+    let maxWidth = 0;
+    const labels = document.querySelectorAll<HTMLDivElement>('.lil-gui .controller .name').values();
+    const ctx = document.createElement('canvas').getContext('2d');
+    if (ctx === null) return;
+    for (const label of labels) {
+      ctx.font = window.getComputedStyle(label).font;
+      const measure = ctx.measureText(label.innerText);
+      const width = measure.actualBoundingBoxLeft + measure.actualBoundingBoxRight;
+      maxWidth = Math.max(width, maxWidth);
+      console.log('label', label.innerText, 'width', measure.width);
+    }
+
+    const labelRatio = 0.4;
+    const mainWidth = Math.ceil(maxWidth / labelRatio);
+    console.log('maxWidth', maxWidth, 'mainWidth', mainWidth);
+
+    // GUIのpaddingを取得
+    let padding = 20;
+    const rootElement = this.gui.domElement;
+    if (rootElement !== null) {
+      const style = window.getComputedStyle(rootElement);
+      padding += parseInt(style.paddingLeft) + parseInt(style.paddingRight);
+    }
+
+    // moveableを通してサイズ変更する
+    const calcWidth = mainWidth + padding;
+    const nowWidth = this.gui.domElement.clientWidth;
+    const limitWidth = document.body.clientWidth * 0.5;
+    this.guiMove.request('resizable', { offsetWidth: Math.min(Math.max(calcWidth, nowWidth), limitWidth) }, true);
   }
 }
