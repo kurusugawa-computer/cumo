@@ -12,7 +12,7 @@ PROTO_PY = lib/cumo/_internal/protobuf/client_pb2.py lib/cumo/_internal/protobuf
 
 # phony targets
 
-all: lint build
+all: lint build lib/sample_data.pcd
 
 serve: ${CLIENT_FILES} ${PROTO_TS} client/node_modules
 	cd client && yarn serve
@@ -38,12 +38,13 @@ serve-docs: docs
 docs: lib/docs/_build/html/index.html
 
 clean:
-	rm -rf lib/dist lib/docs lib/cumo/_internal/protobuf lib/README.md
+	rm -rf lib/dist lib/docs lib/cumo/_internal/protobuf
 	rm -rf client/src/protobuf client/public
 
 distclean: clean
 	rm -rf lib/.venv
 	rm -rf client/node_modules
+	rm -f lib/sample_data.pcd
 
 # protobuf
 
@@ -102,7 +103,24 @@ lib/README.md: README.md
 	cp README.md lib/README.md
 
 lib/.venv:
-	cd lib && poetry install
+	cd lib && poetry install --no-ansi
+
+define KITTI2PCD
+from cumo._vendor.pypcd import pypcd
+import numpy as np
+points = np.fromfile('sample_data.bin', dtype=np.float32).reshape(-1, 4)
+colors = np.full((points.shape[0],), 0x00ffffff, dtype=np.uint32)
+points = np.hstack([points[:, :3], colors.view(np.float32).reshape(-1, 1)])
+pypcd.make_xyz_rgb_point_cloud(points).save_pcd('sample_data.pcd')
+endef
+export KITTI2PCD
+
+lib/sample_data.pcd: lib/sample_data.bin lib/.venv lib/cumo/_internal/protobuf/__init__.py
+	cd lib && echo "$$KITTI2PCD" | poetry run python
+
+lib/sample_data.bin:
+	curl --header 'Accept: application/vnd.github.v3.raw' --output lib/sample_data.bin --silent --location \
+	https://api.github.com/repos/kurusugawa-computer/annofab-3dpc-editor-cli/contents/tests/resources/kitti3dobj/testing/velodyne/000000.bin?ref=a885ae0
 
 $(PROTO_PLUGIN_MYPY): lib/.venv
 	@:

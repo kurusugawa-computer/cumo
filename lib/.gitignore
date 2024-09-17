@@ -1,4 +1,5 @@
 *.pcd
+*.bin
 README.md
 
 # Byte-compiled / optimized / DLL files
