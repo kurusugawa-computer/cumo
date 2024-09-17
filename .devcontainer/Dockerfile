@@ -1,28 +1,23 @@
-FROM ubuntu:20.04
-
-ENV PYTHON_VERSION 3.8.7
-ENV HOME /root
-ENV PYTHON_ROOT $HOME/local/python-$PYTHON_VERSION
-ENV PATH $PYTHON_ROOT/bin:$HOME/.poetry/bin:$PATH
+FROM ubuntu:22.04
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        ca-certificates \
+    ca-certificates \
     && apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        tzdata \
+    tzdata \
     && apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/* \
     && ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime \
     && echo 'Asia/Tokyo' >/etc/timezone
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        curl gnupg unzip git sudo\
-        make build-essential libssl-dev zlib1g-dev libbz2-dev \
-        libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
-        xz-utils tk-dev libffi-dev liblzma-dev libusb-1.0-0 libgl1-mesa-dev \
-        python3-distutils python3-dev \
+    curl gnupg unzip git sudo\
+    make build-essential libssl-dev zlib1g-dev libbz2-dev bash-completion \
+    libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
+    xz-utils tk-dev libffi-dev liblzma-dev libusb-1.0-0 libgl1-mesa-dev \
+    python3-distutils python3-dev \
     && apt-get clean && rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/*
 
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
@@ -40,19 +35,22 @@ RUN groupadd --gid 1000 vscode \
     && useradd --uid 1000 --gid 1000 -m vscode \
     && echo vscode ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/vscode \
     && chmod 0440 /etc/sudoers.d/vscode
-
 USER vscode
-ENV HOME /home/vscode
+
+ENV PYTHON_VERSION=3.8.7
+ENV HOME=/home/vscode
+ENV PYTHON_ROOT=$HOME/.local/python-$PYTHON_VERSION
+ENV PATH=$PYTHON_ROOT/bin:$HOME/.poetry/bin:$PATH
+ENV PATH="$PATH:/home/vscode/.local/python-3.8.7/bin"
 
 RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv \
     && cd ~/.pyenv/plugins/python-build \
-    && PREFIX=~/local ./install.sh \
-    && ~/local/bin/python-build -v ${PYTHON_VERSION} ~/local/python-${PYTHON_VERSION}
+    && PREFIX="$HOME/.local/" ./install.sh \
+    && ~/.local/bin/python-build --verbose ${PYTHON_VERSION} ${PYTHON_ROOT}
 
-ENV PATH "$PATH:/home/vscode/local/python-3.8.7/bin"
 WORKDIR /home/vscode
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
-ENV PATH "$PATH:/home/vscode/.local/bin"
+ENV PATH="$PATH:/home/vscode/.local/bin"
 
 RUN poetry config virtualenvs.in-project true
