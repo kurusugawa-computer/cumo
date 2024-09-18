@@ -1,4 +1,4 @@
-.PHONY: all serve build lint format serve-docs docs clean distclean
+.PHONY: all serve build build-lib build-client lint format serve-docs docs clean distclean
 .INTERMEDIATE: lib/sample_data.bin lib/README.md
 
 PYTHON_FILES = $(shell find lib -type f -name '*.py')
@@ -17,8 +17,12 @@ all: lint build lib/sample_data.pcd
 serve: ${CLIENT_FILES} ${PROTO_TS} client/node_modules
 	cd client && yarn serve
 
-build: lib/README.md lib/cumo/_internal/protobuf/__init__.py client/public/index.html ${PYTHON_FILES} lib/.venv
+build: build-lib build-client
+
+build-lib: lib/README.md lib/cumo/_internal/protobuf/__init__.py lib/.venv lib/cumo/public/index.html ${PYTHON_FILES}
 	cd lib && poetry build
+
+build-client: client/public/index.html
 
 lint: ${PYTHON_FILES} ${CLIENT_FILES} client/node_modules lib/.venv lib/cumo/_internal/protobuf/__init__.py
 	cd client && yarn lint:eslint
@@ -38,7 +42,7 @@ serve-docs: docs
 docs: lib/docs/_build/html/index.html
 
 clean:
-	rm -rf lib/dist lib/docs lib/cumo/_internal/protobuf
+	rm -rf lib/dist lib/docs lib/cumo/_internal/protobuf lib/cumo/public
 	rm -rf client/src/protobuf client/public
 
 distclean: clean
@@ -104,6 +108,9 @@ lib/README.md: README.md
 
 lib/.venv:
 	cd lib && poetry install --no-ansi
+
+lib/cumo/public/index.html: client/public/index.html
+	cp -r client/public lib/cumo/
 
 define KITTI2PCD
 from cumo._vendor.pypcd import pypcd
