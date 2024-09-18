@@ -15,19 +15,23 @@ devcontainer環境を使用することで、ビルド環境を構築するこ�
 その中で以下のようにすると、`lib/docs/`以下にドキュメントが生成されます。
 
 ```console
-$ cd lib
-$ poetry install
-$ poetry run sphinx-apidoc --append-syspath -F -o ./docs .
+$ make docs
+```
+
+また、`serve-docs`ターゲットを実行するとPythonのサーバーが起動し、`http://localhost:8000`でドキュメントを閲覧できます。
+
+```console
+$ make serve-docs
 ```
 
 ## 使用例
 
 `lib/cumo/__main__.py`は3面図を撮る例です。
-`lib/`以下に適当なPCDファイル(以下の例では`pcl_logo.pcd`)を用意して、以下のようにするとpcdファイルを閲覧できます。
+`lib/`以下に適当なPCDファイル(以下の例では`sample_data.pcd`)を用意して、以下のようにするとpcdファイルを閲覧できます。
 
 ```console
 $ cd lib
-$ poetry run python -m cumo pcl_logo.pcd
+$ poetry run python -m cumo sample_data.pcd
 open: http://127.0.0.1:8082
 setup...
 resize window and press custom control button "start"
@@ -47,7 +51,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> viewer = PointCloudViewer()
 >>> viewer.start()
 >>> # open localhost:8082 on your browser
->>> with open(filename, "rb") as f:
+>>> with open("sample_data.pcd", "rb") as f:
 >>>     b = f.read()
 >>>     viewer.send_pointcloud_pcd(b)
 ```
@@ -74,22 +78,23 @@ devcontainer環境に入り、下のようにすると`lib/dist/`以下にtar.gz
 クライアントのHTML等はライブラリに含まれ、tar.gzやwhlファイルの中に格納されます。
 
 ```console
-$ ./build.sh
+$ make
 ```
 
 ### テスト
 
+`make` (または`make all`)を実行していれば、サンプル用のpcdファイル`sample_data.pcd`が`lib/`以下に生成されています。
+
 以下のようにするとテスト用のモードでクライアントページを配信することができます。
 
 ```console
-$ cd client
-$ yarn serve
+$ make serve
 ```
 
 上のようにしてクライアントを配信するサーバを起動した後、ブラウザでクライアントを開きます(大抵の場合自動で開かれます)。
-クライアントを開いた後、ライブラリ側を起動するとクライアント側に接続されます。
+別のターミナルでライブラリ側を起動するとクライアント側に接続されます。
 
 ```console
 $ cd lib
-$ poetry run python -m cumo pcl_logo.pcd
+$ poetry run python -m cumo sample_data.pcd
 ```
