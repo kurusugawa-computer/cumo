@@ -122,7 +122,7 @@ def multiprocessing_worker(
     ]
     thread: threading.Thread
     for thread in threads:
-        thread.setDaemon(True)
+        thread.daemon = True
         thread.start()
 
     for thread in threads:
