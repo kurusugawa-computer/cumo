@@ -2,17 +2,26 @@ body
     background-color: black
     margin: 0
 
-.dg .property-name
-    cursor: default
-    float: left
-    clear: left
-    width: 40%
+.moveable-control
+    display: none // レイアウト無視・アクセス不可
+
+.moveable-line
+    height: 20px !important
+    opacity: 0 // レイアウト反映・アクセス可能
+
+.lil-gui .controller
+    justify-content: space-between
+
+.lil-gui .controller .name
     overflow: hidden
     text-overflow: ellipsis
     white-space: nowrap
+    min-width: 0px
+    flex-shrink: 1
 
-.cr.function .property-name
-    width: 100%
+.lil-gui .controller .widget
+    width: 60%
+    flex-shrink: 0
 
 @keyframes spinner
     0%

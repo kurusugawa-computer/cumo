@@ -28,6 +28,7 @@ export default vite.defineConfig(({ command, mode }) => {
       ViteMinifyPlugin({})
     ],
     server: {
+      host: '0.0.0.0',
       open: true
     }
   };

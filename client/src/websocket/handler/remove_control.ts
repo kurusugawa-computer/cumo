@@ -1,7 +1,7 @@
 import * as PB from '../../protobuf/server';
 import { sendSuccess, sendFailure } from '../client_command';
 import { PointCloudViewer } from '../../viewer';
-import { adjustControlPanelWidthFromContent } from './util';
+import { removeAllInCustom, removeByUUID } from '../../gui/remove_control';
 
 export function handleRemoveControl (
   websocket: WebSocket,
@@ -23,42 +23,14 @@ export function handleRemoveControl (
     default:
       break;
   }
-  adjustControlPanelWidthFromContent(viewer.gui);
 }
 
 function handleRemoveAll (websocket: WebSocket, commandID: string, viewer: PointCloudViewer) {
-  for (let i = viewer.guiCustom.__controllers.length - 1; i >= 0; i--) {
-    viewer.guiCustom.__controllers[i].remove();
-  }
-  for (const [, folder] of Object.entries(viewer.guiCustom.__folders)) {
-    viewer.guiCustom.removeFolder(folder);
-  }
-
+  removeAllInCustom(viewer.gui);
   sendSuccess(websocket, commandID, 'success');
 }
 
 function handleRemoveByUUID (websocket: WebSocket, commandID: string, viewer: PointCloudViewer, uuid: string) {
-  const upperedUUID = uuid.toUpperCase();
-  for (let i = 0; i < viewer.guiCustom.__controllers.length; i++) {
-    const controller = viewer.guiCustom.__controllers[i];
-    if (controller.property === upperedUUID) {
-      controller.remove();
-      sendSuccess(websocket, commandID, 'success');
-      return;
-    }
-  }
-
-  if (!(upperedUUID in viewer.folderUUIDmap)) {
-    sendFailure(websocket, commandID, 'control not found');
-    return;
-  }
-  const folderName = viewer.folderUUIDmap[upperedUUID];
-  if (!(folderName in viewer.guiCustom.__folders)) {
-    sendFailure(websocket, commandID, 'control not found');
-    return;
-  }
-  const folder = viewer.guiCustom.__folders[folderName];
-  viewer.guiCustom.removeFolder(folder);
-
+  removeByUUID(viewer.gui, uuid);
   sendSuccess(websocket, commandID, 'success');
 }
