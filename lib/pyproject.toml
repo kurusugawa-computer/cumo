@@ -1,7 +1,7 @@
 [tool.poetry]
 readme = "README.md"
 name = "cumo"
-version = "0.33.7"
+version = "0.0.0" # dynamic-versioningによりgitタグ名がバージョンになる
 description = "Webブラウザ上に点群を描画する python ライブラリ"
 authors = ["Kurusugawa Computer"]
 license = "BSD"
@@ -18,10 +18,7 @@ classifiers = [
 	"Topic :: Utilities",
 	"Operating System :: OS Independent",
 ]
-include = [
-    "cumo/public/*",
-    "cumo/_internal/protobuf/*",
-]
+include = ["cumo/public/*", "cumo/_internal/protobuf/*"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -37,13 +34,19 @@ mypy = "^1.3.0"
 autopep8 = "^2.0.2"
 Sphinx = "^4.0.0"
 pylint = "^2.12.2"
-flake8 = {version = "^6.0.0", python = "^3.8.1"}
-mypy-protobuf = {version = "^3.5.0", python = "^3.8.1"}
+flake8 = { version = "^6.0.0", python = "^3.8.1" }
+mypy-protobuf = { version = "^3.5.0", python = "^3.8.1" }
 types-pillow = "^10.0.0.2"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "semver"
+pattern = "^v(?P<base>\\d+\\.\\d+\\.\\d+)"
 
 [[tool.mypy.overrides]]
 module = "cumo._vendor.*"

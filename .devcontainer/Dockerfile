@@ -54,3 +54,5 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="$PATH:/home/vscode/.local/bin"
 
 RUN poetry config virtualenvs.in-project true
+
+RUN poetry self add "poetry-dynamic-versioning[plugin]"
