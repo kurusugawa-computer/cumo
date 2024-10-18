@@ -38,6 +38,8 @@
     "google-protobuf": "^3",
     "html2canvas": "^1",
     "image-type": "^4",
+    "lil-gui": "^0.19.2",
+    "moveable": "^0.53.0",
     "vite": "^4.4.7"
   }
 }
