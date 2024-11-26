@@ -1,0 +1,51 @@
+name: Deploy to PyPI
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  deploy:
+    name: Deploy to PyPI
+    runs-on: ubuntu-22.04
+    permissions:
+      id-token: write # for gh-action-pypi-publish
+      contents: write # for action-gh-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/Iron"
+      - name: Install yarn
+        run: npm install -g yarn
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "${HOME}/.local/bin" >> ${GITHUB_PATH}
+          ${HOME}/.local/bin/poetry config virtualenvs.in-project true
+      - name: Install protoc
+        env:
+          PROTOC_VERSION: "24.2"
+        run: |
+          curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip
+          unzip protoc-${PROTOC_VERSION}-linux-x86_64.zip
+          cp ./bin/protoc /usr/local/bin/.
+          chmod +x /usr/local/bin/protoc
+      - name: Build
+        run: |
+          make build
+      # https://docs.github.com/ja/enterprise-cloud@latest/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-pypi
+      - name: Deploy to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: "lib/dist"
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: lib/dist/*
+          generate_release_notes: true

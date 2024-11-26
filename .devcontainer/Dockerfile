@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM mcr.microsoft.com/vscode/devcontainers/base:ubuntu-22.04
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -11,9 +11,11 @@ RUN apt-get update \
     && ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime \
     && echo 'Asia/Tokyo' >/etc/timezone
 
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-    curl gnupg unzip git sudo\
+    curl gnupg unzip \
     make build-essential libssl-dev zlib1g-dev libbz2-dev bash-completion \
     libreadline-dev libsqlite3-dev llvm libncurses5-dev libncursesw5-dev \
     xz-utils tk-dev libffi-dev liblzma-dev libusb-1.0-0 libgl1-mesa-dev \
@@ -31,10 +33,6 @@ ENV PROTOC_VERSION=24.2
 RUN curl -L -O https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip \
     && unzip protoc-${PROTOC_VERSION}-linux-x86_64.zip && cp ./bin/protoc /usr/local/bin/. && chmod +x /usr/local/bin/protoc
 
-RUN groupadd --gid 1000 vscode \
-    && useradd --uid 1000 --gid 1000 -m vscode \
-    && echo vscode ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/vscode \
-    && chmod 0440 /etc/sudoers.d/vscode
 USER vscode
 
 ENV PYTHON_VERSION=3.8.7
@@ -54,3 +52,5 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="$PATH:/home/vscode/.local/bin"
 
 RUN poetry config virtualenvs.in-project true
+
+RUN poetry self add "poetry-dynamic-versioning[plugin]"
